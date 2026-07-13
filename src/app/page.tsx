@@ -3291,8 +3291,20 @@ export default function Home() {
                 </span>
               </div>
 
-              <button className="btn-primary" type="submit" style={{ marginTop: '0.5rem' }}>
-                Import Timetable
+              <button
+                className="btn-primary"
+                type="submit"
+                disabled={isLoading}
+                style={{ marginTop: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+              >
+                {isLoading ? (
+                  <>
+                    <div style={{ width: '14px', height: '14px', border: '2px solid transparent', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                    <span>Importing...</span>
+                  </>
+                ) : (
+                  <span>Import Timetable</span>
+                )}
               </button>
             </form>
           </div>

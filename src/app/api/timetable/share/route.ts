@@ -44,8 +44,19 @@ export async function POST(req: Request) {
 
     const cleanCode = code.trim().toLowerCase();
 
-    const sourceSemester = await db.semester.findFirst({
-      where: { id: { startsWith: cleanCode } },
+    // To prevent PostgreSQL casting/UUID-matching errors (LIKE on native uuid column),
+    // we fetch all semester IDs first and resolve the matching semester id in memory.
+    const allSemesters = await db.semester.findMany({
+      select: { id: true }
+    });
+
+    const matchedSem = allSemesters.find(s => s.id.toLowerCase().startsWith(cleanCode));
+    if (!matchedSem) {
+      return NextResponse.json({ error: 'Routine not found. Check the code and try again.' }, { status: 404 });
+    }
+
+    const sourceSemester = await db.semester.findUnique({
+      where: { id: matchedSem.id },
       include: {
         subjects: {
           include: {
