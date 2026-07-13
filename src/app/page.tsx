@@ -956,6 +956,20 @@ export default function Home() {
     setError('');
     setSuccess('');
 
+    // Validate that startTime is before endTime for all slots
+    for (const slot of reviewSlots) {
+      if (!slot.startTime || !slot.endTime) {
+        setError('Please specify start and end times for all slots.');
+        setIsOcrLoading(false);
+        return;
+      }
+      if (slot.startTime >= slot.endTime) {
+        setError(`Start time must be before end time for "${slot.subjectName || 'unnamed subject'}".`);
+        setIsOcrLoading(false);
+        return;
+      }
+    }
+
     try {
       const res = await fetch('/api/timetable', {
         method: 'POST',
@@ -1027,6 +1041,10 @@ export default function Home() {
     e.preventDefault();
     if (!slotSubjectId || !slotDay || !slotStartTime || !slotEndTime) {
       setError('Please fill in all slot fields.');
+      return;
+    }
+    if (slotStartTime >= slotEndTime) {
+      setError('Start time must be before end time.');
       return;
     }
     setError('');

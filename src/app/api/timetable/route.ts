@@ -90,6 +90,13 @@ export async function POST(req: Request) {
 
       // 2. Loop through verified slots
       for (const parsed of slots) {
+        if (!parsed.startTime || !parsed.endTime) {
+          throw new Error('All slots must have start and end times.');
+        }
+        if (parsed.startTime >= parsed.endTime) {
+          throw new Error(`Start time must be before end time for "${parsed.subjectName || 'unnamed subject'}".`);
+        }
+
         const normalizedName = normalizeSubjectName(parsed.subjectName);
         
         // Skip blanks, free periods, lunch, breaks, recess, library, etc.

@@ -16,6 +16,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
+    if (startTime >= endTime) {
+      return NextResponse.json({ error: 'Start time must be before end time' }, { status: 400 });
+    }
+
     const activeSemester = await db.semester.findFirst({
       where: { studentId: student.id, isActive: true },
     });
