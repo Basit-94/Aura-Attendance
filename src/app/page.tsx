@@ -2183,6 +2183,15 @@ export default function Home() {
                 )}
               </div>
               <div style={{ display: 'flex', gap: '0.75rem' }}>
+                <button 
+                  className="btn-outline" 
+                  style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }} 
+                  onClick={handleExportCSV}
+                  title="Export all active semester logs to CSV"
+                >
+                  <FileText size={14} />
+                  <span>Export CSV</span>
+                </button>
                 <button className="btn-outline" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }} onClick={() => setShowAddSemester(true)}>
                   New Semester
                 </button>
