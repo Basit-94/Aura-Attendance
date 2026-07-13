@@ -976,25 +976,51 @@ button, input, select {
   transition: var(--transition-smooth);
 }
 
-.check-btn-present:hover, .check-btn-present.active {
+.check-btn-present.active {
   background: var(--success);
   border-color: var(--success);
   box-shadow: 0 4px 15px rgba(16, 185, 129, 0.25);
   color: var(--text-primary);
 }
 
-.check-btn-absent:hover, .check-btn-absent.active {
+.check-btn-absent.active {
   background: var(--danger);
   border-color: var(--danger);
   box-shadow: 0 4px 15px rgba(239, 68, 68, 0.25);
   color: var(--text-primary);
 }
 
-.check-btn-holiday:hover, .check-btn-holiday.active {
+.check-btn-holiday.active {
   background: var(--warning);
   border-color: var(--warning);
   box-shadow: 0 4px 15px rgba(245, 158, 11, 0.25);
   color: var(--text-primary);
+}
+
+.check-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5 !important;
+}
+
+@media (hover: hover) {
+  .check-btn-present:hover:not(:disabled) {
+    background: var(--success);
+    border-color: var(--success);
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.25);
+    color: var(--text-primary);
+  }
+  .check-btn-absent:hover:not(:disabled) {
+    background: var(--danger);
+    border-color: var(--danger);
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.25);
+    color: var(--text-primary);
+  }
+  .check-btn-holiday:hover:not(:disabled) {
+    background: var(--warning);
+    border-color: var(--warning);
+    box-shadow: 0 4px 15px rgba(245, 158, 11, 0.25);
+    color: var(--text-primary);
+  }
 }
 
 /* =========================================================================

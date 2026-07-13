@@ -178,6 +178,7 @@ export default function Home() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [copiedCode, setCopiedCode] = useState(false);
+  const [inFlightChecks, setInFlightChecks] = useState<Record<string, boolean>>({});
 
   // Predictor Slider state
   const [selectedSubjectId, setSelectedSubjectId] = useState('');
@@ -490,6 +491,8 @@ export default function Home() {
 
   // Quick Check-in Actions
   const handleCheckIn = async (subjectId: string, status: 'PRESENT' | 'ABSENT' | 'HOLIDAY' | 'REMOVE') => {
+    if (inFlightChecks[subjectId]) return;
+    setInFlightChecks((prev) => ({ ...prev, [subjectId]: true }));
     try {
       const res = await fetch('/api/attendance/log', {
         method: 'POST',
@@ -501,15 +504,18 @@ export default function Home() {
         }),
       });
       if (res.ok) {
-        fetchDashboardData();
+        await fetchDashboardData();
       }
     } catch (err) {
       console.error(err);
+    } finally {
+      setInFlightChecks((prev) => ({ ...prev, [subjectId]: false }));
     }
   };
 
   const handleTeacherCheckIn = async (subjectId: string, status: 'PRESENT' | 'ABSENT' | 'HOLIDAY' | 'REMOVE') => {
-    if (!teacherViewingData) return;
+    if (!teacherViewingData || inFlightChecks[subjectId]) return;
+    setInFlightChecks((prev) => ({ ...prev, [subjectId]: true }));
     setError('');
     setSuccess('');
     try {
@@ -531,6 +537,8 @@ export default function Home() {
       await refreshTeacherMirrorData();
     } catch (err: any) {
       setError(err.message || 'Failed to update attendance');
+    } finally {
+      setInFlightChecks((prev) => ({ ...prev, [subjectId]: false }));
     }
   };
 
@@ -1676,30 +1684,30 @@ export default function Home() {
                     <div className="form-group" style={{ marginBottom: 0 }}>
                       <span className="form-label" style={{ fontSize: '0.75rem', marginBottom: '0.4rem' }}>Log attendance today:</span>
                       <div className="check-in-actions">
-                        <button
+                         <button
                           type="button"
                           className={`check-btn check-btn-present ${todayLog?.status === 'PRESENT' ? 'active' : ''}`}
-                          disabled={!isTeacherEditingUnlocked}
+                          disabled={!isTeacherEditingUnlocked || inFlightChecks[sub.id]}
                           onClick={() => handleTeacherCheckIn(sub.id, todayLog?.status === 'PRESENT' ? 'REMOVE' : 'PRESENT')}
-                          style={{ opacity: isTeacherEditingUnlocked ? 1 : 0.5, cursor: isTeacherEditingUnlocked ? 'pointer' : 'not-allowed' }}
+                          style={{ opacity: (!isTeacherEditingUnlocked || inFlightChecks[sub.id]) ? 0.5 : 1, cursor: isTeacherEditingUnlocked && !inFlightChecks[sub.id] ? 'pointer' : 'not-allowed' }}
                         >
                           Present
                         </button>
                         <button
                           type="button"
                           className={`check-btn check-btn-absent ${todayLog?.status === 'ABSENT' ? 'active' : ''}`}
-                          disabled={!isTeacherEditingUnlocked}
+                          disabled={!isTeacherEditingUnlocked || inFlightChecks[sub.id]}
                           onClick={() => handleTeacherCheckIn(sub.id, todayLog?.status === 'ABSENT' ? 'REMOVE' : 'ABSENT')}
-                          style={{ opacity: isTeacherEditingUnlocked ? 1 : 0.5, cursor: isTeacherEditingUnlocked ? 'pointer' : 'not-allowed' }}
+                          style={{ opacity: (!isTeacherEditingUnlocked || inFlightChecks[sub.id]) ? 0.5 : 1, cursor: isTeacherEditingUnlocked && !inFlightChecks[sub.id] ? 'pointer' : 'not-allowed' }}
                         >
                           Absent
                         </button>
                         <button
                           type="button"
                           className={`check-btn check-btn-holiday ${todayLog?.status === 'HOLIDAY' ? 'active' : ''}`}
-                          disabled={!isTeacherEditingUnlocked}
+                          disabled={!isTeacherEditingUnlocked || inFlightChecks[sub.id]}
                           onClick={() => handleTeacherCheckIn(sub.id, todayLog?.status === 'HOLIDAY' ? 'REMOVE' : 'HOLIDAY')}
-                          style={{ opacity: isTeacherEditingUnlocked ? 1 : 0.5, cursor: isTeacherEditingUnlocked ? 'pointer' : 'not-allowed' }}
+                          style={{ opacity: (!isTeacherEditingUnlocked || inFlightChecks[sub.id]) ? 0.5 : 1, cursor: isTeacherEditingUnlocked && !inFlightChecks[sub.id] ? 'pointer' : 'not-allowed' }}
                         >
                           Holiday
                         </button>
@@ -2268,7 +2276,8 @@ export default function Home() {
                             <button
                               type="button"
                               className={`check-btn check-btn-present ${todayLog?.status === 'PRESENT' ? 'active' : ''}`}
-                              style={{ padding: '0.35rem', fontSize: '0.75rem' }}
+                              style={{ padding: '0.35rem', fontSize: '0.75rem', opacity: inFlightChecks[matchingSubject.id] ? 0.5 : 1, cursor: inFlightChecks[matchingSubject.id] ? 'not-allowed' : 'pointer' }}
+                              disabled={inFlightChecks[matchingSubject.id]}
                               onClick={() => handleCheckIn(matchingSubject.id, todayLog?.status === 'PRESENT' ? 'REMOVE' : 'PRESENT')}
                             >
                               Present
@@ -2276,7 +2285,8 @@ export default function Home() {
                             <button
                               type="button"
                               className={`check-btn check-btn-absent ${todayLog?.status === 'ABSENT' ? 'active' : ''}`}
-                              style={{ padding: '0.35rem', fontSize: '0.75rem' }}
+                              style={{ padding: '0.35rem', fontSize: '0.75rem', opacity: inFlightChecks[matchingSubject.id] ? 0.5 : 1, cursor: inFlightChecks[matchingSubject.id] ? 'not-allowed' : 'pointer' }}
+                              disabled={inFlightChecks[matchingSubject.id]}
                               onClick={() => handleCheckIn(matchingSubject.id, todayLog?.status === 'ABSENT' ? 'REMOVE' : 'ABSENT')}
                             >
                               Absent
@@ -2284,7 +2294,8 @@ export default function Home() {
                             <button
                               type="button"
                               className={`check-btn check-btn-holiday ${todayLog?.status === 'HOLIDAY' ? 'active' : ''}`}
-                              style={{ padding: '0.35rem', fontSize: '0.75rem' }}
+                              style={{ padding: '0.35rem', fontSize: '0.75rem', opacity: inFlightChecks[matchingSubject.id] ? 0.5 : 1, cursor: inFlightChecks[matchingSubject.id] ? 'not-allowed' : 'pointer' }}
+                              disabled={inFlightChecks[matchingSubject.id]}
                               onClick={() => handleCheckIn(matchingSubject.id, todayLog?.status === 'HOLIDAY' ? 'REMOVE' : 'HOLIDAY')}
                             >
                               Holiday
@@ -2885,21 +2896,29 @@ export default function Home() {
                         <span className="form-label" style={{ fontSize: '0.75rem', marginBottom: '0.4rem' }}>Log attendance today:</span>
                         <div className="check-in-actions">
                           <button
+                            type="button"
                             className={`check-btn check-btn-present ${todayLog?.status === 'PRESENT' ? 'active' : ''}`}
+                            disabled={inFlightChecks[sub.id]}
                             onClick={() => handleCheckIn(sub.id, todayLog?.status === 'PRESENT' ? 'REMOVE' : 'PRESENT')}
+                            style={{ opacity: inFlightChecks[sub.id] ? 0.5 : 1, cursor: inFlightChecks[sub.id] ? 'not-allowed' : 'pointer' }}
                           >
                             Present
                           </button>
                           <button
+                            type="button"
                             className={`check-btn check-btn-absent ${todayLog?.status === 'ABSENT' ? 'active' : ''}`}
+                            disabled={inFlightChecks[sub.id]}
                             onClick={() => handleCheckIn(sub.id, todayLog?.status === 'ABSENT' ? 'REMOVE' : 'ABSENT')}
+                            style={{ opacity: inFlightChecks[sub.id] ? 0.5 : 1, cursor: inFlightChecks[sub.id] ? 'not-allowed' : 'pointer' }}
                           >
                             Absent
                           </button>
                           <button
                             type="button"
                             className={`check-btn check-btn-holiday ${todayLog?.status === 'HOLIDAY' ? 'active' : ''}`}
+                            disabled={inFlightChecks[sub.id]}
                             onClick={() => handleCheckIn(sub.id, todayLog?.status === 'HOLIDAY' ? 'REMOVE' : 'HOLIDAY')}
+                            style={{ opacity: inFlightChecks[sub.id] ? 0.5 : 1, cursor: inFlightChecks[sub.id] ? 'not-allowed' : 'pointer' }}
                           >
                             Holiday
                           </button>
