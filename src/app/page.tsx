@@ -1238,7 +1238,7 @@ export default function Home() {
       setError('Please enter a valid 8-character share code.');
       return;
     }
-    if (!confirm('Warning: Importing a friend\'s routine will wipe out your current active subjects and detailed attendance logs. Proceed?')) return;
+    if (!confirm("Warning: Importing a friend's routine will overwrite your weekly schedule slots. Your existing subjects and logged attendance history will be preserved. Proceed?")) return;
     setIsLoading(true);
     setError('');
     setSuccess('');
@@ -3287,7 +3287,7 @@ export default function Home() {
                   required
                 />
                 <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block', marginTop: '0.5rem' }}>
-                  *Note: Importing a friend&apos;s routine will wipe out your current active subjects and detailed attendance logs. This cannot be undone.
+                  *Note: Importing a friend&apos;s routine will update your weekly class schedule slots. Your existing subjects and logged attendance history will be preserved.
                 </span>
               </div>
 

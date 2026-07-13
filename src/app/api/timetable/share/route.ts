@@ -75,7 +75,8 @@ export async function POST(req: Request) {
     }
 
     const activeSemester = await db.semester.findFirst({
-      where: { studentId: student.id, isActive: true }
+      where: { studentId: student.id, isActive: true },
+      include: { subjects: true }
     });
 
     if (!activeSemester) {
@@ -83,25 +84,43 @@ export async function POST(req: Request) {
     }
 
     await db.$transaction(async (tx) => {
-      await tx.subject.deleteMany({
-        where: { semesterId: activeSemester.id }
-      });
-
-      for (const srcSub of sourceSemester.subjects) {
-        const newSub = await tx.subject.create({
-          data: {
-            semesterId: activeSemester.id,
-            name: srcSub.name,
-            type: srcSub.type,
-            targetPercentage: srcSub.targetPercentage
-          }
+      // 1. Wipe out existing schedule slots for the active semester's subjects
+      const activeSubjectIds = activeSemester.subjects.map(s => s.id);
+      if (activeSubjectIds.length > 0) {
+        await tx.scheduleSlot.deleteMany({
+          where: { subjectId: { in: activeSubjectIds } }
         });
+      }
 
+      // Local tracker of subjects to prevent creating duplicates in this transaction
+      const localSubjects = [...activeSemester.subjects];
+
+      // 2. Loop through friend's routine subjects
+      for (const srcSub of sourceSemester.subjects) {
+        // Check if subject already exists (case-insensitive name + same type)
+        let subject = localSubjects.find(
+          (s) => s.name.toLowerCase() === srcSub.name.toLowerCase() && s.type === srcSub.type
+        );
+
+        if (!subject) {
+          // If the subject doesn't exist, create it
+          subject = await tx.subject.create({
+            data: {
+              semesterId: activeSemester.id,
+              name: srcSub.name,
+              type: srcSub.type,
+              targetPercentage: srcSub.targetPercentage
+            }
+          });
+          localSubjects.push(subject);
+        }
+
+        // 3. Create schedule slots linked to this subject
         if (srcSub.scheduleSlots.length > 0) {
           for (const slot of srcSub.scheduleSlots) {
             await tx.scheduleSlot.create({
               data: {
-                subjectId: newSub.id,
+                subjectId: subject.id,
                 dayOfWeek: slot.dayOfWeek,
                 startTime: slot.startTime,
                 endTime: slot.endTime
