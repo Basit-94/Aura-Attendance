@@ -3209,6 +3209,12 @@ export default function Home() {
               </button>
             </div>
             
+            {error && (
+              <div className="toast toast-error" style={{ marginBottom: '1rem' }}>
+                {error}
+              </div>
+            )}
+            
             <form onSubmit={handleCreateSlot}>
               <div className="form-group">
                 <label className="form-label">Subject</label>
@@ -3386,6 +3392,12 @@ export default function Home() {
                   Review and verify your routine schedule below. You can select existing subjects or type in your own (autocomplete suggestions will appear as you type). All days and times are fully editable.
                 </p>
 
+                {error && (
+                  <div className="toast toast-error" style={{ marginBottom: '1rem' }}>
+                    {error}
+                  </div>
+                )}
+
                 <div style={{ maxHeight: '380px', overflowY: 'auto', overflowX: 'auto', marginBottom: '1rem', paddingRight: '0.5rem' }}>
                   <table style={{ width: '100%', minWidth: '600px', borderCollapse: 'collapse' }}>
                     <thead>
@@ -3517,9 +3529,17 @@ export default function Home() {
                   <button
                     type="submit"
                     className="btn-primary"
-                    style={{ width: 'auto', padding: '0.5rem 1.5rem', fontSize: '0.8rem' }}
+                    disabled={isOcrLoading}
+                    style={{ width: 'auto', padding: '0.5rem 1.5rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
                   >
-                    Save Timetable & Apply
+                    {isOcrLoading ? (
+                      <>
+                        <div style={{ width: '14px', height: '14px', border: '2px solid transparent', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                        <span>Saving...</span>
+                      </>
+                    ) : (
+                      <span>Save Timetable & Apply</span>
+                    )}
                   </button>
                 </div>
               </form>
