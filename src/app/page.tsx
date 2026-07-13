@@ -493,6 +493,64 @@ export default function Home() {
   const handleCheckIn = async (subjectId: string, status: 'PRESENT' | 'ABSENT' | 'HOLIDAY' | 'REMOVE') => {
     if (inFlightChecks[subjectId]) return;
     setInFlightChecks((prev) => ({ ...prev, [subjectId]: true }));
+    
+    // Optimistic Update
+    const previousSubjects = [...subjects];
+    setSubjects(prevSubjects => {
+      return prevSubjects.map(sub => {
+        if (sub.id !== subjectId) return sub;
+
+        const todayDateStr = new Date().toISOString().split('T')[0];
+        let updatedLogs = sub.logs ? [...sub.logs] : [];
+        const todayLogIndex = updatedLogs.findIndex(log => log.date.split('T')[0] === todayDateStr);
+
+        if (status === 'REMOVE') {
+          if (todayLogIndex !== -1) {
+            updatedLogs.splice(todayLogIndex, 1);
+          }
+        } else {
+          if (todayLogIndex !== -1) {
+            updatedLogs[todayLogIndex] = { ...updatedLogs[todayLogIndex], status };
+          } else {
+            updatedLogs = [{ id: `temp-${Date.now()}`, date: new Date().toISOString(), status }, ...updatedLogs];
+          }
+        }
+
+        const oldTodayLog = sub.logs?.find(log => log.date.split('T')[0] === todayDateStr);
+        const oldStatus = oldTodayLog?.status || 'NONE';
+        
+        let presentDiff = 0;
+        let absentDiff = 0;
+        let holidayDiff = 0;
+
+        if (oldStatus === 'PRESENT') presentDiff--;
+        else if (oldStatus === 'ABSENT') absentDiff--;
+        else if (oldStatus === 'HOLIDAY') holidayDiff--;
+
+        if (status === 'PRESENT') presentDiff++;
+        else if (status === 'ABSENT') absentDiff++;
+        else if (status === 'HOLIDAY') holidayDiff++;
+
+        const newPresent = Math.max(0, sub.stats.present + presentDiff);
+        const newAbsent = Math.max(0, sub.stats.absent + absentDiff);
+        const newHoliday = Math.max(0, sub.stats.holiday + holidayDiff);
+        const newTotal = newPresent + newAbsent;
+        const newPercentage = newTotal > 0 ? (newPresent / newTotal) * 100 : 100.0;
+
+        return {
+          ...sub,
+          logs: updatedLogs,
+          stats: {
+            present: newPresent,
+            absent: newAbsent,
+            holiday: newHoliday,
+            total: newTotal,
+            percentage: Math.round(newPercentage * 10) / 10
+          }
+        };
+      });
+    });
+
     try {
       const res = await fetch('/api/attendance/log', {
         method: 'POST',
@@ -503,11 +561,16 @@ export default function Home() {
           status,
         }),
       });
-      if (res.ok) {
+      if (!res.ok) {
+        // Rollback on error
+        setSubjects(previousSubjects);
+      } else {
         await fetchDashboardData();
       }
     } catch (err) {
       console.error(err);
+      // Rollback on error
+      setSubjects(previousSubjects);
     } finally {
       setInFlightChecks((prev) => ({ ...prev, [subjectId]: false }));
     }
@@ -518,6 +581,66 @@ export default function Home() {
     setInFlightChecks((prev) => ({ ...prev, [subjectId]: true }));
     setError('');
     setSuccess('');
+
+    // Optimistic Update for Teacher View
+    const previousTeacherViewingData = teacherViewingData;
+    setTeacherViewingData(prev => {
+      if (!prev) return null;
+      const updatedSubjects = prev.subjects.map(sub => {
+        if (sub.id !== subjectId) return sub;
+
+        const todayDateStr = new Date().toISOString().split('T')[0];
+        let updatedLogs = sub.logs ? [...sub.logs] : [];
+        const todayLogIndex = updatedLogs.findIndex(log => log.date.split('T')[0] === todayDateStr);
+
+        if (status === 'REMOVE') {
+          if (todayLogIndex !== -1) {
+            updatedLogs.splice(todayLogIndex, 1);
+          }
+        } else {
+          if (todayLogIndex !== -1) {
+            updatedLogs[todayLogIndex] = { ...updatedLogs[todayLogIndex], status };
+          } else {
+            updatedLogs = [{ id: `temp-${Date.now()}`, date: new Date().toISOString(), status }, ...updatedLogs];
+          }
+        }
+
+        const oldTodayLog = sub.logs?.find(log => log.date.split('T')[0] === todayDateStr);
+        const oldStatus = oldTodayLog?.status || 'NONE';
+        
+        let presentDiff = 0;
+        let absentDiff = 0;
+        let holidayDiff = 0;
+
+        if (oldStatus === 'PRESENT') presentDiff--;
+        else if (oldStatus === 'ABSENT') absentDiff--;
+        else if (oldStatus === 'HOLIDAY') holidayDiff--;
+
+        if (status === 'PRESENT') presentDiff++;
+        else if (status === 'ABSENT') absentDiff++;
+        else if (status === 'HOLIDAY') holidayDiff++;
+
+        const newPresent = Math.max(0, sub.stats.present + presentDiff);
+        const newAbsent = Math.max(0, sub.stats.absent + absentDiff);
+        const newHoliday = Math.max(0, sub.stats.holiday + holidayDiff);
+        const newTotal = newPresent + newAbsent;
+        const newPercentage = newTotal > 0 ? (newPresent / newTotal) * 100 : 100.0;
+
+        return {
+          ...sub,
+          logs: updatedLogs,
+          stats: {
+            present: newPresent,
+            absent: newAbsent,
+            holiday: newHoliday,
+            total: newTotal,
+            percentage: Math.round(newPercentage * 10) / 10
+          }
+        };
+      });
+      return { ...prev, subjects: updatedSubjects };
+    });
+
     try {
       const res = await fetch('/api/attendance/log', {
         method: 'POST',
@@ -531,12 +654,18 @@ export default function Home() {
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      if (!res.ok) {
+        // Rollback on error
+        setTeacherViewingData(previousTeacherViewingData);
+        throw new Error(data.error);
+      }
 
       setSuccess('Attendance logged successfully!');
       await refreshTeacherMirrorData();
     } catch (err: any) {
       setError(err.message || 'Failed to update attendance');
+      // Rollback on error
+      setTeacherViewingData(previousTeacherViewingData);
     } finally {
       setInFlightChecks((prev) => ({ ...prev, [subjectId]: false }));
     }
