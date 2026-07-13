@@ -1,0 +1,78 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Student model represents the user account
+model Student {
+  id                String            @id @default(uuid())
+  email             String            @unique
+  passwordHash      String
+  uniqueCode        String            @unique // Unique 6-7 digit code for teachers to access
+  teacherEditPin    String?           // Rotable 4-digit PIN for teacher to edit attendance
+  createdAt         DateTime          @default(now())
+  semesters         Semester[]
+  archivedSummaries ArchivedSummary[]
+}
+
+// Semester model handles different terms/semesters separately
+model Semester {
+  id        String    @id @default(uuid())
+  studentId String
+  student   Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  name      String    // e.g., "1st Semester", "2nd Semester"
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  subjects  Subject[]
+}
+
+// Subject model covers individual courses (Lectures or Labs)
+model Subject {
+  id               String          @id @default(uuid())
+  semesterId       String
+  semester         Semester        @relation(fields: [semesterId], references: [id], onDelete: Cascade)
+  name             String          // e.g., "Mathematics III", "Chemistry Lab"
+  type             String          // "LECTURE" or "LAB"
+  targetPercentage Float           @default(75.0) // Goal percentage to reach
+  createdAt        DateTime        @default(now())
+  scheduleSlots    ScheduleSlot[]
+  attendanceLogs   AttendanceLog[]
+}
+
+// ScheduleSlot represents when a subject occurs during the week
+model ScheduleSlot {
+  id        String  @id @default(uuid())
+  subjectId String
+  subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  dayOfWeek String  // "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"
+  startTime String  // "HH:MM" format (24-hour)
+  endTime   String  // "HH:MM" format (24-hour)
+}
+
+// AttendanceLog tracks individual class markups
+model AttendanceLog {
+  id        String   @id @default(uuid())
+  subjectId String
+  subject   Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  date      DateTime // Date of the class (can include slot start time to allow multiple classes of the same subject per day)
+  status    String   // "PRESENT", "ABSENT", "HOLIDAY"
+  createdAt DateTime @default(now())
+  
+  @@unique([subjectId, date])
+}
+
+// ArchivedSummary keeps snapshot percentages of past semesters
+model ArchivedSummary {
+  id                String   @id @default(uuid())
+  studentId         String
+  student           Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  semesterName      String
+  overallPercentage Float
+  lecturePercentage Float
+  labPercentage     Float
+  archivedAt        DateTime @default(now())
+}
