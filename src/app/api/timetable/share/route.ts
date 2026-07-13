@@ -98,14 +98,16 @@ export async function POST(req: Request) {
         });
 
         if (srcSub.scheduleSlots.length > 0) {
-          await tx.scheduleSlot.createMany({
-            data: srcSub.scheduleSlots.map(slot => ({
-              subjectId: newSub.id,
-              dayOfWeek: slot.dayOfWeek,
-              startTime: slot.startTime,
-              endTime: slot.endTime
-            }))
-          });
+          for (const slot of srcSub.scheduleSlots) {
+            await tx.scheduleSlot.create({
+              data: {
+                subjectId: newSub.id,
+                dayOfWeek: slot.dayOfWeek,
+                startTime: slot.startTime,
+                endTime: slot.endTime
+              }
+            });
+          }
         }
       }
     });
