@@ -12,10 +12,10 @@ export interface ParsedClass {
 
 // Realistic timetable template for Developer Mock Mode
 const MOCK_TIMETABLE: ParsedClass[] = [
-  { subjectName: 'Mathematics III', type: 'LECTURE', dayOfWeek: 'MONDAY', startTime: '09:00', endTime: '10:00' },
+  { subjectName: 'Mathematics III', type: 'LECTURE', dayOfWeek: 'MONDAY', startTime: '09:30', endTime: '10:30' },
   { subjectName: 'Data Structures', type: 'LECTURE', dayOfWeek: 'MONDAY', startTime: '11:00', endTime: '12:00' },
   { subjectName: 'Physics Lab', type: 'LAB', dayOfWeek: 'TUESDAY', startTime: '10:00', endTime: '12:00' },
-  { subjectName: 'Mathematics III', type: 'LECTURE', dayOfWeek: 'WEDNESDAY', startTime: '09:00', endTime: '10:00' },
+  { subjectName: 'Mathematics III', type: 'LECTURE', dayOfWeek: 'WEDNESDAY', startTime: '09:30', endTime: '10:30' },
   { subjectName: 'Computer Networks', type: 'LECTURE', dayOfWeek: 'WEDNESDAY', startTime: '14:00', endTime: '15:30' },
   { subjectName: 'Data Structures', type: 'LECTURE', dayOfWeek: 'THURSDAY', startTime: '11:00', endTime: '12:00' },
   { subjectName: 'Chemistry Lab', type: 'LAB', dayOfWeek: 'THURSDAY', startTime: '14:00', endTime: '16:00' },

@@ -1361,8 +1361,8 @@ export default function Home() {
         subjectName: c.subjectName,
         type: c.type || 'LECTURE',
         dayOfWeek: c.dayOfWeek || 'MONDAY',
-        startTime: c.startTime || '09:00',
-        endTime: c.endTime || '10:00',
+        startTime: c.startTime || '09:30',
+        endTime: c.endTime || '10:30',
         isNewSubject: false
       }));
 
@@ -1396,8 +1396,8 @@ export default function Home() {
         subjectName: '',
         type: 'LECTURE',
         dayOfWeek: 'MONDAY',
-        startTime: '09:00',
-        endTime: '09:50',
+        startTime: '09:30',
+        endTime: '10:30',
         isNewSubject: true
       }
     ]);
