@@ -2697,11 +2697,11 @@ export default function Home() {
           /* Render Active Dashboard */
           <>
             {/* Semester selector banner */}
-            <div className="glass-card flex-between" style={{ padding: '1rem 1.5rem', marginBottom: '1.5rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div className="glass-card flex-between" style={{ padding: '1rem 1.5rem', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
                 <BookOpen size={20} className="text-primary" />
                 {isEditingSemesterName ? (
-                  <form onSubmit={handleRenameSemester} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <form onSubmit={handleRenameSemester} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                     <input
                       type="text"
                       className="form-input"
@@ -2714,7 +2714,7 @@ export default function Home() {
                     <button type="button" className="btn-outline" onClick={() => setIsEditingSemesterName(false)} style={{ width: 'auto', padding: '0.3rem 0.75rem', fontSize: '0.8rem' }}>Cancel</button>
                   </form>
                 ) : (
-                  <span style={{ fontWeight: 600, fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span style={{ fontWeight: 600, fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                     Active Term: {activeSemesterName || 'No active semester'}
                     <button 
                       className="copy-btn" 
@@ -2733,7 +2733,7 @@ export default function Home() {
                   </span>
                 )}
               </div>
-              <div style={{ display: 'flex', gap: '0.75rem' }}>
+              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
                 <button 
                   className="btn-outline" 
                   style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }} 
