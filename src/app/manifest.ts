@@ -14,13 +14,13 @@ export default function manifest(): MetadataRoute.Manifest {
         src: 'https://cdn-icons-png.flaticon.com/512/3200/3200742.png',
         sizes: '512x512',
         type: 'image/png',
-        purpose: 'any maskable',
+        purpose: 'any',
       },
       {
         src: 'https://cdn-icons-png.flaticon.com/512/3200/3200742.png',
         sizes: '192x192',
         type: 'image/png',
-        purpose: 'any maskable',
+        purpose: 'any',
       }
     ],
   };
