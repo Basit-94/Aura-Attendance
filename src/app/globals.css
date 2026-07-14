@@ -32,7 +32,7 @@
   --text-secondary: #cbd5e1; /* Increased contrast Slate-300 */
   --text-muted: #94a3b8; /* Increased contrast Slate-400 */
   
-  --glass-blur: blur(24px);
+  --glass-blur: blur(8px);
   --shadow-main: 0 20px 50px rgba(0, 0, 0, 0.5);
   --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   --border-radius-lg: 20px;
@@ -154,6 +154,7 @@ button, input, select {
   box-shadow: var(--shadow-main);
   padding: 1.5rem;
   transition: var(--transition-smooth);
+  will-change: transform, box-shadow, border-color;
 }
 
 .glass-card:hover {
@@ -1254,7 +1255,7 @@ button, input, select {
   --text-secondary: #334155;
   --text-muted: #57607a;
   
-  --glass-blur: blur(24px);
+  --glass-blur: blur(8px);
   --shadow-main: 0 20px 45px rgba(31, 38, 135, 0.06);
 }
 

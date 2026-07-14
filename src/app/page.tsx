@@ -1787,25 +1787,30 @@ export default function Home() {
   const DAYS = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'];
 
   const getDynamicTimes = () => {
-    let minHour = 9;
-    let maxHour = 9;
-    
-    if (timetable.length > 0) {
-      const hours = timetable.flatMap(slot => {
-        const startH = parseInt(slot.startTime.split(':')[0]);
-        const endH = parseInt(slot.endTime.split(':')[0]);
-        return [startH, endH];
-      });
-      minHour = Math.min(...hours);
-      maxHour = Math.max(...hours);
+    if (timetable.length === 0) {
+      return ['09:30', '10:30'];
     }
     
-    const timesList: string[] = [];
-    for (let h = minHour; h <= maxHour + 1; h++) {
+    const startTimes = timetable.map(slot => slot.startTime);
+    const endTimes = timetable.map(slot => slot.endTime);
+    const allTimes = Array.from(new Set([...startTimes])).sort((a, b) => a.localeCompare(b));
+    
+    const sortedEndTimes = [...endTimes].sort((a, b) => b.localeCompare(a));
+    const latestEndTime = sortedEndTimes[0] || '10:30';
+    
+    if (!allTimes.includes(latestEndTime)) {
+      allTimes.push(latestEndTime);
+    } else {
+      const [h, m] = latestEndTime.split(':').map(Number);
+      const nextH = (h + 1) % 24;
       const pad = (num: number) => num.toString().padStart(2, '0');
-      timesList.push(`${pad(h)}:00`);
+      const extraTime = `${pad(nextH)}:${pad(m)}`;
+      if (!allTimes.includes(extraTime)) {
+        allTimes.push(extraTime);
+      }
     }
-    return timesList;
+    
+    return allTimes.sort((a, b) => a.localeCompare(b));
   };
   const TIMES = getDynamicTimes();
   
