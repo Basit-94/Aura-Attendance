@@ -77,14 +77,6 @@ export async function POST(req: Request) {
 
     // Save verified schedule slots safely inside a transaction block
     await db.$transaction(async (tx) => {
-      // 1. Wipe out existing schedule slots for subjects in the active semester
-      const activeSubjectIds = activeSemester.subjects.map((s) => s.id);
-      await tx.scheduleSlot.deleteMany({
-        where: {
-          subjectId: { in: activeSubjectIds },
-        },
-      });
-
       // Local tracker of subjects to prevent creating duplicates in this request
       const localSubjects = [...activeSemester.subjects];
 
@@ -125,15 +117,27 @@ export async function POST(req: Request) {
           localSubjects.push(subject);
         }
 
-        // Create the new schedule slot linked to this subject
-        await tx.scheduleSlot.create({
-          data: {
+        // Check if schedule slot already exists to prevent duplicate entries
+        const existingSlot = await tx.scheduleSlot.findFirst({
+          where: {
             subjectId: subject.id,
-            dayOfWeek: parsed.dayOfWeek,
+            dayOfWeek: parsed.dayOfWeek.toUpperCase(),
             startTime: parsed.startTime,
             endTime: parsed.endTime,
-          },
+          }
         });
+
+        if (!existingSlot) {
+          // Create the new schedule slot linked to this subject
+          await tx.scheduleSlot.create({
+            data: {
+              subjectId: subject.id,
+              dayOfWeek: parsed.dayOfWeek.toUpperCase(),
+              startTime: parsed.startTime,
+              endTime: parsed.endTime,
+            },
+          });
+        }
       }
     });
 

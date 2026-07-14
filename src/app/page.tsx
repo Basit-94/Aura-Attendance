@@ -201,7 +201,7 @@ export default function Home() {
   const [criteriaB, setCriteriaB] = useState<number>(60);
 
   // Theme Toggle state
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+  const [theme, setTheme] = useState<'dark' | 'light'>('light');
 
   // Teacher Edit PIN states
   const [teacherEditPin, setTeacherEditPin] = useState('');
@@ -244,7 +244,7 @@ export default function Home() {
     if (savedA) setCriteriaA(parseInt(savedA));
     if (savedB) setCriteriaB(parseInt(savedB));
 
-    const savedTheme = localStorage.getItem('aura_theme') || 'dark';
+    const savedTheme = localStorage.getItem('aura_theme') || 'light';
     setTheme(savedTheme as 'dark' | 'light');
     document.documentElement.classList.toggle('light', savedTheme === 'light');
   }, []);
@@ -1748,11 +1748,48 @@ export default function Home() {
   };
 
   // Timetable Slot positioning helpers
-  const DAYS = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'];
+  const weekDaysOrdered = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'];
   
-  // Dynamically resolve time slots based on timetable schedule data to prevent mismatches
-  const sortedTimeSlots = Array.from(new Set(timetable.map((slot: any) => slot.startTime))).sort((a, b) => a.localeCompare(b));
-  const TIMES = sortedTimeSlots.length > 0 ? sortedTimeSlots : ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00'];
+  const getDynamicDays = () => {
+    if (timetable.length === 0) {
+      return ['MONDAY', 'TUESDAY'];
+    }
+    const indices = timetable.map(slot => weekDaysOrdered.indexOf(slot.dayOfWeek.toUpperCase())).filter(idx => idx !== -1);
+    if (indices.length === 0) return ['MONDAY', 'TUESDAY'];
+    const minIdx = Math.min(...indices);
+    const maxIdx = Math.max(...indices);
+    
+    const daysToShow: string[] = [];
+    for (let i = minIdx; i <= maxIdx; i++) {
+      daysToShow.push(weekDaysOrdered[i]);
+    }
+    if (maxIdx < weekDaysOrdered.length - 1) {
+      daysToShow.push(weekDaysOrdered[maxIdx + 1]);
+    } else {
+      daysToShow.push('MONDAY');
+    }
+    return Array.from(new Set(daysToShow));
+  };
+  const DAYS = getDynamicDays();
+
+  const getDynamicTimes = () => {
+    if (timetable.length === 0) {
+      return ['09:00', '10:00'];
+    }
+    const filledTimes = Array.from(new Set(timetable.map(slot => slot.startTime))).sort((a, b) => a.localeCompare(b));
+    if (filledTimes.length === 0) return ['09:00', '10:00'];
+    
+    const lastTime = filledTimes[filledTimes.length - 1];
+    const [h, m] = lastTime.split(':').map(Number);
+    const nextH = (h + 1) % 24;
+    const pad = (num: number) => num.toString().padStart(2, '0');
+    const nextTime = `${pad(nextH)}:${pad(m)}`;
+    
+    return [...filledTimes, nextTime];
+  };
+  const TIMES = getDynamicTimes();
+  
+  const sortedTimeSlots: string[] = [];
 
   const getTimetableSlot = (day: string, time: string) => {
     return timetable.find((slot) => {
@@ -3381,11 +3418,15 @@ export default function Home() {
                     </div>
                   ) : (
                     <div className="timetable-grid-wrapper">
-                      <div className="timetable-grid">
+                      <div className="timetable-grid" style={{ gridTemplateColumns: `80px repeat(${DAYS.length}, 1fr)` }}>
                         {/* Blank top left cell */}
                         <div className="grid-cell grid-header-cell" style={{ minHeight: '40px' }}>Time</div>
-                        {DAYS.map((day) => (
-                          <div key={day} className="grid-cell grid-header-cell" style={{ minHeight: '40px' }}>
+                        {DAYS.map((day, idx) => (
+                          <div 
+                            key={day} 
+                            className="grid-cell grid-header-cell" 
+                            style={{ minHeight: '40px', borderRight: idx === DAYS.length - 1 ? 'none' : '' }}
+                          >
                             {day.substring(0, 3)}
                           </div>
                         ))}
@@ -3398,7 +3439,7 @@ export default function Home() {
                               <div className="grid-cell grid-time-cell" style={{ minHeight: '40px' }}>
                                 {formattedTime}
                               </div>
-                              {DAYS.map((day) => {
+                              {DAYS.map((day, idx) => {
                                 const matchingSlots = timetable.filter(
                                   (slot) =>
                                     slot.dayOfWeek.toUpperCase() === day &&
@@ -3406,13 +3447,15 @@ export default function Home() {
                                     slot.endTime > time
                                 );
 
+                                const borderRightStyle = idx === DAYS.length - 1 ? 'none' : '';
+
                                 if (matchingSlots.length === 0) {
                                   return (
                                     <div
                                       key={day}
                                       className="grid-cell grid-body-cell clickable-grid-cell"
                                       onClick={() => handleEmptyCellClick(day, time)}
-                                      style={{ minHeight: '40px' }}
+                                      style={{ minHeight: '40px', borderRight: borderRightStyle }}
                                     />
                                   );
                                 }
@@ -3424,11 +3467,36 @@ export default function Home() {
                                     style={{
                                       minHeight: '40px',
                                       background: matchingSlots[0].type === 'LECTURE' ? 'rgba(99, 102, 241, 0.15)' : 'rgba(6, 182, 212, 0.15)',
-                                      borderLeft: matchingSlots[0].type === 'LECTURE' ? '3px solid var(--primary)' : '3px solid var(--secondary)'
+                                      borderLeft: matchingSlots[0].type === 'LECTURE' ? '3px solid var(--primary)' : '3px solid var(--secondary)',
+                                      position: 'relative',
+                                      borderRight: borderRightStyle
                                     }}
                                   >
-                                    <div className="timetable-slot-name" title={matchingSlots[0].subjectName}>
-                                      {matchingSlots[0].subjectName}
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.25rem' }}>
+                                      <div className="timetable-slot-name" title={matchingSlots[0].subjectName} style={{ fontWeight: 600 }}>
+                                        {matchingSlots[0].subjectName}
+                                      </div>
+                                      <button 
+                                        type="button"
+                                        onClick={() => handleDeleteSlot(matchingSlots[0].id)}
+                                        style={{
+                                          background: 'transparent',
+                                          border: 'none',
+                                          color: 'var(--danger)',
+                                          cursor: 'pointer',
+                                          padding: '0.1rem',
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          justifyContent: 'center',
+                                          opacity: 0.7,
+                                          transition: 'opacity 0.2s'
+                                        }}
+                                        onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
+                                        onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.7')}
+                                        title="Delete Slot"
+                                      >
+                                        <X size={12} />
+                                      </button>
                                     </div>
                                     <div className="timetable-slot-time">
                                       {matchingSlots[0].startTime}-{matchingSlots[0].endTime}
@@ -3474,8 +3542,12 @@ export default function Home() {
                           <XAxis 
                             dataKey="name" 
                             stroke="var(--text-secondary)" 
-                            fontSize={10} 
+                            fontSize={11} 
+                            fontWeight={500}
                             tickLine={false}
+                            height={60}
+                            angle={-20}
+                            textAnchor="end"
                           />
                           <YAxis 
                             stroke="var(--text-secondary)" 
@@ -3492,7 +3564,18 @@ export default function Home() {
                               color: 'var(--text-primary)' 
                             }} 
                           />
-                          <ReferenceLine y={75} label={{ value: '75% Criteria', position: 'top', fill: 'var(--danger)', fontSize: 10 }} stroke="var(--danger)" strokeDasharray="3 3" />
+                          <ReferenceLine 
+                            y={criteriaA} 
+                            label={{ value: `Primary Target (${criteriaA}%)`, position: 'insideTopLeft', fill: 'var(--danger)', fontSize: 10, fontWeight: 600 }} 
+                            stroke="var(--danger)" 
+                            strokeDasharray="4 4" 
+                          />
+                          <ReferenceLine 
+                            y={criteriaB} 
+                            label={{ value: `Secondary Target (${criteriaB}%)`, position: 'insideBottomLeft', fill: 'var(--warning)', fontSize: 10, fontWeight: 600 }} 
+                            stroke="var(--warning)" 
+                            strokeDasharray="4 4" 
+                          />
                           <Bar dataKey="percentage" radius={[4, 4, 0, 0]}>
                             {subjects.map((s, index) => {
                               const meetsTarget = s.stats.percentage >= s.targetPercentage;

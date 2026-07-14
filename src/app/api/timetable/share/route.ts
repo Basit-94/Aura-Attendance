@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
+import { normalizeSubjectName } from '@/lib/ocr';
 
 // Retrieve active semester share code
 export async function GET() {
@@ -84,22 +85,16 @@ export async function POST(req: Request) {
     }
 
     await db.$transaction(async (tx) => {
-      // 1. Wipe out existing schedule slots for the active semester's subjects
-      const activeSubjectIds = activeSemester.subjects.map(s => s.id);
-      if (activeSubjectIds.length > 0) {
-        await tx.scheduleSlot.deleteMany({
-          where: { subjectId: { in: activeSubjectIds } }
-        });
-      }
-
       // Local tracker of subjects to prevent creating duplicates in this transaction
       const localSubjects = [...activeSemester.subjects];
 
       // 2. Loop through friend's routine subjects
       for (const srcSub of sourceSemester.subjects) {
+        const normalizedName = normalizeSubjectName(srcSub.name);
+
         // Check if subject already exists (case-insensitive name + same type)
         let subject = localSubjects.find(
-          (s) => s.name.toLowerCase() === srcSub.name.toLowerCase() && s.type === srcSub.type
+          (s) => s.name.toLowerCase() === normalizedName.toLowerCase() && s.type === srcSub.type
         );
 
         if (!subject) {
@@ -107,7 +102,7 @@ export async function POST(req: Request) {
           subject = await tx.subject.create({
             data: {
               semesterId: activeSemester.id,
-              name: srcSub.name,
+              name: normalizedName,
               type: srcSub.type,
               targetPercentage: srcSub.targetPercentage
             }
@@ -118,14 +113,25 @@ export async function POST(req: Request) {
         // 3. Create schedule slots linked to this subject
         if (srcSub.scheduleSlots.length > 0) {
           for (const slot of srcSub.scheduleSlots) {
-            await tx.scheduleSlot.create({
-              data: {
+            const existingSlot = await tx.scheduleSlot.findFirst({
+              where: {
                 subjectId: subject.id,
-                dayOfWeek: slot.dayOfWeek,
+                dayOfWeek: slot.dayOfWeek.toUpperCase(),
                 startTime: slot.startTime,
-                endTime: slot.endTime
+                endTime: slot.endTime,
               }
             });
+
+            if (!existingSlot) {
+              await tx.scheduleSlot.create({
+                data: {
+                  subjectId: subject.id,
+                  dayOfWeek: slot.dayOfWeek.toUpperCase(),
+                  startTime: slot.startTime,
+                  endTime: slot.endTime
+                }
+              });
+            }
           }
         }
       }
