@@ -1406,13 +1406,36 @@ export default function Home() {
 
   const handleAddReviewSlot = () => {
     console.log("[DEBUG] handleAddReviewSlot triggered. Current reviewSlots:", reviewSlots);
+    
+    // Default to the last slot's day, or MONDAY
+    let defaultDay = 'MONDAY';
+    if (reviewSlots.length > 0) {
+      defaultDay = reviewSlots[reviewSlots.length - 1].dayOfWeek.toUpperCase();
+    }
+    
+    // Find all slots on this day in reviewSlots
+    const sameDaySlots = reviewSlots.filter(s => s.dayOfWeek.toUpperCase() === defaultDay);
+    let defaultStart = '09:30';
+    let defaultEnd = '10:30';
+    
+    if (sameDaySlots.length > 0) {
+      // Find the latest endTime
+      const sorted = [...sameDaySlots].sort((a, b) => b.endTime.localeCompare(a.endTime));
+      defaultStart = sorted[0].endTime;
+      
+      const [h, m] = defaultStart.split(':').map(Number);
+      const nextH = (h + 1) % 24;
+      const pad = (num: number) => num.toString().padStart(2, '0');
+      defaultEnd = `${pad(nextH)}:${pad(m)}`;
+    }
+    
     const newSlot = {
       keyId: `new-${Date.now()}-${reviewSlots.length}`,
       subjectName: '',
       type: 'LECTURE',
-      dayOfWeek: 'MONDAY',
-      startTime: '09:00',
-      endTime: '09:50',
+      dayOfWeek: defaultDay as any,
+      startTime: defaultStart,
+      endTime: defaultEnd,
       isNewSubject: true
     };
     setReviewSlots(prev => {
@@ -1617,9 +1640,22 @@ export default function Home() {
     }
     setSlotDay(day);
     setSlotSubjectId(subjects[0]?.id || '');
-    setSlotStartTime(time);
     
-    const [hourStr, minStr] = time.split(':');
+    // Find all slots on this day in current timetable
+    const sameDaySlots = timetable.filter(slot => slot.dayOfWeek.toUpperCase() === day.toUpperCase());
+    let defaultStart = time;
+    
+    if (sameDaySlots.length > 0) {
+      // Find the latest slot end time
+      const sorted = [...sameDaySlots].sort((a, b) => b.endTime.localeCompare(a.endTime));
+      defaultStart = sorted[0].endTime;
+    } else {
+      defaultStart = '09:30';
+    }
+    
+    setSlotStartTime(defaultStart);
+    
+    const [hourStr, minStr] = defaultStart.split(':');
     const endHour = parseInt(hourStr) + 1;
     const endHourStr = endHour.toString().padStart(2, '0');
     setSlotEndTime(`${endHourStr}:${minStr}`);
