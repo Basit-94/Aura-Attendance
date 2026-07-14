@@ -178,6 +178,10 @@ export default function Home() {
   const [isOcrLoading, setIsOcrLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  
+  // Offline & PWA States
+  const [isOfflineSyncPending, setIsOfflineSyncPending] = useState(false);
+  const [isBrowserOffline, setIsBrowserOffline] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
   const [inFlightChecks, setInFlightChecks] = useState<Record<string, boolean>>({});
 
@@ -359,6 +363,111 @@ export default function Home() {
       console.error(err);
     }
   };
+
+  const addToOfflineQueue = (subjectId: string, status: string) => {
+    const todayStr = new Date().toISOString().split('T')[0];
+    const logItem = {
+      subjectId,
+      date: todayStr,
+      status,
+      timestamp: Date.now()
+    };
+    
+    const existingQueueStr = localStorage.getItem('aura_offline_logs');
+    let queue = existingQueueStr ? JSON.parse(existingQueueStr) : [];
+    
+    queue = queue.filter((item: any) => !(item.subjectId === subjectId && item.date === todayStr));
+    queue.push(logItem);
+    
+    localStorage.setItem('aura_offline_logs', JSON.stringify(queue));
+    setIsOfflineSyncPending(true);
+  };
+
+  const syncOfflineLogs = async () => {
+    const existingQueueStr = localStorage.getItem('aura_offline_logs');
+    if (!existingQueueStr) return;
+    
+    const queue = JSON.parse(existingQueueStr);
+    if (queue.length === 0) return;
+    
+    console.log(`[Offline Sync] Syncing ${queue.length} attendance logs...`);
+    const successfulIds: number[] = [];
+    
+    for (let i = 0; i < queue.length; i++) {
+      const item = queue[i];
+      try {
+        const res = await fetch('/api/attendance/log', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            subjectId: item.subjectId,
+            date: item.date,
+            status: item.status,
+          }),
+        });
+        
+        if (res.ok) {
+          successfulIds.push(item.timestamp);
+        }
+      } catch (err) {
+        console.warn('[Offline Sync] Sync failed for item:', item, err);
+        break;
+      }
+    }
+    
+    const remainingQueue = queue.filter((item: any) => !successfulIds.includes(item.timestamp));
+    if (remainingQueue.length > 0) {
+      localStorage.setItem('aura_offline_logs', JSON.stringify(remainingQueue));
+      setIsOfflineSyncPending(true);
+    } else {
+      localStorage.removeItem('aura_offline_logs');
+      setIsOfflineSyncPending(false);
+      fetchDashboardData();
+    }
+  };
+
+  // Register PWA service worker and initialize online/offline listeners
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator && window.location.hostname !== 'localhost') {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').then(
+          (registration) => {
+            console.log('ServiceWorker registration successful with scope: ', registration.scope);
+          },
+          (err) => {
+            console.log('ServiceWorker registration failed: ', err);
+          }
+        );
+      });
+    }
+
+    setIsBrowserOffline(!navigator.onLine);
+    
+    const existingQueueStr = localStorage.getItem('aura_offline_logs');
+    if (existingQueueStr && JSON.parse(existingQueueStr).length > 0) {
+      setIsOfflineSyncPending(true);
+      if (navigator.onLine) {
+        syncOfflineLogs();
+      }
+    }
+
+    const handleOnline = () => {
+      setIsBrowserOffline(false);
+      syncOfflineLogs();
+    };
+
+    const handleOffline = () => {
+      setIsBrowserOffline(true);
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   const fetchHistoryData = async () => {
     try {
@@ -575,9 +684,9 @@ export default function Home() {
         await fetchDashboardData();
       }
     } catch (err) {
-      console.error(err);
-      // Rollback on error
-      setSubjects(previousSubjects);
+      console.warn('[handleCheckIn] Network request failed. Saving check-in locally.', err);
+      addToOfflineQueue(subjectId, status);
+      setSuccess('Offline Mode: Attendance saved locally. We will sync it when connection returns.');
     } finally {
       setInFlightChecks((prev) => ({ ...prev, [subjectId]: false }));
     }
@@ -4260,6 +4369,43 @@ export default function Home() {
           </div>
         );
       })()}
+
+      {/* Offline Status indicator banner */}
+      {(isBrowserOffline || isOfflineSyncPending) && (
+        <div 
+          style={{
+            position: 'fixed',
+            bottom: '1.5rem',
+            right: '1.5rem',
+            background: isBrowserOffline ? 'rgba(239, 68, 68, 0.15)' : 'rgba(245, 158, 11, 0.15)',
+            backdropFilter: 'blur(12px)',
+            border: `1px solid ${isBrowserOffline ? 'var(--danger)' : 'var(--warning)'}`,
+            borderRadius: 'var(--border-radius-md)',
+            padding: '0.75rem 1.25rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.6rem',
+            zIndex: 9999,
+            color: 'var(--text-primary)',
+            fontSize: '0.85rem',
+            boxShadow: 'var(--shadow-main)',
+            animation: 'fadeIn 0.3s ease'
+          }}
+        >
+          <div style={{
+            width: '8px',
+            height: '8px',
+            borderRadius: '50%',
+            background: isBrowserOffline ? 'var(--danger)' : 'var(--warning)',
+            animation: 'pulse 1.5s infinite'
+          }} />
+          <span style={{ fontWeight: 500 }}>
+            {isBrowserOffline 
+              ? 'Working Offline (Saved logs will sync online)' 
+              : 'Syncing local logs...'}
+          </span>
+        </div>
+      )}
     </div>
   );
 }

@@ -6,6 +6,12 @@ import { Analytics } from '@vercel/analytics/react';
 export const metadata: Metadata = {
   title: 'AuraAttend | Premium Attendance Tracker',
   description: 'Smart attendance tracking and predictor advisor for students and teachers',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'AuraAttend',
+  },
 };
 
 export default function RootLayout({
