@@ -1748,44 +1748,28 @@ export default function Home() {
   };
 
   // Timetable Slot positioning helpers
-  const weekDaysOrdered = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'];
-  
-  const getDynamicDays = () => {
-    if (timetable.length === 0) {
-      return ['MONDAY', 'TUESDAY'];
-    }
-    const indices = timetable.map(slot => weekDaysOrdered.indexOf(slot.dayOfWeek.toUpperCase())).filter(idx => idx !== -1);
-    if (indices.length === 0) return ['MONDAY', 'TUESDAY'];
-    const minIdx = Math.min(...indices);
-    const maxIdx = Math.max(...indices);
-    
-    const daysToShow: string[] = [];
-    for (let i = minIdx; i <= maxIdx; i++) {
-      daysToShow.push(weekDaysOrdered[i]);
-    }
-    if (maxIdx < weekDaysOrdered.length - 1) {
-      daysToShow.push(weekDaysOrdered[maxIdx + 1]);
-    } else {
-      daysToShow.push('MONDAY');
-    }
-    return Array.from(new Set(daysToShow));
-  };
-  const DAYS = getDynamicDays();
+  const DAYS = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'];
 
   const getDynamicTimes = () => {
-    if (timetable.length === 0) {
-      return ['09:00', '10:00'];
+    let minHour = 9;
+    let maxHour = 9;
+    
+    if (timetable.length > 0) {
+      const hours = timetable.flatMap(slot => {
+        const startH = parseInt(slot.startTime.split(':')[0]);
+        const endH = parseInt(slot.endTime.split(':')[0]);
+        return [startH, endH];
+      });
+      minHour = Math.min(...hours);
+      maxHour = Math.max(...hours);
     }
-    const filledTimes = Array.from(new Set(timetable.map(slot => slot.startTime))).sort((a, b) => a.localeCompare(b));
-    if (filledTimes.length === 0) return ['09:00', '10:00'];
     
-    const lastTime = filledTimes[filledTimes.length - 1];
-    const [h, m] = lastTime.split(':').map(Number);
-    const nextH = (h + 1) % 24;
-    const pad = (num: number) => num.toString().padStart(2, '0');
-    const nextTime = `${pad(nextH)}:${pad(m)}`;
-    
-    return [...filledTimes, nextTime];
+    const timesList: string[] = [];
+    for (let h = minHour; h <= maxHour + 1; h++) {
+      const pad = (num: number) => num.toString().padStart(2, '0');
+      timesList.push(`${pad(h)}:00`);
+    }
+    return timesList;
   };
   const TIMES = getDynamicTimes();
   
