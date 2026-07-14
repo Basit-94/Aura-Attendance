@@ -25,6 +25,7 @@ import {
   Moon,
   Edit
 } from 'lucide-react';
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, ReferenceLine, CartesianGrid, Cell } from 'recharts';
 
 interface ScheduleSlot {
   id: string;
@@ -209,6 +210,12 @@ export default function Home() {
 
   // Multi-day Bunk Simulator state
   const [bunkProjectionDays, setBunkProjectionDays] = useState<number>(3);
+
+  // Tab State
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'timetable' | 'analytics'>('dashboard');
+
+  // Subject Filter State
+  const [subjectFilter, setSubjectFilter] = useState<'ALL' | 'LECTURE' | 'LAB'>('ALL');
 
   // Teacher Batch Mode states
   const [isBatchModeActive, setIsBatchModeActive] = useState(false);
@@ -829,7 +836,6 @@ export default function Home() {
         console.error(err);
       }
     }
-
     setIsLoading(false);
     setSuccess(`Logged attendance successfully for ${successCount} student(s). Failed for ${failCount} student(s).`);
   };
@@ -851,6 +857,347 @@ export default function Home() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const handleExportPDF = () => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      alert('Could not open print window. Please allow popups.');
+      return;
+    }
+
+    const allLogs: Array<{
+      date: string;
+      subjectName: string;
+      subjectType: 'LECTURE' | 'LAB';
+      status: 'PRESENT' | 'ABSENT' | 'HOLIDAY';
+    }> = [];
+
+    subjects.forEach((sub) => {
+      sub.logs?.forEach((log) => {
+        allLogs.push({
+          date: log.date.split('T')[0],
+          subjectName: sub.name,
+          subjectType: sub.type,
+          status: log.status
+        });
+      });
+    });
+
+    allLogs.sort((a, b) => b.date.localeCompare(a.date));
+
+    const overallStats = getOverallStats(subjects);
+    const lectureStats = getTypeStatsFull(subjects, 'LECTURE');
+    const labStats = getTypeStatsFull(subjects, 'LAB');
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>${activeSemesterName || 'Semester'} Attendance Report</title>
+          <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+            
+            :root {
+              --primary: #4f46e5;
+              --text-primary: #111827;
+              --text-secondary: #4b5563;
+              --border: #e5e7eb;
+              --success: #10b981;
+              --danger: #ef4444;
+              --warning: #f59e0b;
+              --bg-light: #f9fafb;
+            }
+
+            body {
+              font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+              color: var(--text-primary);
+              margin: 0;
+              padding: 40px;
+              background-color: #ffffff;
+              line-height: 1.5;
+            }
+
+            .header {
+              display: flex;
+              justify-content: space-between;
+              align-items: flex-start;
+              border-bottom: 2px solid var(--primary);
+              padding-bottom: 20px;
+              margin-bottom: 30px;
+            }
+
+            .header-left h1 {
+              margin: 0 0 5px 0;
+              font-size: 24px;
+              color: var(--primary);
+              font-weight: 700;
+            }
+
+            .header-left p {
+              margin: 0;
+              font-size: 14px;
+              color: var(--text-secondary);
+            }
+
+            .header-right {
+              text-align: right;
+            }
+
+            .header-right h2 {
+              margin: 0 0 5px 0;
+              font-size: 18px;
+              font-weight: 600;
+            }
+
+            .header-right p {
+              margin: 0;
+              font-size: 13px;
+              color: var(--text-secondary);
+            }
+
+            .stats-grid {
+              display: grid;
+              grid-template-columns: repeat(3, 1fr);
+              gap: 20px;
+              margin-bottom: 30px;
+            }
+
+            .stat-card {
+              border: 1px solid var(--border);
+              border-radius: 8px;
+              padding: 15px;
+              background-color: var(--bg-light);
+              text-align: center;
+            }
+
+            .stat-title {
+              font-size: 12px;
+              font-weight: 600;
+              text-transform: uppercase;
+              letter-spacing: 0.05em;
+              color: var(--text-secondary);
+              margin-bottom: 5px;
+            }
+
+            .stat-value {
+              font-size: 28px;
+              font-weight: 700;
+              color: var(--primary);
+            }
+
+            .stat-sub {
+              font-size: 12px;
+              color: var(--text-secondary);
+              margin-top: 5px;
+            }
+
+            h3 {
+              font-size: 16px;
+              font-weight: 600;
+              margin: 30px 0 15px 0;
+              border-bottom: 1px solid var(--border);
+              padding-bottom: 8px;
+              color: var(--primary);
+            }
+
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-bottom: 30px;
+              font-size: 13px;
+            }
+
+            th, td {
+              border: 1px solid var(--border);
+              padding: 10px 12px;
+              text-align: left;
+            }
+
+            th {
+              background-color: var(--bg-light);
+              font-weight: 600;
+              color: var(--text-secondary);
+            }
+
+            tr:nth-child(even) td {
+              background-color: #fcfcfc;
+            }
+
+            .status-badge {
+              display: inline-block;
+              padding: 2px 8px;
+              border-radius: 4px;
+              font-size: 11px;
+              font-weight: 600;
+              text-transform: uppercase;
+            }
+
+            .status-present {
+              background-color: rgba(16, 185, 129, 0.1);
+              color: var(--success);
+            }
+
+            .status-absent {
+              background-color: rgba(239, 68, 68, 0.1);
+              color: var(--danger);
+            }
+
+            .status-holiday {
+              background-color: rgba(245, 158, 11, 0.1);
+              color: var(--warning);
+            }
+
+            .pct-meets {
+              color: var(--success);
+              font-weight: 600;
+            }
+
+            .pct-critical {
+              color: var(--danger);
+              font-weight: 600;
+            }
+
+            .advice-text {
+              font-style: italic;
+              font-size: 12px;
+            }
+
+            .no-records {
+              text-align: center;
+              color: var(--text-secondary);
+              padding: 20px;
+              font-style: italic;
+            }
+
+            @media print {
+              body {
+                padding: 0;
+              }
+              .no-print {
+                display: none;
+              }
+              table {
+                page-break-inside: auto;
+              }
+              tr {
+                page-break-inside: avoid;
+                page-break-after: auto;
+              }
+              thead {
+                display: table-header-group;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div class="header-left">
+              <h1>AuraAttend Report</h1>
+              <p>Personal Attendance Summary</p>
+              ${currentUser ? `<p style="margin-top: 5px;">Student: <strong>${currentUser.email}</strong> (${currentUser.uniqueCode})</p>` : ''}
+            </div>
+            <div class="header-right">
+              <h2>${activeSemesterName || 'Active Term'}</h2>
+              <p>Generated: ${new Date().toLocaleDateString()}</p>
+            </div>
+          </div>
+
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-title">Overall Attendance</div>
+              <div class="stat-value" style="color: ${overallStats.percentage >= criteriaA ? 'var(--success)' : 'var(--danger)'}">
+                ${overallStats.percentage}%
+              </div>
+              <div class="stat-sub">${overallStats.present} of ${overallStats.total} classes</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-title">Lectures</div>
+              <div class="stat-value">${lectureStats.percentage}%</div>
+              <div class="stat-sub">${lectureStats.present} of ${lectureStats.total} classes</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-title">Labs</div>
+              <div class="stat-value">${labStats.percentage}%</div>
+              <div class="stat-sub">${labStats.present} of ${labStats.total} classes</div>
+            </div>
+          </div>
+
+          <h3>Subject-wise Attendance</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Subject Name</th>
+                <th>Type</th>
+                <th>Target</th>
+                <th>Attended</th>
+                <th>Absent</th>
+                <th>Holiday</th>
+                <th>Total</th>
+                <th>Percentage</th>
+                <th>Advice</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${subjects.map(sub => {
+                const meetsTarget = sub.stats.percentage >= sub.targetPercentage;
+                const advice = calculateAdvice(sub.stats.present, sub.stats.total, sub.targetPercentage);
+                return `
+                  <tr>
+                    <td><strong>${sub.name}</strong></td>
+                    <td>${sub.type}</td>
+                    <td>${sub.targetPercentage}%</td>
+                    <td>${sub.stats.present}</td>
+                    <td>${sub.stats.absent}</td>
+                    <td>${sub.stats.holiday}</td>
+                    <td>${sub.stats.total}</td>
+                    <td class="${meetsTarget ? 'pct-meets' : 'pct-critical'}">${sub.stats.percentage}%</td>
+                    <td class="advice-text" style="color: ${advice.status === 'safe' ? 'var(--success)' : advice.status === 'danger' ? 'var(--danger)' : 'var(--warning)'}">
+                      ${advice.text}
+                    </td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+
+          <h3>Chronological Attendance Log</h3>
+          ${allLogs.length === 0 ? `
+            <div class="no-records">No attendance logs registered in this term yet.</div>
+          ` : `
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Subject Name</th>
+                  <th>Type</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${allLogs.map(log => `
+                  <tr>
+                    <td>${log.date}</td>
+                    <td><strong>${log.subjectName}</strong></td>
+                    <td>${log.subjectType}</td>
+                    <td>
+                      <span class="status-badge status-${log.status.toLowerCase()}">${log.status}</span>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          `}
+
+          <div class="no-print" style="margin-top: 40px; text-align: center;">
+            <button onclick="window.print()" style="padding: 10px 20px; font-family: inherit; font-size: 14px; font-weight: 600; color: #ffffff; background-color: var(--primary); border: none; border-radius: 6px; cursor: pointer; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+              Print / Save PDF
+            </button>
+          </div>
+        </body>
+      </html>
+    `);
+    
+    printWindow.document.close();
   };
 
   // Manual Add Subject
@@ -2301,7 +2648,7 @@ export default function Home() {
           /* Render Active Dashboard */
           <>
             {/* Semester selector banner */}
-            <div className="glass-card flex-between" style={{ padding: '1rem 1.5rem' }}>
+            <div className="glass-card flex-between" style={{ padding: '1rem 1.5rem', marginBottom: '1.5rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                 <BookOpen size={20} className="text-primary" />
                 {isEditingSemesterName ? (
@@ -2341,11 +2688,11 @@ export default function Home() {
                 <button 
                   className="btn-outline" 
                   style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }} 
-                  onClick={handleExportCSV}
-                  title="Export all active semester logs to CSV"
+                  onClick={handleExportPDF}
+                  title="Export all active semester logs to PDF Report"
                 >
                   <FileText size={14} />
-                  <span>Export CSV</span>
+                  <span>Export PDF Report</span>
                 </button>
                 <button className="btn-outline" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }} onClick={() => setShowAddSemester(true)}>
                   New Semester
@@ -2353,752 +2700,1011 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Today's Schedule Checklist widget */}
-            {(() => {
-              const todayDayName = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'][new Date().getDay()];
-              const todaySlots = timetable
-                .filter((slot: any) => slot.dayOfWeek.toUpperCase() === todayDayName)
-                .sort((a: any, b: any) => a.startTime.localeCompare(b.startTime));
-              
-              if (todaySlots.length === 0) return null;
-
-              // Group slots by subjectId
-              const groupedTodaySlots: Record<string, typeof todaySlots> = {};
-              for (const slot of todaySlots) {
-                if (!groupedTodaySlots[slot.subjectId]) {
-                  groupedTodaySlots[slot.subjectId] = [];
-                }
-                groupedTodaySlots[slot.subjectId].push(slot);
-              }
-
-              const todayDateStr = new Date().toISOString().split('T')[0];
-
-              return (
-                <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1.5rem' }}>
-                  <div className="flex-between">
-                    <h3 style={{ fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <Calendar size={20} className="text-secondary" />
-                      <span>Today&apos;s Class Checklist ({new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })})</span>
-                    </h3>
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1rem' }}>
-                    {Object.keys(groupedTodaySlots).map((subjectId) => {
-                      const slots = groupedTodaySlots[subjectId];
-                      const matchingSubject = subjects.find((s: any) => s.id === subjectId);
-                      if (!matchingSubject) return null;
-
-                      const todayLog = matchingSubject.logs?.find(
-                        (log: any) => log.date.split('T')[0] === todayDateStr
-                      );
-
-                      // Display merged times if consecutive, otherwise list them
-                      const isConsecutive = slots.length > 1 && (() => {
-                        const toMin = (t: string) => {
-                          const [h, m] = t.split(':').map(Number);
-                          return h * 60 + m;
-                        };
-                        for (let i = 0; i < slots.length - 1; i++) {
-                          const currentEnd = toMin(slots[i].endTime);
-                          const nextStart = toMin(slots[i+1].startTime);
-                          if (nextStart - currentEnd > 30) return false;
-                        }
-                        return true;
-                      })();
-
-                      const timeDisplay = isConsecutive
-                        ? `${slots[0].startTime} - ${slots[slots.length - 1].endTime}`
-                        : slots.map((s: any) => `${s.startTime}-${s.endTime}`).join(', ');
-
-                      return (
-                        <div key={subjectId} className="glass-card" style={{ padding: '0.75rem 1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', background: 'rgba(255,255,255,0.01)', border: '1px solid var(--border-color)' }}>
-                          <div className="flex-between">
-                            <span style={{ fontWeight: 600, fontSize: '0.95rem' }}>{matchingSubject.name}</span>
-                            <span className={`subject-badge ${matchingSubject.type.toLowerCase()}`} style={{ scale: '0.85', transformOrigin: 'right center' }}>{matchingSubject.type}</span>
-                          </div>
-                          <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                            Time: <strong>{timeDisplay}</strong>
-                          </span>
-                          
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.35rem', marginTop: '0.25rem' }}>
-                            <button
-                              type="button"
-                              className={`check-btn check-btn-present ${todayLog?.status === 'PRESENT' ? 'active' : ''}`}
-                              style={{ padding: '0.35rem', fontSize: '0.75rem', opacity: inFlightChecks[matchingSubject.id] ? 0.5 : 1, cursor: inFlightChecks[matchingSubject.id] ? 'not-allowed' : 'pointer' }}
-                              disabled={inFlightChecks[matchingSubject.id]}
-                              onClick={() => handleCheckIn(matchingSubject.id, todayLog?.status === 'PRESENT' ? 'REMOVE' : 'PRESENT')}
-                            >
-                              Present
-                            </button>
-                            <button
-                              type="button"
-                              className={`check-btn check-btn-absent ${todayLog?.status === 'ABSENT' ? 'active' : ''}`}
-                              style={{ padding: '0.35rem', fontSize: '0.75rem', opacity: inFlightChecks[matchingSubject.id] ? 0.5 : 1, cursor: inFlightChecks[matchingSubject.id] ? 'not-allowed' : 'pointer' }}
-                              disabled={inFlightChecks[matchingSubject.id]}
-                              onClick={() => handleCheckIn(matchingSubject.id, todayLog?.status === 'ABSENT' ? 'REMOVE' : 'ABSENT')}
-                            >
-                              Absent
-                            </button>
-                            <button
-                              type="button"
-                              className={`check-btn check-btn-holiday ${todayLog?.status === 'HOLIDAY' ? 'active' : ''}`}
-                              style={{ padding: '0.35rem', fontSize: '0.75rem', opacity: inFlightChecks[matchingSubject.id] ? 0.5 : 1, cursor: inFlightChecks[matchingSubject.id] ? 'not-allowed' : 'pointer' }}
-                              disabled={inFlightChecks[matchingSubject.id]}
-                              onClick={() => handleCheckIn(matchingSubject.id, todayLog?.status === 'HOLIDAY' ? 'REMOVE' : 'HOLIDAY')}
-                            >
-                              Holiday
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })()}
-
-            {/* Top Widgets Grid */}
-            <div className="widgets-grid">
-              {/* Widget 1: Overall combined */}
-              <div className="glass-card progress-widget" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '1rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div className="progress-widget-info">
-                    <span className="progress-widget-title">Overall Attendance</span>
-                    <span className="progress-widget-value">{overall.percentage}%</span>
-                    <span className="progress-widget-sub">{overall.present} of {overall.total} classes attended</span>
-                  </div>
-                  <div className="circle-progress-wrapper">
-                    <svg width="90" height="90">
-                      <circle cx="45" cy="45" r="38" className="circle-progress-bg" />
-                      <circle
-                        cx="45" cy="45" r="38"
-                        className="circle-progress-fg"
-                        style={{
-                          strokeDasharray: 238,
-                          strokeDashoffset: 238 - (238 * overall.percentage) / 100,
-                          stroke: 'var(--primary)'
-                        }}
-                      />
-                    </svg>
-                    <div className="circle-progress-text">{Math.round(overall.percentage)}%</div>
-                  </div>
-                </div>
-                <div className="widget-advice-box">
-                  <div className="widget-advice-item">
-                    <span className="widget-advice-label">{criteriaA}% Goal:</span>
-                    <span className={`widget-advice-value ${calculateAdvice(overall.present, overall.total, criteriaA).status}`}>
-                      {calculateAdvice(overall.present, overall.total, criteriaA).text}
-                    </span>
-                  </div>
-                  <div className="widget-advice-item">
-                    <span className="widget-advice-label">{criteriaB}% Goal:</span>
-                    <span className={`widget-advice-value ${calculateAdvice(overall.present, overall.total, criteriaB).status}`}>
-                      {calculateAdvice(overall.present, overall.total, criteriaB).text}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Widget 2: Lecture averages */}
-              <div className="glass-card linear-widget" style={{ justifyContent: 'space-between' }}>
-                <div>
-                  <div className="linear-widget-header">
-                    <span className="progress-widget-title">Lecture Aggregate</span>
-                    <span style={{ fontSize: '1.2rem', fontWeight: 700 }}>{lectureAvg}%</span>
-                  </div>
-                  <div className="linear-bar-bg">
-                    <div
-                      className="linear-bar-fg"
-                      style={{ width: `${lectureAvg}%`, background: 'linear-gradient(90deg, var(--primary), var(--secondary))' }}
-                    />
-                  </div>
-                  <span className="progress-widget-sub">{lectureStats.present} of {lectureStats.total} lecture hours attended</span>
-                </div>
-                <div className="widget-advice-box">
-                  <div className="widget-advice-item">
-                    <span className="widget-advice-label">{criteriaA}% Goal:</span>
-                    <span className={`widget-advice-value ${calculateAdvice(lectureStats.present, lectureStats.total, criteriaA).status}`}>
-                      {calculateAdvice(lectureStats.present, lectureStats.total, criteriaA).text}
-                    </span>
-                  </div>
-                  <div className="widget-advice-item">
-                    <span className="widget-advice-label">{criteriaB}% Goal:</span>
-                    <span className={`widget-advice-value ${calculateAdvice(lectureStats.present, lectureStats.total, criteriaB).status}`}>
-                      {calculateAdvice(lectureStats.present, lectureStats.total, criteriaB).text}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Widget 3: Lab averages */}
-              <div className="glass-card linear-widget" style={{ justifyContent: 'space-between' }}>
-                <div>
-                  <div className="linear-widget-header">
-                    <span className="progress-widget-title">Lab Aggregate</span>
-                    <span style={{ fontSize: '1.2rem', fontWeight: 700 }}>{labAvg}%</span>
-                  </div>
-                  <div className="linear-bar-bg">
-                    <div
-                      className="linear-bar-fg"
-                      style={{ width: `${labAvg}%`, background: 'var(--secondary)' }}
-                    />
-                  </div>
-                  <span className="progress-widget-sub">{labStats.present} of {labStats.total} lab sessions attended</span>
-                </div>
-                <div className="widget-advice-box">
-                  <div className="widget-advice-item">
-                    <span className="widget-advice-label">{criteriaA}% Goal:</span>
-                    <span className={`widget-advice-value ${calculateAdvice(labStats.present, labStats.total, criteriaA).status}`}>
-                      {calculateAdvice(labStats.present, labStats.total, criteriaA).text}
-                    </span>
-                  </div>
-                  <div className="widget-advice-item">
-                    <span className="widget-advice-label">{criteriaB}% Goal:</span>
-                    <span className={`widget-advice-value ${calculateAdvice(labStats.present, labStats.total, criteriaB).status}`}>
-                      {calculateAdvice(labStats.present, labStats.total, criteriaB).text}
-                    </span>
-                  </div>
-                </div>
-              </div>
+            {/* Navigation Tabs Bar */}
+            <div className="glass-card" style={{ display: 'flex', gap: '0.5rem', padding: '0.5rem', marginBottom: '1.5rem', borderRadius: 'var(--border-radius-md)', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                className={`tab-btn ${activeTab === 'dashboard' ? 'active' : ''}`}
+                onClick={() => setActiveTab('dashboard')}
+                style={{
+                  flex: 1,
+                  minWidth: '120px',
+                  padding: '0.75rem 1rem',
+                  fontSize: '0.9rem',
+                  fontWeight: 600,
+                  borderRadius: 'var(--border-radius-sm)',
+                  border: 'none',
+                  background: activeTab === 'dashboard' ? 'var(--primary-glow)' : 'transparent',
+                  color: activeTab === 'dashboard' ? 'var(--text-primary)' : 'var(--text-secondary)',
+                  cursor: 'pointer',
+                  transition: 'var(--transition-smooth)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem'
+                }}
+              >
+                <BookOpen size={16} />
+                <span>Dashboard</span>
+              </button>
+              <button
+                type="button"
+                className={`tab-btn ${activeTab === 'timetable' ? 'active' : ''}`}
+                onClick={() => setActiveTab('timetable')}
+                style={{
+                  flex: 1,
+                  minWidth: '120px',
+                  padding: '0.75rem 1rem',
+                  fontSize: '0.9rem',
+                  fontWeight: 600,
+                  borderRadius: 'var(--border-radius-sm)',
+                  border: 'none',
+                  background: activeTab === 'timetable' ? 'var(--primary-glow)' : 'transparent',
+                  color: activeTab === 'timetable' ? 'var(--text-primary)' : 'var(--text-secondary)',
+                  cursor: 'pointer',
+                  transition: 'var(--transition-smooth)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem'
+                }}
+              >
+                <Calendar size={16} />
+                <span>Weekly Schedule</span>
+              </button>
+              <button
+                type="button"
+                className={`tab-btn ${activeTab === 'analytics' ? 'active' : ''}`}
+                onClick={() => setActiveTab('analytics')}
+                style={{
+                  flex: 1,
+                  minWidth: '120px',
+                  padding: '0.75rem 1rem',
+                  fontSize: '0.9rem',
+                  fontWeight: 600,
+                  borderRadius: 'var(--border-radius-sm)',
+                  border: 'none',
+                  background: activeTab === 'analytics' ? 'var(--primary-glow)' : 'transparent',
+                  color: activeTab === 'analytics' ? 'var(--text-primary)' : 'var(--text-secondary)',
+                  cursor: 'pointer',
+                  transition: 'var(--transition-smooth)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem'
+                }}
+              >
+                <TrendingUp size={16} />
+                <span>Analytics & Predictors</span>
+              </button>
             </div>
 
-            {/* Split section: Advisor & Bunk Planner */}
-            <div className="dashboard-main-split">
-               {/* Timetable Grid Card */}
-              <div className="glass-card timetable-card">
-                <div className="timetable-header-row" style={{ flexWrap: 'wrap', gap: '0.5rem' }}>
-                  <h3 style={{ fontSize: '1.4rem' }}>Timetable Schedule</h3>
-                  
-                  <div className="timetable-controls" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginLeft: 'auto', flexWrap: 'wrap' }}>
-                    {timetableShareCode && (
-                      <div 
-                        className="share-code-pill" 
-                        onClick={copyShareCodeToClipboard}
-                        title="Click to copy your timetable share code to clipboard"
-                        style={{ 
-                          cursor: 'pointer', 
-                          display: 'flex', 
-                          alignItems: 'center', 
-                          gap: '0.35rem', 
-                          fontSize: '0.8rem', 
-                          padding: '0.4rem 0.65rem', 
-                          background: 'rgba(99, 102, 241, 0.08)', 
-                          border: '1px solid rgba(99, 102, 241, 0.15)', 
-                          borderRadius: 'var(--border-radius-sm)', 
-                          color: 'var(--primary)',
-                          fontWeight: 'bold',
-                          transition: 'var(--transition-smooth)'
-                        }}
-                      >
-                        <span>Share Code: <strong>{timetableShareCode}</strong></span>
-                        {copiedShareCode ? <Check size={12} /> : <Copy size={12} />}
-                      </div>
-                    )}
-
-                    <button className="btn-outline" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={() => setShowImportCodeModal(true)}>
-                      <Copy size={14} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
-                      Import Friend&apos;s Code
-                    </button>
-
-                    <input
-                      type="text"
-                      placeholder="Branch/Sec (e.g. cseI)"
-                      value={uploadFilter}
-                      onChange={(e) => setUploadFilter(e.target.value)}
-                      className="form-input"
-                      style={{
-                        width: '150px',
-                        padding: '0.4rem 0.75rem',
-                        fontSize: '0.8rem',
-                        background: 'rgba(255,255,255,0.03)',
-                        border: '1px solid var(--border-color)',
-                        borderRadius: 'var(--border-radius-sm)',
-                        color: 'var(--text-primary)'
-                      }}
-                    />
-
-                    <input
-                      type="text"
-                      placeholder="Lab Group (e.g. Grp A)"
-                      value={labGroupFilter}
-                      onChange={(e) => setLabGroupFilter(e.target.value)}
-                      className="form-input"
-                      style={{
-                        width: '150px',
-                        padding: '0.4rem 0.75rem',
-                        fontSize: '0.8rem',
-                        background: 'rgba(255,255,255,0.03)',
-                        border: '1px solid var(--border-color)',
-                        borderRadius: 'var(--border-radius-sm)',
-                        color: 'var(--text-primary)'
-                      }}
-                    />
-
-                    <button className="btn-outline" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={() => fileInputRef.current?.click()}>
-                      <Upload size={14} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
-                      Upload Image/PDF Timetable
-                    </button>
-
-                    <button className="btn-outline" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={handleManualTimetableEdit}>
-                      <Edit size={14} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
-                      Enter Manually
-                    </button>
-                  </div>
-
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    className="file-input-hidden"
-                    accept="image/*,application/pdf"
-                    onChange={handleTimetableUpload}
-                  />
+            {/* Beautiful Toast Error/Success Banners for active student view */}
+            {error && (
+              <div className="toast toast-error" style={{ marginBottom: '1.5rem' }}>
+                <AlertCircle className="toast-icon" size={18} />
+                <div>
+                  <strong>Configuration Error:</strong> {error}
                 </div>
+              </div>
+            )}
+            {success && (
+              <div className="toast toast-success" style={{ marginBottom: '1.5rem' }}>
+                <Check className="toast-icon" size={18} />
+                <div>
+                  <strong>Operation Successful:</strong> {success}
+                </div>
+              </div>
+            )}
 
-                 {isOcrLoading ? (
-                  <div className="scanning-container" style={{ position: 'relative', overflow: 'hidden', padding: '3rem 2rem', background: 'rgba(255,255,255,0.01)', borderRadius: 'var(--border-radius-md)', border: '1px dashed var(--border-color)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
-                    <div className="scanning-line" style={{ position: 'absolute', left: 0, right: 0, height: '4px', background: 'linear-gradient(90deg, transparent, var(--secondary), transparent)', top: 0, animation: 'scan 2s linear infinite', boxShadow: '0 0 12px var(--secondary)' }} />
-                    <div style={{ display: 'inline-flex', position: 'relative', padding: '1rem', background: 'rgba(99, 102, 241, 0.08)', borderRadius: '50%', color: 'var(--primary)', animation: 'pulse 1.5s infinite alternate' }}>
-                      <Calendar size={36} />
+            {/* TAB CONTENT 1: DASHBOARD */}
+            {activeTab === 'dashboard' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                
+                {/* Top Widgets Grid */}
+                <div className="widgets-grid" style={{ marginBottom: 0 }}>
+                  {/* Widget 1: Overall combined */}
+                  <div className="glass-card progress-widget" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '1rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div className="progress-widget-info">
+                        <span className="progress-widget-title">Overall Attendance</span>
+                        <span className="progress-widget-value">{overall.percentage}%</span>
+                        <span className="progress-widget-sub">{overall.present} of {overall.total} classes attended</span>
+                      </div>
+                      <div className="circle-progress-wrapper">
+                        <svg width="90" height="90">
+                          <circle cx="45" cy="45" r="38" className="circle-progress-bg" />
+                          <circle
+                            cx="45" cy="45" r="38"
+                            className="circle-progress-fg"
+                            style={{
+                              strokeDasharray: 238,
+                              strokeDashoffset: 238 - (238 * overall.percentage) / 100,
+                              stroke: 'var(--primary)'
+                            }}
+                          />
+                        </svg>
+                        <div className="circle-progress-text">{Math.round(overall.percentage)}%</div>
+                      </div>
                     </div>
-                    <h4 style={{ fontSize: '1.2rem', fontWeight: 600, background: 'linear-gradient(135deg, var(--text-primary), var(--secondary))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                      {pendingTimetableFile ? "Importing Schedule Slots..." : "AI Vision Scanner Active..."}
-                    </h4>
-                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', maxWidth: '320px', margin: '0 auto', lineHeight: 1.5, textAlign: 'center' }}>
-                      {pendingTimetableFile 
-                        ? `Extracting slots for stream "${selectedStream}" and group "${selectedGroup}"...`
-                        : "Pre-scanning routine layout for streams, branches, and lab groups..."}
-                    </p>
-                  </div>
-                ) : timetable.length === 0 ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                    <div className="upload-zone" onClick={() => fileInputRef.current?.click()}>
-                      <Calendar size={42} />
-                      <div>
-                        <h4>No timetable schedule defined yet</h4>
-                        <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '0.25rem' }}>
-                          Drag and drop your class timetable image/PDF here, or click to upload.
-                        </p>
-                        <span style={{ color: 'var(--secondary)', fontSize: '0.8rem', display: 'block', marginTop: '0.5rem' }}>
-                          *AuraAttend Neural Vision Scanner Active
+                    <div className="widget-advice-box">
+                      <div className="widget-advice-item">
+                        <span className="widget-advice-label">{criteriaA}% Goal:</span>
+                        <span className={`widget-advice-value ${calculateAdvice(overall.present, overall.total, criteriaA).status}`}>
+                          {calculateAdvice(overall.present, overall.total, criteriaA).text}
+                        </span>
+                      </div>
+                      <div className="widget-advice-item">
+                        <span className="widget-advice-label">{criteriaB}% Goal:</span>
+                        <span className={`widget-advice-value ${calculateAdvice(overall.present, overall.total, criteriaB).status}`}>
+                          {calculateAdvice(overall.present, overall.total, criteriaB).text}
                         </span>
                       </div>
                     </div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem', color: 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: 'bold', letterSpacing: '0.05em' }}>
-                      <div style={{ flex: 1, height: '1px', background: 'var(--border-color)' }} />
-                      <span>OR USE FRIEND&apos;S CODE</span>
-                      <div style={{ flex: 1, height: '1px', background: 'var(--border-color)' }} />
-                    </div>
-
-                    <form onSubmit={handleImportFriendTimetable} className="glass-card" style={{ padding: '1rem', display: 'flex', gap: '0.5rem', background: 'rgba(255,255,255,0.01)', border: '1px dashed var(--border-color)', margin: 0 }}>
-                      <input
-                        type="text"
-                        className="form-input"
-                        placeholder="Paste Friend's Alphanumeric Code (e.g. 4A2E5D9C)"
-                        value={friendShareCodeInput}
-                        onChange={(e) => setFriendShareCodeInput(e.target.value)}
-                        style={{ flex: 1, padding: '0.5rem 0.75rem', fontSize: '0.85rem' }}
-                        required
-                      />
-                      <button type="submit" className="btn-primary" style={{ width: 'auto', padding: '0 1rem', fontSize: '0.85rem', whiteSpace: 'nowrap' }}>
-                        Load Routine
-                      </button>
-                    </form>
                   </div>
-                ) : (
-                  <div className="timetable-grid-wrapper">
-                    <div className="timetable-grid">
-                      {/* Blank top left cell */}
-                      <div className="grid-cell grid-header-cell" style={{ minHeight: '40px' }}>Time</div>
-                      {DAYS.map((day) => (
-                        <div key={day} className="grid-cell grid-header-cell" style={{ minHeight: '40px' }}>
-                          {day.substring(0, 3)}
-                        </div>
-                      ))}
 
-                      {TIMES.map((time: any) => (
-                        <Fragment key={time}>
-                          <div className="grid-cell grid-time-cell">{time}</div>
-                          {DAYS.map((day: any) => {
-                            const slot = getTimetableSlot(day, time);
-                            return (
-                              <div 
-                                key={`${day}-${time}`} 
-                                className={`grid-cell ${!slot ? 'clickable-grid-cell' : ''}`}
-                                onClick={() => !slot && handleEmptyCellClick(day, time)}
-                              >
-                                {slot ? (
-                                  <div className={`slot-item ${slot.type.toLowerCase()}`} style={{ position: 'relative', paddingRight: '1.75rem' }}>
-                                    <div className="slot-name" title={slot.subjectName}>{slot.subjectName}</div>
-                                    <div className="slot-time">{slot.startTime}-{slot.endTime}</div>
-                                    <button
-                                      type="button"
-                                      title="Delete Slot"
-                                      className="delete-slot-btn"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleDeleteSlot(slot.id);
-                                      }}
-                                    >
-                                      <Trash size={12} />
-                                    </button>
-                                  </div>
-                                ) : null}
-                              </div>
-                            );
-                          })}
-                        </Fragment>
-                      ))}
+                  {/* Widget 2: Lecture averages */}
+                  <div className="glass-card linear-widget" style={{ justifyContent: 'space-between' }}>
+                    <div>
+                      <div className="linear-widget-header">
+                        <span className="progress-widget-title">Lecture Aggregate</span>
+                        <span style={{ fontSize: '1.2rem', fontWeight: 700 }}>{lectureAvg}%</span>
+                      </div>
+                      <div className="linear-bar-bg">
+                        <div
+                          className="linear-bar-fg"
+                          style={{ width: `${lectureAvg}%`, background: 'linear-gradient(90deg, var(--primary), var(--secondary))' }}
+                        />
+                      </div>
+                      <span className="progress-widget-sub">{lectureStats.present} of {lectureStats.total} lecture hours attended</span>
+                    </div>
+                    <div className="widget-advice-box">
+                      <div className="widget-advice-item">
+                        <span className="widget-advice-label">{criteriaA}% Goal:</span>
+                        <span className={`widget-advice-value ${calculateAdvice(lectureStats.present, lectureStats.total, criteriaA).status}`}>
+                          {calculateAdvice(lectureStats.present, lectureStats.total, criteriaA).text}
+                        </span>
+                      </div>
+                      <div className="widget-advice-item">
+                        <span className="widget-advice-label">{criteriaB}% Goal:</span>
+                        <span className={`widget-advice-value ${calculateAdvice(lectureStats.present, lectureStats.total, criteriaB).status}`}>
+                          {calculateAdvice(lectureStats.present, lectureStats.total, criteriaB).text}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                )}
-              </div>
 
-              {/* Right panel: Advisor & Predictor */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                {/* Skip Advisor Card */}
-                <div className="glass-card advisor-card">
-                  <h3 style={{ fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <ShieldCheck size={20} className="text-secondary" />
-                    <span>Skip-Day Advisor</span>
-                  </h3>
-                  
-                  <div className={`advisor-status ${advisor.status}`}>
-                    <AlertCircle size={24} style={{ flexShrink: 0 }} />
-                    <div className="advisor-text">
-                      <h4>{advisor.title}</h4>
-                      <p>{advisor.description}</p>
+                  {/* Widget 3: Lab averages */}
+                  <div className="glass-card linear-widget" style={{ justifyContent: 'space-between' }}>
+                    <div>
+                      <div className="linear-widget-header">
+                        <span className="progress-widget-title">Lab Aggregate</span>
+                        <span style={{ fontSize: '1.2rem', fontWeight: 700 }}>{labAvg}%</span>
+                      </div>
+                      <div className="linear-bar-bg">
+                        <div
+                          className="linear-bar-fg"
+                          style={{ width: `${labAvg}%`, background: 'var(--secondary)' }}
+                        />
+                      </div>
+                      <span className="progress-widget-sub">{labStats.present} of {labStats.total} lab sessions attended</span>
+                    </div>
+                    <div className="widget-advice-box">
+                      <div className="widget-advice-item">
+                        <span className="widget-advice-label">{criteriaA}% Goal:</span>
+                        <span className={`widget-advice-value ${calculateAdvice(labStats.present, labStats.total, criteriaA).status}`}>
+                          {calculateAdvice(labStats.present, labStats.total, criteriaA).text}
+                        </span>
+                      </div>
+                      <div className="widget-advice-item">
+                        <span className="widget-advice-label">{criteriaB}% Goal:</span>
+                        <span className={`widget-advice-value ${calculateAdvice(labStats.present, labStats.total, criteriaB).status}`}>
+                          {calculateAdvice(labStats.present, labStats.total, criteriaB).text}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Bunk Predictor Slider Widget */}
-                <div className="glass-card planner-widget">
-                  <h3 style={{ fontSize: '1.25rem' }}>Bunk Planner Predictor</h3>
+                {/* Today's Checklist Widget */}
+                {(() => {
+                  const todayDayName = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'][new Date().getDay()];
+                  const todaySlots = timetable
+                    .filter((slot) => slot.dayOfWeek.toUpperCase() === todayDayName)
+                    .sort((a, b) => a.startTime.localeCompare(b.startTime));
                   
-                  {subjects.length === 0 ? (
-                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Add subjects to plan attendances.</p>
-                  ) : (
-                    <>
-                      <div className="form-group" style={{ marginBottom: 0 }}>
-                        <label className="form-label">Plan Subject</label>
-                        <select
-                          className="planner-select"
-                          value={selectedSubjectId}
-                          onChange={(e) => {
-                            setSelectedSubjectId(e.target.value);
-                            setBunkCount(0);
-                          }}
-                        >
-                          {subjects.map((sub) => (
-                            <option key={sub.id} value={sub.id}>
-                              {sub.name} ({sub.type})
-                            </option>
-                          ))}
-                        </select>
-                      </div>
+                  if (todaySlots.length === 0) return null;
 
-                      <div className="slider-container">
-                        <div className="slider-labels">
-                          <span>Actions:</span>
-                          <span className="slider-value-glowing">
-                            {bunkCount === 0
-                              ? 'No change'
-                              : bunkCount > 0
-                              ? `Attend next ${bunkCount} classes`
-                              : `Skip next ${Math.abs(bunkCount)} classes`}
-                          </span>
-                        </div>
-                        <input
-                          type="range"
-                          className="custom-range-input"
-                          min="-10"
-                          max="10"
-                          step="1"
-                          value={bunkCount}
-                          onChange={(e) => setBunkCount(parseInt(e.target.value))}
-                        />
-                      </div>
+                  // Group slots by subjectId
+                  const groupedTodaySlots: Record<string, ScheduleSlot[]> = {};
+                  for (const slot of todaySlots) {
+                    if (!groupedTodaySlots[slot.subjectId]) {
+                      groupedTodaySlots[slot.subjectId] = [];
+                    }
+                    groupedTodaySlots[slot.subjectId].push(slot);
+                  }
 
-                      <div className="planner-results">
-                        <div>
-                          <div className="result-stat-label">Predicted %</div>
-                          <div className="result-stat-value" style={{ color: predictor.meetsTarget ? 'var(--success)' : 'var(--danger)' }}>
-                            {predictor.newPercentage}%
-                          </div>
-                        </div>
-                        <div>
-                          <div className="result-stat-label">Target Goal</div>
-                          <div className="result-stat-value">
-                            {subjects.find((s) => s.id === selectedSubjectId)?.targetPercentage}%
-                          </div>
-                        </div>
-                        <p style={{ gridColumn: '1 / -1', fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>
-                          {predictor.statusText}
-                        </p>
-                      </div>
-                    </>
-                  )}
-                </div>
+                  const todayDateStr = new Date().toISOString().split('T')[0];
 
-                {/* Multi-Day Bunk Simulator Card */}
-                <div className="glass-card planner-widget">
-                  <h3 style={{ fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <TrendingUp size={20} className="text-primary" />
-                    <span>Multi-Day Bunk Simulator</span>
-                  </h3>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '0.25rem' }}>
-                    Simulate skipping the next N consecutive calendar days.
-                  </p>
-                  
-                  {timetable.length === 0 ? (
-                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '0.75rem' }}>
-                      Please upload a timetable to simulate multi-day skipping.
-                    </p>
-                  ) : (
-                    <>
-                      <div className="slider-container" style={{ marginTop: '1rem' }}>
-                        <div className="slider-labels">
-                          <span>Skip Consecutive Days:</span>
-                          <span className="slider-value-glowing">{bunkProjectionDays} Days</span>
-                        </div>
-                        <input
-                          type="range"
-                          className="custom-range-input"
-                          min="1"
-                          max="14"
-                          step="1"
-                          value={bunkProjectionDays}
-                          onChange={(e) => setBunkProjectionDays(parseInt(e.target.value))}
-                        />
+                  return (
+                    <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                      <div className="flex-between">
+                        <h3 style={{ fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <Calendar size={20} className="text-secondary" />
+                          <span>Today&apos;s Class Checklist ({new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })})</span>
+                        </h3>
                       </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1rem' }}>
+                        {Object.keys(groupedTodaySlots).map((subjectId) => {
+                          const slots = groupedTodaySlots[subjectId];
+                          const matchingSubject = subjects.find((s) => s.id === subjectId);
+                          if (!matchingSubject) return null;
 
-                      <div className="planner-results" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '180px', overflowY: 'auto', padding: '0.5rem' }}>
-                        {subjects.map(sub => {
-                          const projectedAbsents = getProjectedMissCount(sub.id, bunkProjectionDays);
-                          const newTotal = sub.stats.total + projectedAbsents;
-                          const newPct = newTotal > 0 ? Math.round((sub.stats.present / newTotal) * 1000) / 10 : 100;
-                          const meetsTarget = newPct >= sub.targetPercentage;
-                          
-                          if (projectedAbsents === 0) return null;
+                          const todayLog = matchingSubject.logs?.find(
+                            (log) => log.date.split('T')[0] === todayDateStr
+                          );
+
+                          // Display merged times if consecutive, otherwise list them
+                          const isConsecutive = slots.length > 1 && (() => {
+                            const toMin = (t: string) => {
+                              const [h, m] = t.split(':').map(Number);
+                              return h * 60 + m;
+                            };
+                            for (let i = 0; i < slots.length - 1; i++) {
+                              const currentEnd = toMin(slots[i].endTime);
+                              const nextStart = toMin(slots[i+1].startTime);
+                              if (nextStart - currentEnd > 30) return false;
+                            }
+                            return true;
+                          })();
+
+                          const timeDisplay = isConsecutive
+                            ? `${slots[0].startTime} - ${slots[slots.length - 1].endTime}`
+                            : slots.map((s) => `${s.startTime}-${s.endTime}`).join(', ');
 
                           return (
-                            <div key={sub.id} className="flex-between" style={{ padding: '0.35rem 0.5rem', borderBottom: '1px solid var(--border-color)', fontSize: '0.85rem' }}>
-                              <span>{sub.name} <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>({projectedAbsents} missed)</span></span>
-                              <span style={{ fontWeight: 700, color: meetsTarget ? 'var(--success)' : 'var(--danger)' }}>
-                                {sub.stats.percentage}% → {newPct}%
+                            <div key={subjectId} className="glass-card" style={{ padding: '0.75rem 1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', background: 'rgba(255,255,255,0.01)', border: '1px solid var(--border-color)' }}>
+                              <div className="flex-between">
+                                <span style={{ fontWeight: 600, fontSize: '0.95rem' }}>{matchingSubject.name}</span>
+                                <span className={`subject-badge ${matchingSubject.type.toLowerCase()}`} style={{ scale: '0.85', transformOrigin: 'right center' }}>{matchingSubject.type}</span>
+                              </div>
+                              <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                                Time: <strong>{timeDisplay}</strong>
                               </span>
+                              
+                              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.35rem', marginTop: '0.25rem' }}>
+                                <button
+                                  type="button"
+                                  className={`check-btn check-btn-present ${todayLog?.status === 'PRESENT' ? 'active' : ''}`}
+                                  style={{ padding: '0.35rem', fontSize: '0.75rem', opacity: inFlightChecks[matchingSubject.id] ? 0.5 : 1, cursor: inFlightChecks[matchingSubject.id] ? 'not-allowed' : 'pointer' }}
+                                  disabled={inFlightChecks[matchingSubject.id]}
+                                  onClick={() => handleCheckIn(matchingSubject.id, todayLog?.status === 'PRESENT' ? 'REMOVE' : 'PRESENT')}
+                                >
+                                  Present
+                                </button>
+                                <button
+                                  type="button"
+                                  className={`check-btn check-btn-absent ${todayLog?.status === 'ABSENT' ? 'active' : ''}`}
+                                  style={{ padding: '0.35rem', fontSize: '0.75rem', opacity: inFlightChecks[matchingSubject.id] ? 0.5 : 1, cursor: inFlightChecks[matchingSubject.id] ? 'not-allowed' : 'pointer' }}
+                                  disabled={inFlightChecks[matchingSubject.id]}
+                                  onClick={() => handleCheckIn(matchingSubject.id, todayLog?.status === 'ABSENT' ? 'REMOVE' : 'ABSENT')}
+                                >
+                                  Absent
+                                </button>
+                                <button
+                                  type="button"
+                                  className={`check-btn check-btn-holiday ${todayLog?.status === 'HOLIDAY' ? 'active' : ''}`}
+                                  style={{ padding: '0.35rem', fontSize: '0.75rem', opacity: inFlightChecks[matchingSubject.id] ? 0.5 : 1, cursor: inFlightChecks[matchingSubject.id] ? 'not-allowed' : 'pointer' }}
+                                  disabled={inFlightChecks[matchingSubject.id]}
+                                  onClick={() => handleCheckIn(matchingSubject.id, todayLog?.status === 'HOLIDAY' ? 'REMOVE' : 'HOLIDAY')}
+                                >
+                                  Holiday
+                                </button>
+                              </div>
                             </div>
                           );
                         })}
-                        {subjects.every(sub => getProjectedMissCount(sub.id, bunkProjectionDays) === 0) && (
-                          <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', textAlign: 'center' }}>No classes scheduled for the selected duration.</p>
-                        )}
                       </div>
-                    </>
+                    </div>
+                  );
+                })()}
+
+                {/* Subjects Grid & Quick Actions */}
+                <div>
+                  <div className="subjects-section-header" style={{ flexWrap: 'wrap', gap: '1rem' }}>
+                    <h3 style={{ fontSize: '1.6rem' }}>Subject Check-Ins</h3>
+                    
+                    {/* Responsive Filter Buttons */}
+                    <div style={{ display: 'flex', gap: '0.25rem', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', padding: '0.25rem', borderRadius: 'var(--border-radius-md)' }}>
+                      <button
+                        type="button"
+                        onClick={() => setSubjectFilter('ALL')}
+                        style={{
+                          padding: '0.35rem 0.75rem',
+                          fontSize: '0.8rem',
+                          fontWeight: 600,
+                          border: 'none',
+                          background: subjectFilter === 'ALL' ? 'var(--primary)' : 'transparent',
+                          color: subjectFilter === 'ALL' ? '#fff' : 'var(--text-secondary)',
+                          borderRadius: 'var(--border-radius-sm)',
+                          cursor: 'pointer',
+                          transition: 'var(--transition-smooth)'
+                        }}
+                      >
+                        All
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSubjectFilter('LECTURE')}
+                        style={{
+                          padding: '0.35rem 0.75rem',
+                          fontSize: '0.8rem',
+                          fontWeight: 600,
+                          border: 'none',
+                          background: subjectFilter === 'LECTURE' ? 'var(--primary)' : 'transparent',
+                          color: subjectFilter === 'LECTURE' ? '#fff' : 'var(--text-secondary)',
+                          borderRadius: 'var(--border-radius-sm)',
+                          cursor: 'pointer',
+                          transition: 'var(--transition-smooth)'
+                        }}
+                      >
+                        Lectures
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSubjectFilter('LAB')}
+                        style={{
+                          padding: '0.35rem 0.75rem',
+                          fontSize: '0.8rem',
+                          fontWeight: 600,
+                          border: 'none',
+                          background: subjectFilter === 'LAB' ? 'var(--primary)' : 'transparent',
+                          color: subjectFilter === 'LAB' ? '#fff' : 'var(--text-secondary)',
+                          borderRadius: 'var(--border-radius-sm)',
+                          cursor: 'pointer',
+                          transition: 'var(--transition-smooth)'
+                        }}
+                      >
+                        Labs
+                      </button>
+                    </div>
+
+                    <button className="btn-primary" style={{ width: 'auto', padding: '0.5rem 1rem', fontSize: '0.85rem', marginLeft: 'auto' }} onClick={() => setShowAddSubject(true)}>
+                      <Plus size={16} />
+                      <span>Add Subject</span>
+                    </button>
+                  </div>
+
+                  {(() => {
+                    const filteredSubjects = subjects.filter((sub) => {
+                      if (subjectFilter === 'ALL') return true;
+                      return sub.type === subjectFilter;
+                    });
+
+                    if (filteredSubjects.length === 0) {
+                      return (
+                        <div className="glass-card" style={{ textAlign: 'center', padding: '3rem' }}>
+                          <BookOpen size={48} style={{ color: 'var(--text-muted)', marginBottom: '1rem' }} />
+                          <h4>No {subjectFilter === 'ALL' ? '' : subjectFilter === 'LECTURE' ? 'Lectures' : 'Labs'} Configured</h4>
+                          <p style={{ color: 'var(--text-secondary)', marginTop: '0.25rem' }}>No subjects of this type are currently configured.</p>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div className="subjects-grid">
+                        {filteredSubjects.map((sub) => {
+                          const todayLog = sub.logs.find(
+                            (log) => log.date.split('T')[0] === new Date().toISOString().split('T')[0]
+                          );
+
+                          return (
+                            <div key={sub.id} className="glass-card subject-card">
+                              <div className="subject-card-header">
+                                <div className="subject-card-title">
+                                  <span className={`subject-badge ${sub.type.toLowerCase()}`}>{sub.type}</span>
+                                  <h3>{sub.name}</h3>
+                                  <div className="subject-goal-indicator">
+                                    <span className={`goal-status-dot ${
+                                      sub.stats.percentage >= sub.targetPercentage ? 'status-dot-green' : 'status-dot-red'
+                                    }`} />
+                                    <span>Target Goal: {sub.targetPercentage}%</span>
+                                  </div>
+                                </div>
+                                <button
+                                  type="button"
+                                  style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+                                  onClick={() => handleDeleteSubject(sub.id)}
+                                >
+                                  <Trash size={16} />
+                                </button>
+                              </div>
+
+                              <div className="subject-card-stats" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div>
+                                  <div className="sub-stat-big">{sub.stats.percentage}%</div>
+                                  <span className="sub-stat-ratio">
+                                    {sub.stats.present} / {sub.stats.total} logged classes
+                                  </span>
+                                </div>
+                                {(() => {
+                                  const advice = calculateAdvice(sub.stats.present, sub.stats.total, sub.targetPercentage);
+                                  return (
+                                    <div className={`bunk-budget-badge ${advice.status}`}>
+                                      {advice.status === 'safe' ? (
+                                        <span>Can skip: <strong>{advice.classCount}</strong></span>
+                                      ) : advice.status === 'warning' ? (
+                                        <span>Can skip: <strong>0</strong></span>
+                                      ) : (
+                                        <span>Attend: <strong>+{advice.classCount}</strong></span>
+                                      )}
+                                    </div>
+                                  );
+                                })()}
+                              </div>
+
+                              <div className="linear-bar-bg" style={{ height: '6px' }}>
+                                <div
+                                  className="linear-bar-fg"
+                                  style={{
+                                    width: `${sub.stats.percentage}%`,
+                                    background: sub.stats.percentage >= sub.targetPercentage ? 'var(--success)' : 'var(--danger)'
+                                  }}
+                                />
+                              </div>
+
+                              {/* Attendance Criteria Advice */}
+                              <div className="criteria-advice-section">
+                                <div className="advice-badge-container">
+                                  <div className={`advice-badge-item ${calculateAdvice(sub.stats.present, sub.stats.total, criteriaA).status}`}>
+                                    <span className="advice-target">{criteriaA}% Target:</span>
+                                    <span className="advice-text">{calculateAdvice(sub.stats.present, sub.stats.total, criteriaA).text}</span>
+                                  </div>
+                                  <div className={`advice-badge-item ${calculateAdvice(sub.stats.present, sub.stats.total, criteriaB).status}`}>
+                                    <span className="advice-target">{criteriaB}% Target:</span>
+                                    <span className="advice-text">{calculateAdvice(sub.stats.present, sub.stats.total, criteriaB).text}</span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Quick Attendance Check-in */}
+                              <div className="form-group" style={{ marginBottom: 0 }}>
+                                <span className="form-label" style={{ fontSize: '0.75rem', marginBottom: '0.4rem' }}>Log attendance today:</span>
+                                <div className="check-in-actions">
+                                  <button
+                                    type="button"
+                                    className={`check-btn check-btn-present ${todayLog?.status === 'PRESENT' ? 'active' : ''}`}
+                                    disabled={inFlightChecks[sub.id]}
+                                    onClick={() => handleCheckIn(sub.id, todayLog?.status === 'PRESENT' ? 'REMOVE' : 'PRESENT')}
+                                    style={{ opacity: inFlightChecks[sub.id] ? 0.5 : 1, cursor: inFlightChecks[sub.id] ? 'not-allowed' : 'pointer' }}
+                                  >
+                                    Present
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className={`check-btn check-btn-absent ${todayLog?.status === 'ABSENT' ? 'active' : ''}`}
+                                    disabled={inFlightChecks[sub.id]}
+                                    onClick={() => handleCheckIn(sub.id, todayLog?.status === 'ABSENT' ? 'REMOVE' : 'ABSENT')}
+                                    style={{ opacity: inFlightChecks[sub.id] ? 0.5 : 1, cursor: inFlightChecks[sub.id] ? 'not-allowed' : 'pointer' }}
+                                  >
+                                    Absent
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className={`check-btn check-btn-holiday ${todayLog?.status === 'HOLIDAY' ? 'active' : ''}`}
+                                    disabled={inFlightChecks[sub.id]}
+                                    onClick={() => handleCheckIn(sub.id, todayLog?.status === 'HOLIDAY' ? 'REMOVE' : 'HOLIDAY')}
+                                    style={{ opacity: inFlightChecks[sub.id] ? 0.5 : 1, cursor: inFlightChecks[sub.id] ? 'not-allowed' : 'pointer' }}
+                                  >
+                                    Holiday
+                                  </button>
+                                </div>
+                              </div>
+
+                              {/* Collapsible Calendar Heatmap for Student */}
+                              <div className="calendar-heatmap-wrapper">
+                                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Last 30 Days History:</span>
+                                <div className="heatmap-grid">
+                                  {getLast30Days().map((dateStr) => {
+                                    const log = sub.logs?.find((l) => l.date.split('T')[0] === dateStr);
+                                    let statusClass = 'empty';
+                                    let tooltipText = `${dateStr}: No class`;
+                                    if (log) {
+                                      statusClass = log.status.toLowerCase();
+                                      tooltipText = `${dateStr}: ${log.status}`;
+                                    }
+                                    return (
+                                      <div 
+                                        key={dateStr} 
+                                        className={`heatmap-cell ${statusClass}`} 
+                                        title={tooltipText}
+                                      />
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
+                </div>
+
+              </div>
+            )}
+
+            {/* TAB CONTENT 2: TIMETABLE */}
+            {activeTab === 'timetable' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                
+                {/* Timetable Grid Card (full width!) */}
+                <div className="glass-card timetable-card" style={{ margin: 0 }}>
+                  <div className="timetable-header-row" style={{ flexWrap: 'wrap', gap: '0.5rem' }}>
+                    <h3 style={{ fontSize: '1.4rem' }}>Timetable Schedule</h3>
+                    
+                    <div className="timetable-controls" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginLeft: 'auto', flexWrap: 'wrap' }}>
+                      {timetableShareCode && (
+                        <div 
+                          className="share-code-pill" 
+                          onClick={copyShareCodeToClipboard}
+                          title="Click to copy your timetable share code to clipboard"
+                          style={{ 
+                            cursor: 'pointer', 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            gap: '0.35rem', 
+                            fontSize: '0.8rem', 
+                            padding: '0.4rem 0.65rem', 
+                            background: 'rgba(99, 102, 241, 0.08)', 
+                            border: '1px solid rgba(99, 102, 241, 0.15)', 
+                            borderRadius: 'var(--border-radius-sm)', 
+                            color: 'var(--primary)',
+                            fontWeight: 'bold',
+                            transition: 'var(--transition-smooth)'
+                          }}
+                        >
+                          <span>Share Code: <strong>{timetableShareCode}</strong></span>
+                          {copiedShareCode ? <Check size={12} /> : <Copy size={12} />}
+                        </div>
+                      )}
+
+                      <button className="btn-outline" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={() => setShowImportCodeModal(true)}>
+                        <Copy size={14} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
+                        Import Friend&apos;s Code
+                      </button>
+
+                      <input
+                        type="text"
+                        placeholder="Branch/Sec (e.g. cseI)"
+                        value={uploadFilter}
+                        onChange={(e) => setUploadFilter(e.target.value)}
+                        className="form-input"
+                        style={{
+                          width: '150px',
+                          padding: '0.4rem 0.75rem',
+                          fontSize: '0.8rem',
+                          background: 'rgba(255,255,255,0.03)',
+                          border: '1px solid var(--border-color)',
+                          borderRadius: 'var(--border-radius-sm)',
+                          color: 'var(--text-primary)'
+                        }}
+                      />
+
+                      <input
+                        type="text"
+                        placeholder="Lab Group (e.g. Grp A)"
+                        value={labGroupFilter}
+                        onChange={(e) => setLabGroupFilter(e.target.value)}
+                        className="form-input"
+                        style={{
+                          width: '150px',
+                          padding: '0.4rem 0.75rem',
+                          fontSize: '0.8rem',
+                          background: 'rgba(255,255,255,0.03)',
+                          border: '1px solid var(--border-color)',
+                          borderRadius: 'var(--border-radius-sm)',
+                          color: 'var(--text-primary)'
+                        }}
+                      />
+
+                      <button className="btn-outline" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={() => fileInputRef.current?.click()}>
+                        <Upload size={14} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
+                        Upload Image/PDF Timetable
+                      </button>
+
+                      <button className="btn-outline" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={handleManualTimetableEdit}>
+                        <Edit size={14} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
+                        Enter Manually
+                      </button>
+                    </div>
+
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      className="file-input-hidden"
+                      accept="image/*,application/pdf"
+                      onChange={handleTimetableUpload}
+                    />
+                  </div>
+
+                  {isOcrLoading ? (
+                    <div className="scanning-container" style={{ position: 'relative', overflow: 'hidden', padding: '3rem 2rem', background: 'rgba(255,255,255,0.01)', borderRadius: 'var(--border-radius-md)', border: '1px dashed var(--border-color)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+                      <div className="scanning-line" style={{ position: 'absolute', left: 0, right: 0, height: '4px', background: 'linear-gradient(90deg, transparent, var(--secondary), transparent)', top: 0, animation: 'scan 2s linear infinite', boxShadow: '0 0 12px var(--secondary)' }} />
+                      <div style={{ display: 'inline-flex', position: 'relative', padding: '1rem', background: 'rgba(99, 102, 241, 0.08)', borderRadius: '50%', color: 'var(--primary)', animation: 'pulse 1.5s infinite alternate' }}>
+                        <Calendar size={36} />
+                      </div>
+                      <h4 style={{ fontSize: '1.2rem', fontWeight: 600, background: 'linear-gradient(135deg, var(--text-primary), var(--secondary))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                        {pendingTimetableFile ? "Importing Schedule Slots..." : "AI Vision Scanner Active..."}
+                      </h4>
+                      <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', maxWidth: '320px', margin: '0 auto', lineHeight: 1.5, textAlign: 'center' }}>
+                        {pendingTimetableFile 
+                          ? `Extracting slots for stream "${selectedStream}" and group "${selectedGroup}"...`
+                          : "Pre-scanning routine layout for streams, branches, and lab groups..."}
+                      </p>
+                    </div>
+                  ) : timetable.length === 0 ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                      <div className="upload-zone" onClick={() => fileInputRef.current?.click()}>
+                        <Calendar size={42} />
+                        <div>
+                          <h4>No timetable schedule defined yet</h4>
+                          <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '0.25rem' }}>
+                            Drag and drop your class timetable image/PDF here, or click to upload.
+                          </p>
+                          <span style={{ color: 'var(--secondary)', fontSize: '0.8rem', display: 'block', marginTop: '0.5rem' }}>
+                            *AuraAttend Neural Vision Scanner Active
+                          </span>
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem', color: 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: 'bold', letterSpacing: '0.05em' }}>
+                        <div style={{ flex: 1, height: '1px', background: 'var(--border-color)' }} />
+                        <span>OR USE FRIEND&apos;S CODE</span>
+                        <div style={{ flex: 1, height: '1px', background: 'var(--border-color)' }} />
+                      </div>
+
+                      <form onSubmit={handleImportFriendTimetable} className="glass-card" style={{ padding: '1rem', display: 'flex', gap: '0.5rem', background: 'rgba(255,255,255,0.01)', border: '1px dashed var(--border-color)', margin: 0 }}>
+                        <input
+                          type="text"
+                          className="form-input"
+                          placeholder="Paste Friend's Alphanumeric Code (e.g. 4A2E5D9C)"
+                          value={friendShareCodeInput}
+                          onChange={(e) => setFriendShareCodeInput(e.target.value)}
+                          style={{ flex: 1, padding: '0.5rem 0.75rem', fontSize: '0.85rem' }}
+                          required
+                        />
+                        <button type="submit" className="btn-primary" style={{ width: 'auto', padding: '0 1rem', fontSize: '0.85rem', whiteSpace: 'nowrap' }}>
+                          Load Routine
+                        </button>
+                      </form>
+                    </div>
+                  ) : (
+                    <div className="timetable-grid-wrapper">
+                      <div className="timetable-grid">
+                        {/* Blank top left cell */}
+                        <div className="grid-cell grid-header-cell" style={{ minHeight: '40px' }}>Time</div>
+                        {DAYS.map((day) => (
+                          <div key={day} className="grid-cell grid-header-cell" style={{ minHeight: '40px' }}>
+                            {day.substring(0, 3)}
+                          </div>
+                        ))}
+
+                        {/* RENDER ROW FOR EACH HOUR */}
+                        {TIMES.map((time) => {
+                          const formattedTime = time.substring(0, 5);
+                          return (
+                            <Fragment key={time}>
+                              <div className="grid-cell grid-time-cell" style={{ minHeight: '40px' }}>
+                                {formattedTime}
+                              </div>
+                              {DAYS.map((day) => {
+                                const matchingSlots = timetable.filter(
+                                  (slot) =>
+                                    slot.dayOfWeek.toUpperCase() === day &&
+                                    slot.startTime <= time &&
+                                    slot.endTime > time
+                                );
+
+                                if (matchingSlots.length === 0) {
+                                  return (
+                                    <div
+                                      key={day}
+                                      className="grid-cell grid-body-cell clickable-grid-cell"
+                                      onClick={() => handleEmptyCellClick(day, time)}
+                                      style={{ minHeight: '40px' }}
+                                    />
+                                  );
+                                }
+
+                                return (
+                                  <div
+                                    key={day}
+                                    className="grid-cell grid-body-cell active-grid-cell"
+                                    style={{
+                                      minHeight: '40px',
+                                      background: matchingSlots[0].type === 'LECTURE' ? 'rgba(99, 102, 241, 0.15)' : 'rgba(6, 182, 212, 0.15)',
+                                      borderLeft: matchingSlots[0].type === 'LECTURE' ? '3px solid var(--primary)' : '3px solid var(--secondary)'
+                                    }}
+                                  >
+                                    <div className="timetable-slot-name" title={matchingSlots[0].subjectName}>
+                                      {matchingSlots[0].subjectName}
+                                    </div>
+                                    <div className="timetable-slot-time">
+                                      {matchingSlots[0].startTime}-{matchingSlots[0].endTime}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </Fragment>
+                          );
+                        })}
+                      </div>
+                    </div>
                   )}
                 </div>
 
-                {/* Attendance Criteria Threshold Settings Card */}
-                <div className="glass-card settings-card">
-                  <h3 style={{ fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <Sliders size={20} className="text-secondary" />
-                    <span>Target Criteria Settings</span>
-                  </h3>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '0.25rem' }}>
-                    Adjust the custom percentage thresholds used across the dashboard.
-                  </p>
-                  
-                  <div style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                    <div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.25rem' }}>
-                        <span style={{ fontWeight: 600 }}>Primary Criteria Target:</span>
-                        <span style={{ color: 'var(--primary)', fontWeight: 700 }}>{criteriaA}%</span>
-                      </div>
-                      <input
-                        type="range"
-                        className="custom-range-input"
-                        min="50"
-                        max="100"
-                        step="5"
-                        value={criteriaA}
-                        onChange={(e) => handleUpdateCriteriaA(parseInt(e.target.value))}
-                      />
-                    </div>
+              </div>
+            )}
 
-                    <div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.25rem' }}>
-                        <span style={{ fontWeight: 600 }}>Secondary Criteria Target:</span>
-                        <span style={{ color: 'var(--secondary)', fontWeight: 700 }}>{criteriaB}%</span>
+            {/* TAB CONTENT 3: ANALYTICS */}
+            {activeTab === 'analytics' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                
+                {/* Attendance Analytics Visual Chart */}
+                <div className="glass-card" style={{ padding: '1.5rem', margin: 0 }}>
+                  <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <TrendingUp size={20} className="text-primary" />
+                    <span>Attendance Performance Visualizer</span>
+                  </h3>
+                  {subjects.length === 0 ? (
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Add subjects to view charts.</p>
+                  ) : (
+                    <div style={{ width: '100%', height: 320, minWidth: '280px' }}>
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart
+                          data={subjects.map(s => ({
+                            name: s.name,
+                            percentage: s.stats.percentage,
+                            target: s.targetPercentage
+                          }))}
+                          margin={{ top: 20, right: 20, left: -20, bottom: 20 }}
+                        >
+                          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                          <XAxis 
+                            dataKey="name" 
+                            stroke="var(--text-secondary)" 
+                            fontSize={10} 
+                            tickLine={false}
+                          />
+                          <YAxis 
+                            stroke="var(--text-secondary)" 
+                            domain={[0, 100]} 
+                            fontSize={10} 
+                            tickLine={false}
+                            axisLine={false}
+                          />
+                          <Tooltip 
+                            contentStyle={{ 
+                              background: 'var(--bg-card)', 
+                              borderColor: 'var(--border-color)', 
+                              borderRadius: 'var(--border-radius-sm)',
+                              color: 'var(--text-primary)' 
+                            }} 
+                          />
+                          <ReferenceLine y={75} label={{ value: '75% Criteria', position: 'top', fill: 'var(--danger)', fontSize: 10 }} stroke="var(--danger)" strokeDasharray="3 3" />
+                          <Bar dataKey="percentage" radius={[4, 4, 0, 0]}>
+                            {subjects.map((s, index) => {
+                              const meetsTarget = s.stats.percentage >= s.targetPercentage;
+                              return (
+                                <Cell 
+                                  key={`cell-${index}`} 
+                                  fill={meetsTarget ? 'var(--success)' : 'var(--danger)'} 
+                                />
+                              );
+                            })}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  )}
+                </div>
+
+                {/* Advisor, Predictors, Settings Grid */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
+                  
+                  {/* Skip Advisor Card */}
+                  <div className="glass-card advisor-card">
+                    <h3 style={{ fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <ShieldCheck size={20} className="text-secondary" />
+                      <span>Skip-Day Advisor</span>
+                    </h3>
+                    
+                    <div className={`advisor-status ${advisor.status}`}>
+                      <AlertCircle size={24} style={{ flexShrink: 0 }} />
+                      <div className="advisor-text">
+                        <h4>{advisor.title}</h4>
+                        <p>{advisor.description}</p>
                       </div>
-                      <input
-                        type="range"
-                        className="custom-range-input"
-                        min="40"
-                        max="95"
-                        step="5"
-                        value={criteriaB}
-                        onChange={(e) => handleUpdateCriteriaB(parseInt(e.target.value))}
-                      />
                     </div>
                   </div>
-                </div>
-              </div>
-            </div>
 
-            {/* Subjects Grid & Quick Actions */}
-            <div>
-              <div className="subjects-section-header">
-                <h3 style={{ fontSize: '1.6rem' }}>Subject Check-Ins</h3>
-                <button className="btn-primary" style={{ width: 'auto', padding: '0.5rem 1rem', fontSize: '0.85rem' }} onClick={() => setShowAddSubject(true)}>
-                  <Plus size={16} />
-                  <span>Add Subject</span>
-                </button>
-              </div>
+                  {/* Bunk Predictor Slider Widget */}
+                  <div className="glass-card planner-widget">
+                    <h3 style={{ fontSize: '1.25rem' }}>Bunk Planner Predictor</h3>
+                    
+                    {subjects.length === 0 ? (
+                      <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Add subjects to plan attendances.</p>
+                    ) : (
+                      <>
+                        <div className="form-group" style={{ marginBottom: 0 }}>
+                          <label className="form-label">Plan Subject</label>
+                          <select
+                            className="planner-select"
+                            value={selectedSubjectId}
+                            onChange={(e) => {
+                              setSelectedSubjectId(e.target.value);
+                              setBunkCount(0);
+                            }}
+                          >
+                            {subjects.map((sub) => (
+                              <option key={sub.id} value={sub.id}>
+                                {sub.name} ({sub.type})
+                              </option>
+                            ))}
+                          </select>
+                        </div>
 
-              {subjects.length === 0 && (
-                <div className="glass-card" style={{ textAlign: 'center', padding: '3rem' }}>
-                  <BookOpen size={48} style={{ color: 'var(--text-muted)', marginBottom: '1rem' }} />
-                  <h4>No Subjects Added Yet</h4>
-                  <p style={{ color: 'var(--text-secondary)', marginTop: '0.25rem' }}>Add subjects manually or upload your timetable above to get started.</p>
-                </div>
-              )}
-
-              <div className="subjects-grid">
-                {subjects.map((sub) => {
-                  // Check today's logged status for this subject
-                  const todayLog = sub.logs.find(
-                    (log) => log.date.split('T')[0] === new Date().toISOString().split('T')[0]
-                  );
-
-                  return (
-                    <div key={sub.id} className="glass-card subject-card">
-                      <div className="subject-card-header">
-                        <div className="subject-card-title">
-                          <span className={`subject-badge ${sub.type.toLowerCase()}`}>{sub.type}</span>
-                          <h3>{sub.name}</h3>
-                          <div className="subject-goal-indicator">
-                            <span className={`goal-status-dot ${
-                              sub.stats.percentage >= sub.targetPercentage ? 'status-dot-green' : 'status-dot-red'
-                            }`} />
-                            <span>Target Goal: {sub.targetPercentage}%</span>
+                        <div className="slider-container">
+                          <div className="slider-labels">
+                            <span>Actions:</span>
+                            <span className="slider-value-glowing">
+                              {bunkCount === 0
+                                ? 'No change'
+                                : bunkCount > 0
+                                ? `Attend next ${bunkCount} classes`
+                                : `Skip next ${Math.abs(bunkCount)} classes`}
+                            </span>
                           </div>
+                          <input
+                            type="range"
+                            className="custom-range-input"
+                            min="-10"
+                            max="10"
+                            step="1"
+                            value={bunkCount}
+                            onChange={(e) => setBunkCount(parseInt(e.target.value))}
+                          />
                         </div>
-                        <button
-                          style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
-                          onClick={() => handleDeleteSubject(sub.id)}
-                        >
-                          <Trash size={16} />
-                        </button>
-                      </div>
 
-                      <div className="subject-card-stats" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div>
-                          <div className="sub-stat-big">{sub.stats.percentage}%</div>
-                          <span className="sub-stat-ratio">
-                            {sub.stats.present} / {sub.stats.total} logged classes
-                          </span>
-                        </div>
-                        {(() => {
-                          const advice = calculateAdvice(sub.stats.present, sub.stats.total, sub.targetPercentage);
-                          return (
-                            <div className={`bunk-budget-badge ${advice.status}`}>
-                              {advice.status === 'safe' ? (
-                                <span>Can skip: <strong>{advice.classCount}</strong></span>
-                              ) : advice.status === 'warning' ? (
-                                <span>Can skip: <strong>0</strong></span>
-                              ) : (
-                                <span>Attend: <strong>+{advice.classCount}</strong></span>
-                              )}
+                        <div className="planner-results">
+                          <div>
+                            <div className="result-stat-label">Predicted %</div>
+                            <div className="result-stat-value" style={{ color: predictor.meetsTarget ? 'var(--success)' : 'var(--danger)' }}>
+                              {predictor.newPercentage}%
                             </div>
-                          );
-                        })()}
-                      </div>
+                          </div>
+                          <div>
+                            <div className="result-stat-label">Target Goal</div>
+                            <div className="result-stat-value">
+                              {subjects.find((s) => s.id === selectedSubjectId)?.targetPercentage}%
+                            </div>
+                          </div>
+                          <p style={{ gridColumn: '1 / -1', fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>
+                            {predictor.statusText}
+                          </p>
+                        </div>
+                      </>
+                    )}
+                  </div>
 
-                      <div className="linear-bar-bg" style={{ height: '6px' }}>
-                        <div
-                          className="linear-bar-fg"
-                          style={{
-                            width: `${sub.stats.percentage}%`,
-                            background: sub.stats.percentage >= sub.targetPercentage ? 'var(--success)' : 'var(--danger)'
-                          }}
+                  {/* Multi-Day Bunk Simulator Card */}
+                  <div className="glass-card planner-widget">
+                    <h3 style={{ fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <TrendingUp size={20} className="text-primary" />
+                      <span>Multi-Day Bunk Simulator</span>
+                    </h3>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '0.25rem' }}>
+                      Simulate skipping the next N consecutive calendar days.
+                    </p>
+                    
+                    {timetable.length === 0 ? (
+                      <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '0.75rem' }}>
+                        Please upload a timetable to simulate multi-day skipping.
+                      </p>
+                    ) : (
+                      <>
+                        <div className="slider-container" style={{ marginTop: '1rem' }}>
+                          <div className="slider-labels">
+                            <span>Skip Consecutive Days:</span>
+                            <span className="slider-value-glowing">{bunkProjectionDays} Days</span>
+                          </div>
+                          <input
+                            type="range"
+                            className="custom-range-input"
+                            min="1"
+                            max="14"
+                            step="1"
+                            value={bunkProjectionDays}
+                            onChange={(e) => setBunkProjectionDays(parseInt(e.target.value))}
+                          />
+                        </div>
+
+                        <div className="planner-results" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '180px', overflowY: 'auto', padding: '0.5rem' }}>
+                          {subjects.map(sub => {
+                            const projectedAbsents = getProjectedMissCount(sub.id, bunkProjectionDays);
+                            const newTotal = sub.stats.total + projectedAbsents;
+                            const newPct = newTotal > 0 ? Math.round((sub.stats.present / newTotal) * 100) : 100;
+                            const meetsTarget = newPct >= sub.targetPercentage;
+                            
+                            if (projectedAbsents === 0) return null;
+
+                            return (
+                              <div key={sub.id} className="flex-between" style={{ padding: '0.35rem 0.5rem', borderBottom: '1px solid var(--border-color)', fontSize: '0.85rem' }}>
+                                <span>{sub.name} <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>({projectedAbsents} missed)</span></span>
+                                <span style={{ fontWeight: 700, color: meetsTarget ? 'var(--success)' : 'var(--danger)' }}>
+                                  {sub.stats.percentage}% → {newPct}%
+                                </span>
+                              </div>
+                            );
+                          })}
+                          {subjects.every(sub => getProjectedMissCount(sub.id, bunkProjectionDays) === 0) && (
+                            <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', textAlign: 'center' }}>No classes scheduled for the selected duration.</p>
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Attendance Criteria Threshold Settings Card */}
+                  <div className="glass-card settings-card">
+                    <h3 style={{ fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <Sliders size={20} className="text-secondary" />
+                      <span>Target Criteria Settings</span>
+                    </h3>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '0.25rem' }}>
+                      Adjust the custom percentage thresholds used across the dashboard.
+                    </p>
+                    
+                    <div style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                      <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.25rem' }}>
+                          <span style={{ fontWeight: 600 }}>Primary Criteria Target:</span>
+                          <span style={{ color: 'var(--primary)', fontWeight: 700 }}>{criteriaA}%</span>
+                        </div>
+                        <input
+                          type="range"
+                          className="custom-range-input"
+                          min="50"
+                          max="100"
+                          step="5"
+                          value={criteriaA}
+                          onChange={(e) => handleUpdateCriteriaA(parseInt(e.target.value))}
                         />
                       </div>
 
-                      {/* Attendance Criteria Advice */}
-                      <div className="criteria-advice-section">
-                        <div className="advice-badge-container">
-                          <div className={`advice-badge-item ${calculateAdvice(sub.stats.present, sub.stats.total, criteriaA).status}`}>
-                            <span className="advice-target">{criteriaA}% Target:</span>
-                            <span className="advice-text">{calculateAdvice(sub.stats.present, sub.stats.total, criteriaA).text}</span>
-                          </div>
-                          <div className={`advice-badge-item ${calculateAdvice(sub.stats.present, sub.stats.total, criteriaB).status}`}>
-                            <span className="advice-target">{criteriaB}% Target:</span>
-                            <span className="advice-text">{calculateAdvice(sub.stats.present, sub.stats.total, criteriaB).text}</span>
-                          </div>
+                      <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.25rem' }}>
+                          <span style={{ fontWeight: 600 }}>Secondary Criteria Target:</span>
+                          <span style={{ color: 'var(--secondary)', fontWeight: 700 }}>{criteriaB}%</span>
                         </div>
-                      </div>
-
-                      {/* Quick Attendance Check-in */}
-                      <div className="form-group" style={{ marginBottom: 0 }}>
-                        <span className="form-label" style={{ fontSize: '0.75rem', marginBottom: '0.4rem' }}>Log attendance today:</span>
-                        <div className="check-in-actions">
-                          <button
-                            type="button"
-                            className={`check-btn check-btn-present ${todayLog?.status === 'PRESENT' ? 'active' : ''}`}
-                            disabled={inFlightChecks[sub.id]}
-                            onClick={() => handleCheckIn(sub.id, todayLog?.status === 'PRESENT' ? 'REMOVE' : 'PRESENT')}
-                            style={{ opacity: inFlightChecks[sub.id] ? 0.5 : 1, cursor: inFlightChecks[sub.id] ? 'not-allowed' : 'pointer' }}
-                          >
-                            Present
-                          </button>
-                          <button
-                            type="button"
-                            className={`check-btn check-btn-absent ${todayLog?.status === 'ABSENT' ? 'active' : ''}`}
-                            disabled={inFlightChecks[sub.id]}
-                            onClick={() => handleCheckIn(sub.id, todayLog?.status === 'ABSENT' ? 'REMOVE' : 'ABSENT')}
-                            style={{ opacity: inFlightChecks[sub.id] ? 0.5 : 1, cursor: inFlightChecks[sub.id] ? 'not-allowed' : 'pointer' }}
-                          >
-                            Absent
-                          </button>
-                          <button
-                            type="button"
-                            className={`check-btn check-btn-holiday ${todayLog?.status === 'HOLIDAY' ? 'active' : ''}`}
-                            disabled={inFlightChecks[sub.id]}
-                            onClick={() => handleCheckIn(sub.id, todayLog?.status === 'HOLIDAY' ? 'REMOVE' : 'HOLIDAY')}
-                            style={{ opacity: inFlightChecks[sub.id] ? 0.5 : 1, cursor: inFlightChecks[sub.id] ? 'not-allowed' : 'pointer' }}
-                          >
-                            Holiday
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Collapsible Calendar Heatmap for Student */}
-                      <div className="calendar-heatmap-wrapper">
-                        <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Last 30 Days History:</span>
-                        <div className="heatmap-grid">
-                          {getLast30Days().map((dateStr) => {
-                            const log = sub.logs?.find((l) => l.date.split('T')[0] === dateStr);
-                            let statusClass = 'empty';
-                            let tooltipText = `${dateStr}: No class`;
-                            if (log) {
-                              statusClass = log.status.toLowerCase();
-                              tooltipText = `${dateStr}: ${log.status}`;
-                            }
-                            return (
-                              <div 
-                                key={dateStr} 
-                                className={`heatmap-cell ${statusClass}`} 
-                                title={tooltipText}
-                              />
-                            );
-                          })}
-                        </div>
+                        <input
+                          type="range"
+                          className="custom-range-input"
+                          min="40"
+                          max="95"
+                          step="5"
+                          value={criteriaB}
+                          onChange={(e) => handleUpdateCriteriaB(parseInt(e.target.value))}
+                        />
                       </div>
                     </div>
-                  );
-                })}
+                  </div>
+
+                </div>
+
               </div>
-            </div>
+            )}
           </>
         )}
       </main>
