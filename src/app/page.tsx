@@ -1640,22 +1640,9 @@ export default function Home() {
     }
     setSlotDay(day);
     setSlotSubjectId(subjects[0]?.id || '');
+    setSlotStartTime(time);
     
-    // Find all slots on this day in current timetable
-    const sameDaySlots = timetable.filter(slot => slot.dayOfWeek.toUpperCase() === day.toUpperCase());
-    let defaultStart = time;
-    
-    if (sameDaySlots.length > 0) {
-      // Find the latest slot end time
-      const sorted = [...sameDaySlots].sort((a, b) => b.endTime.localeCompare(a.endTime));
-      defaultStart = sorted[0].endTime;
-    } else {
-      defaultStart = '09:30';
-    }
-    
-    setSlotStartTime(defaultStart);
-    
-    const [hourStr, minStr] = defaultStart.split(':');
+    const [hourStr, minStr] = time.split(':');
     const endHour = parseInt(hourStr) + 1;
     const endHourStr = endHour.toString().padStart(2, '0');
     setSlotEndTime(`${endHourStr}:${minStr}`);
