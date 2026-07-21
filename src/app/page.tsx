@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, Fragment } from 'react';
+import dynamic from 'next/dynamic';
 import {
   Check,
   X,
@@ -25,7 +26,15 @@ import {
   Moon,
   Edit
 } from 'lucide-react';
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, ReferenceLine, CartesianGrid, Cell } from 'recharts';
+
+const AttendanceChart = dynamic(() => import('@/components/AttendanceChart'), {
+  ssr: false,
+  loading: () => (
+    <div style={{ height: 320, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
+      Loading chart visualizer...
+    </div>
+  ),
+});
 
 interface ScheduleSlot {
   id: string;
@@ -3647,72 +3656,7 @@ export default function Home() {
                     <TrendingUp size={20} className="text-primary" />
                     <span>Attendance Performance Visualizer</span>
                   </h3>
-                  {subjects.length === 0 ? (
-                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Add subjects to view charts.</p>
-                  ) : (
-                    <div style={{ width: '100%', height: 320, minWidth: '280px' }}>
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart
-                          data={subjects.map(s => ({
-                            name: s.name,
-                            percentage: s.stats.percentage,
-                            target: s.targetPercentage
-                          }))}
-                          margin={{ top: 20, right: 20, left: -20, bottom: 20 }}
-                        >
-                          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                          <XAxis 
-                            dataKey="name" 
-                            stroke="var(--text-secondary)" 
-                            fontSize={11} 
-                            fontWeight={500}
-                            tickLine={false}
-                            height={60}
-                            angle={-20}
-                            textAnchor="end"
-                          />
-                          <YAxis 
-                            stroke="var(--text-secondary)" 
-                            domain={[0, 100]} 
-                            fontSize={10} 
-                            tickLine={false}
-                            axisLine={false}
-                          />
-                          <Tooltip 
-                            contentStyle={{ 
-                              background: 'var(--bg-card)', 
-                              borderColor: 'var(--border-color)', 
-                              borderRadius: 'var(--border-radius-sm)',
-                              color: 'var(--text-primary)' 
-                            }} 
-                          />
-                          <ReferenceLine 
-                            y={criteriaA} 
-                            label={{ value: `Primary Target (${criteriaA}%)`, position: 'insideTopLeft', fill: 'var(--danger)', fontSize: 10, fontWeight: 600 }} 
-                            stroke="var(--danger)" 
-                            strokeDasharray="4 4" 
-                          />
-                          <ReferenceLine 
-                            y={criteriaB} 
-                            label={{ value: `Secondary Target (${criteriaB}%)`, position: 'insideBottomLeft', fill: 'var(--warning)', fontSize: 10, fontWeight: 600 }} 
-                            stroke="var(--warning)" 
-                            strokeDasharray="4 4" 
-                          />
-                          <Bar dataKey="percentage" radius={[4, 4, 0, 0]}>
-                            {subjects.map((s, index) => {
-                              const meetsTarget = s.stats.percentage >= s.targetPercentage;
-                              return (
-                                <Cell 
-                                  key={`cell-${index}`} 
-                                  fill={meetsTarget ? 'var(--success)' : 'var(--danger)'} 
-                                />
-                              );
-                            })}
-                          </Bar>
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
-                  )}
+                  <AttendanceChart subjects={subjects} criteriaA={criteriaA} criteriaB={criteriaB} />
                 </div>
 
                 {/* Advisor, Predictors, Settings Grid */}

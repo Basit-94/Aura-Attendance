@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AuraAttend — Complete User Guide & Feature Manual</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-main: #0b0f19;
+      --card-bg: rgba(20, 26, 42, 0.75);
+      --card-bg-hover: rgba(30, 39, 63, 0.85);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-glow: rgba(99, 102, 241, 0.4);
+      --primary: #6366f1;
+      --primary-glow: rgba(99, 102, 241, 0.25);
+      --secondary: #f43f5e;
+      --secondary-glow: rgba(244, 63, 94, 0.25);
+      --success: #10b981;
+      --success-glow: rgba(16, 185, 129, 0.2);
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --text-primary: #f8fafc;
+      --text-secondary: #cbd5e1;
+      --text-muted: #94a3b8;
+      --border-radius: 20px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: radial-gradient(circle at 50% 15%, #161c38 0%, var(--bg-main) 100%);
+      color: var(--text-primary);
+      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+      line-height: 1.65;
+      padding: 2rem 1rem;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    /* Top Header */
+    header {
+      text-align: center;
+      padding: 3rem 2rem;
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border-color);
+      border-radius: 28px;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.6);
+      margin-bottom: 2.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    header::before {
+      content: "";
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, var(--primary-glow) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 6px 18px;
+      background: rgba(99, 102, 241, 0.15);
+      color: #a5b4fc;
+      border: 1px solid rgba(99, 102, 241, 0.4);
+      border-radius: 30px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      margin-bottom: 1.25rem;
+    }
+
+    h1 {
+      font-size: 3.25rem;
+      font-weight: 900;
+      background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 1rem;
+      letter-spacing: -1px;
+    }
+
+    .subtitle {
+      color: var(--text-secondary);
+      font-size: 1.2rem;
+      max-width: 700px;
+      margin: 0 auto 2rem auto;
+      font-weight: 400;
+    }
+
+    .header-actions {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 32px;
+      border-radius: 14px;
+      font-weight: 700;
+      font-size: 1rem;
+      text-decoration: none;
+      transition: all 0.25s ease;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary) 0%, #4f46e5 100%);
+      color: white;
+      box-shadow: 0 10px 25px var(--primary-glow);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 15px 35px var(--primary-glow);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Section Cards */
+    .section {
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      padding: 2.5rem;
+      margin-bottom: 2.5rem;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    }
+
+    .section-header {
+      margin-bottom: 1.75rem;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 1rem;
+    }
+
+    .section-title {
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .section-desc {
+      color: var(--text-muted);
+      font-size: 1rem;
+      margin-top: 6px;
+    }
+
+    /* Image Showcase Containers */
+    .img-showcase {
+      width: 100%;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+      margin: 1.5rem 0;
+      background: #000;
+    }
+
+    .img-showcase img {
+      width: 100%;
+      height: auto;
+      display: block;
+      transition: transform 0.3s ease;
+    }
+
+    .img-showcase:hover img {
+      transform: scale(1.015);
+    }
+
+    .img-caption {
+      padding: 12px 18px;
+      background: rgba(15, 23, 42, 0.9);
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Grid Layouts */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 1.5rem;
+      transition: all 0.25s ease;
+    }
+
+    .card:hover {
+      border-color: var(--border-glow);
+      transform: translateY(-2px);
+      background: var(--card-bg-hover);
+    }
+
+    .card-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: var(--primary-glow);
+      color: #a5b4fc;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+
+    .card h3 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: white;
+      margin-bottom: 0.5rem;
+    }
+
+    .card p {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+    }
+
+    .card ul {
+      margin-top: 0.75rem;
+      padding-left: 1.2rem;
+      color: var(--text-muted);
+      font-size: 0.92rem;
+    }
+
+    .card ul li {
+      margin-bottom: 6px;
+    }
+
+    /* Step Timeline */
+    .timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .timeline-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 1.25rem;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 1.5rem;
+    }
+
+    .timeline-num {
+      width: 44px;
+      height: 44px;
+      min-width: 44px;
+      background: linear-gradient(135deg, var(--primary), #4f46e5);
+      color: white;
+      font-size: 1.2rem;
+      font-weight: 800;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 18px var(--primary-glow);
+    }
+
+    .timeline-content h4 {
+      font-size: 1.2rem;
+      color: white;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .timeline-content p {
+      color: var(--text-secondary);
+      font-size: 0.96rem;
+    }
+
+    /* Formula & Callout Boxes */
+    .callout {
+      background: rgba(99, 102, 241, 0.1);
+      border-left: 4px solid var(--primary);
+      border-radius: 0 14px 14px 0;
+      padding: 1.25rem;
+      margin: 1.5rem 0;
+    }
+
+    .callout-title {
+      font-weight: 700;
+      color: #a5b4fc;
+      margin-bottom: 6px;
+    }
+
+    .formula-box {
+      background: #070a12;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1rem 1.25rem;
+      font-family: monospace;
+      color: #38bdf8;
+      font-size: 0.95rem;
+      margin-top: 8px;
+    }
+
+    /* Floating Print Button */
+    .print-btn {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      padding: 14px 28px;
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 40px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.95rem;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.6);
+      backdrop-filter: blur(12px);
+      transition: transform 0.2s;
+      z-index: 1000;
+    }
+
+    .print-btn:hover {
+      transform: scale(1.05);
+    }
+
+    /* Print Styles */
+    @media print {
+      body {
+        background: #0b0f19 !important;
+        color: #f8fafc !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        padding: 0;
+      }
+
+      .container {
+        max-width: 100%;
+      }
+
+      .section, header, .card, .timeline-item {
+        background: rgba(20, 26, 42, 0.9) !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        color: #f8fafc !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      h1, .section-title, .card h3, .timeline-content h4, .callout-title {
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+      }
+
+      .subtitle, .section-desc, .card p, .timeline-content p, .img-caption {
+        color: #cbd5e1 !important;
+      }
+
+      .print-btn {
+        display: none !important;
+      }
+
+      .img-showcase img {
+        display: block !important;
+        visibility: visible !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Printable PDF Button -->
+  <button class="print-btn" onclick="window.print()">🖨️ Save as PDF / Print Guide</button>
+
+  <div class="container">
+
+    <!-- HERO HEADER -->
+    <header>
+      <span class="badge">Official AuraAttend Guide</span>
+      <h1>AuraAttend User Guide</h1>
+      <p class="subtitle">A complete walkthrough of features, AI timetable scanning, skip-day prediction algorithms, and teacher verification systems.</p>
+      <div class="header-actions">
+        <a href="https://attendance-tracker-roan-two.vercel.app" target="_blank" rel="noopener noreferrer" class="btn btn-primary">🚀 Launch Web Application</a>
+        <a href="#quick-start" class="btn btn-secondary">📖 Jump to Quick Start</a>
+      </div>
+    </header>
+
+    <!-- SECTION 1: REALTIME WEBSITE OVERVIEW -->
+    <div class="section" id="overview">
+      <div class="section-header">
+        <h2 class="section-title">📊 1. Student Dashboard & Live Statistics</h2>
+        <p class="section-desc">Track your overall percentage, manage subject cards, and instantly log daily attendance.</p>
+      </div>
+
+      <!-- Realtime Screenshot 1 -->
+      <div class="img-showcase">
+        <img src="/images/dashboard_hero.jpg" alt="AuraAttend Realtime Student Dashboard">
+        <div class="img-caption">
+          📍 <strong>Realtime Interface:</strong> Student main dashboard showing overall 88% attendance, color-coded status badges, and direct Present/Absent controls.
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-icon">📈</div>
+          <h3>Overall Attendance Progress</h3>
+          <p>Displays total present count vs total classes conducted across all subjects in your active semester.</p>
+          <ul>
+            <li><strong>Green Badge:</strong> Meeting or exceeding your target percentage (e.g. ≥ 75%).</li>
+            <li><strong>Red Badge:</strong> Falling below your target threshold.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-icon">⚡</div>
+          <h3>One-Tap Attendance Buttons</h3>
+          <p>Mark attendance in a single tap directly from your subject list:</p>
+          <ul>
+            <li><strong>✓ Present:</strong> Increments present and total class counts.</li>
+            <li><strong>✗ Absent:</strong> Increments absent count and total class counts.</li>
+            <li><strong>🌴 Holiday:</strong> Logs class cancellation without penalizing your percentage.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 2: AI OCR TIMETABLE SCANNER -->
+    <div class="section" id="ai-scanner">
+      <div class="section-header">
+        <h2 class="section-title">📸 2. AI Timetable & Routine Scanner</h2>
+        <p class="section-desc">Upload a photo or screenshot of your college timetable to build your schedule automatically.</p>
+      </div>
+
+      <!-- Realtime Screenshot 2 -->
+      <div class="img-showcase">
+        <img src="/images/ai_ocr_timetable.jpg" alt="AI Timetable OCR Parser Interface">
+        <div class="img-caption">
+          📍 <strong>Realtime Interface:</strong> AI Gemini OCR Review Wizard displaying extracted slots with custom time pickers and group filters.
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-icon">🤖</div>
+          <h3>Google Gemini AI OCR</h3>
+          <p>Scans routine images (PNG, JPG, JPEG) and automatically identifies:</p>
+          <ul>
+            <li>Subject Code & Full Name</li>
+            <li>Class Type (`LECTURE` vs `LAB`)</li>
+            <li>Day of the Week (`MONDAY` – `SUNDAY`)</li>
+            <li>Start & End Times in 24-hour format</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-icon">🛠️</div>
+          <h3>Interactive Slot Review Wizard</h3>
+          <p>Review and edit extracted slots in a clean popup modal before saving:</p>
+          <ul>
+            <li><strong>Group Filtering:</strong> Filter out irrelevant lab groups (e.g. keep Group A1, exclude Group A2).</li>
+            <li><strong>Time Pickers:</strong> Fine-tune class timings using native click selectors.</li>
+            <li><strong>+ Add Slot:</strong> Insert missed classes or custom extra lectures.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 3: SKIP-DAY ADVISOR & BUNK PREDICTOR -->
+    <div class="section" id="skip-advisor">
+      <div class="section-header">
+        <h2 class="section-title">🔮 3. Skip-Day Advisor & Bunk Simulator</h2>
+        <p class="section-desc">Know exact safe skip counts and simulate future class decisions in real time.</p>
+      </div>
+
+      <!-- Realtime Screenshot 3 -->
+      <div class="img-showcase">
+        <img src="/images/skip_advisor_analytics.jpg" alt="Skip Day Advisor and Bunk Predictor Analytics">
+        <div class="img-caption">
+          📍 <strong>Realtime Interface:</strong> Analytics Visualizer featuring the Skip-Day Advisor card, Bunk Predictor Slider, and Recharts performance graph.
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-icon">💡</div>
+          <h3>Smart Skip Advice Engine</h3>
+          <p>Calculates exact attendance recommendations based on your target threshold (75% or 60%):</p>
+          <ul>
+            <li><strong style="color:#10b981;">Safe to Skip:</strong> "You can safely skip the next 2 classes."</li>
+            <li><strong style="color:#ef4444;">Must Attend:</strong> "You must attend the next 3 classes to reach 75%."</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-icon">🎛️</div>
+          <h3>Multi-Day Bunk Simulator Slider</h3>
+          <p>Drag the interactive slider to simulate skipping upcoming classes. See live percentage projections updated instantly on screen.</p>
+        </div>
+      </div>
+
+      <!-- Mathematical Formulas -->
+      <div class="callout">
+        <div class="callout-title">📐 Mathematical Calculation Formulas</div>
+        <p>AuraAttend uses strict mathematical models to ensure accurate skip predictions:</p>
+        
+        <div class="formula-box">
+          Max Bunk Allowed = Floor[ ( Present - (Target * Total) ) / Target ]
+        </div>
+        
+        <div class="formula-box" style="margin-top:8px;">
+          Classes Needed to Recover = Ceiling[ ( (Target * Total) - Present ) / (1 - Target) ]
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 4: TEACHER PORTAL & BATCH OPERATIONS -->
+    <div class="section" id="teacher-portal">
+      <div class="section-header">
+        <h2 class="section-title">🍎 4. Teacher & Security Verification Portal</h2>
+        <p class="section-desc">Allow professors to view and update student records using secure 4-digit PINs.</p>
+      </div>
+
+      <!-- Realtime Screenshot 4 -->
+      <div class="img-showcase">
+        <img src="/images/teacher_portal.jpg" alt="Teacher Management Portal and Batch Operations">
+        <div class="img-caption">
+          📍 <strong>Realtime Interface:</strong> Teacher portal showing Student Unique Code lookup, 4-digit Edit PIN security verification, and batch logging controls.
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-icon">🔑</div>
+          <h3>Rotable Security PIN</h3>
+          <p>Students can generate a temporary 4-digit Teacher Edit PIN (e.g. `4921`). Teachers enter this PIN along with the student's unique code to log attendance safely.</p>
+        </div>
+
+        <div class="card">
+          <div class="card-icon">👥</div>
+          <h3>Batch Operations</h3>
+          <p>Teachers can paste multiple comma-separated student codes (e.g. `STU-101, STU-102, STU-103`) to unlock and update attendance records simultaneously.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 5: STEP BY STEP QUICK START -->
+    <div class="section" id="quick-start">
+      <div class="section-header">
+        <h2 class="section-title">📖 5. Quick Start Guide for New Users</h2>
+        <p class="section-desc">Follow these 4 easy steps to start using AuraAttend in under 2 minutes.</p>
+      </div>
+
+      <div class="timeline">
+        <div class="timeline-item">
+          <div class="timeline-num">1</div>
+          <div class="timeline-content">
+            <h4>Create Your Account</h4>
+            <p>Visit <a href="https://attendance-tracker-roan-two.vercel.app" target="_blank" rel="noopener noreferrer" style="color:#818cf8; font-weight:600;">AuraAttend Web App</a>, click <strong>Sign Up</strong>, enter your email and password, and type your initial semester name (e.g., "4th Semester").</p>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="timeline-num">2</div>
+          <div class="timeline-content">
+            <h4>Add Schedule or Upload Routine Photo</h4>
+            <p>Go to the <strong>Timetable</strong> tab and click <strong>Upload Routine Image</strong> for automatic AI scanning, OR go to <strong>Subjects</strong> → click <strong>+ Add Subject</strong> to enter subject names manually.</p>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="timeline-num">3</div>
+          <div class="timeline-content">
+            <h4>Log Daily Classes</h4>
+            <p>After each lecture or lab, tap <strong>Present (✓)</strong> or <strong>Absent (✗)</strong> on the corresponding subject card.</p>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="timeline-num">4</div>
+          <div class="timeline-content">
+            <h4>Check Analytics & Skip Safety</h4>
+            <p>Open the <strong>Analytics</strong> tab to review your performance charts, check your skip safety scores, and export CSV history logs.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 6: FAQ -->
+    <div class="section" id="faq">
+      <div class="section-header">
+        <h2 class="section-title">❓ 6. Frequently Asked Questions</h2>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3>Does AuraAttend work offline?</h3>
+          <p>Yes! AuraAttend is a Progressive Web App (PWA). If your device loses internet connection, your attendance logs are cached in your browser and automatically uploaded when connectivity returns.</p>
+        </div>
+
+        <div class="card">
+          <h3>How do holidays affect my score?</h3>
+          <p>Marking a class as "Holiday" removes that class session from total class counts entirely, ensuring canceled classes never penalize your score.</p>
+        </div>
+
+        <div class="card">
+          <h3>Can I share my schedule with friends?</h3>
+          <p>Yes! Click <strong>Share Routine</strong> under the Timetable tab to copy your unique schedule code. Your classmates can paste this code to import your timetable instantly.</p>
+        </div>
+
+        <div class="card">
+          <h3>How do I export my attendance history?</h3>
+          <p>Open the <strong>History</strong> tab and click <strong>Export CSV</strong> to download a complete spreadsheet report of all your logged attendance sessions.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>
