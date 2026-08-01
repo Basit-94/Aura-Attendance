@@ -225,7 +225,11 @@ export default function Home() {
   const [bunkProjectionDays, setBunkProjectionDays] = useState<number>(3);
 
   // Tab State
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'timetable' | 'analytics'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'timetable' | 'analytics' | 'calendar'>('dashboard');
+
+  // Calendar Logger state
+  const [selectedDate, setSelectedDate] = useState<string>(() => new Date().toISOString().split('T')[0]);
+  const [currentCalendarMonth, setCurrentCalendarMonth] = useState<Date>(() => new Date());
 
   // Subject Filter State
   const [subjectFilter, setSubjectFilter] = useState<'ALL' | 'LECTURE' | 'LAB'>('ALL');
@@ -373,8 +377,8 @@ export default function Home() {
     }
   };
 
-  const addToOfflineQueue = (subjectId: string, status: string) => {
-    const todayStr = new Date().toISOString().split('T')[0];
+  const addToOfflineQueue = (subjectId: string, status: string, dateOverride?: string) => {
+    const todayStr = dateOverride || new Date().toISOString().split('T')[0];
     const logItem = {
       subjectId,
       date: todayStr,
@@ -616,7 +620,7 @@ export default function Home() {
   };
 
   // Quick Check-in Actions
-  const handleCheckIn = async (subjectId: string, status: 'PRESENT' | 'ABSENT' | 'HOLIDAY' | 'REMOVE') => {
+  const handleCheckIn = async (subjectId: string, status: 'PRESENT' | 'ABSENT' | 'HOLIDAY' | 'REMOVE', dateOverride?: string) => {
     if (inFlightChecks[subjectId]) return;
     setInFlightChecks((prev) => ({ ...prev, [subjectId]: true }));
     
@@ -626,7 +630,7 @@ export default function Home() {
       return prevSubjects.map(sub => {
         if (sub.id !== subjectId) return sub;
 
-        const todayDateStr = new Date().toISOString().split('T')[0];
+        const todayDateStr = dateOverride || new Date().toISOString().split('T')[0];
         let updatedLogs = sub.logs ? [...sub.logs] : [];
         const todayLogIndex = updatedLogs.findIndex(log => log.date.split('T')[0] === todayDateStr);
 
@@ -638,7 +642,7 @@ export default function Home() {
           if (todayLogIndex !== -1) {
             updatedLogs[todayLogIndex] = { ...updatedLogs[todayLogIndex], status };
           } else {
-            updatedLogs = [{ id: `temp-${Date.now()}`, date: new Date().toISOString(), status }, ...updatedLogs];
+            updatedLogs = [{ id: `temp-${Date.now()}`, date: dateOverride ? new Date(dateOverride).toISOString() : new Date().toISOString(), status }, ...updatedLogs];
           }
         }
 
@@ -683,7 +687,7 @@ export default function Home() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           subjectId,
-          date: new Date().toISOString().split('T')[0], // Log for today's calendar date
+          date: dateOverride || new Date().toISOString().split('T')[0], // Log for today's calendar date
           status,
         }),
       });
@@ -695,7 +699,7 @@ export default function Home() {
       }
     } catch (err) {
       console.warn('[handleCheckIn] Network request failed. Saving check-in locally.', err);
-      addToOfflineQueue(subjectId, status);
+      addToOfflineQueue(subjectId, status, dateOverride);
       setSuccess('Offline Mode: Attendance saved locally. We will sync it when connection returns.');
     } finally {
       setInFlightChecks((prev) => ({ ...prev, [subjectId]: false }));
@@ -3854,6 +3858,348 @@ export default function Home() {
 
               </div>
             )}
+
+            {/* TAB CONTENT 4: CALENDAR LOGGER */}
+            {activeTab === 'calendar' && (() => {
+              const year = currentCalendarMonth.getFullYear();
+              const monthIndex = currentCalendarMonth.getMonth();
+              const monthNames = [
+                "January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"
+              ];
+              const weekdayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+              const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
+              const firstDayIndex = new Date(year, monthIndex, 1).getDay();
+
+              const daysOfWeekMap = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
+              const selectedDayOfWeekName = daysOfWeekMap[new Date(selectedDate).getDay()];
+
+              const scheduledSlotsForDay = timetable.filter(
+                (slot) => slot.dayOfWeek.toUpperCase() === selectedDayOfWeekName
+              );
+
+              return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem', alignItems: 'start' }}>
+                    
+                    {/* Left Column: Interactive Month Calendar */}
+                    <div className="glass-card" style={{ padding: '1.5rem', margin: 0 }}>
+                      <div className="flex-between" style={{ marginBottom: '1.5rem' }}>
+                        <h3 style={{ fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <Calendar className="text-primary" size={20} />
+                          <span>Attendance History Calendar</span>
+                        </h3>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <button
+                            type="button"
+                            className="copy-btn"
+                            style={{ padding: '0.4rem 0.6rem', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', borderRadius: 'var(--border-radius-sm)' }}
+                            onClick={() => {
+                              setCurrentCalendarMonth(new Date(year, monthIndex - 1, 1));
+                            }}
+                          >
+                            &larr;
+                          </button>
+                          <span style={{ fontWeight: 600, fontSize: '0.95rem', minWidth: '110px', textAlign: 'center' }}>
+                            {monthNames[monthIndex]} {year}
+                          </span>
+                          <button
+                            type="button"
+                            className="copy-btn"
+                            style={{ padding: '0.4rem 0.6rem', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', borderRadius: 'var(--border-radius-sm)' }}
+                            onClick={() => {
+                              setCurrentCalendarMonth(new Date(year, monthIndex + 1, 1));
+                            }}
+                          >
+                            &rarr;
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Weekday Labels */}
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.5rem', textAlign: 'center', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                        {weekdayNames.map(name => (
+                          <div key={name}>{name}</div>
+                        ))}
+                      </div>
+
+                      {/* Calendar Days Grid */}
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.5rem' }}>
+                        {/* Empty padding cells for first day of the week */}
+                        {Array(firstDayIndex).fill(null).map((_, idx) => (
+                          <div key={`pad-${idx}`} style={{ aspectRatio: '1/1' }} />
+                        ))}
+
+                        {/* Day Cells */}
+                        {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((dayNum) => {
+                          const dateStr = `${year}-${String(monthIndex + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+                          const isSelected = selectedDate === dateStr;
+                          const isToday = new Date().toISOString().split('T')[0] === dateStr;
+                          
+                          // Find logs for this day
+                          const dayLogs = subjects.flatMap(sub => 
+                            (sub.logs || [])
+                              .filter(log => log.date.split('T')[0] === dateStr)
+                              .map(log => ({ ...log, subjectName: sub.name, type: sub.type }))
+                          );
+
+                          return (
+                            <button
+                              key={dayNum}
+                              type="button"
+                              onClick={() => setSelectedDate(dateStr)}
+                              style={{
+                                aspectRatio: '1/1',
+                                background: isSelected 
+                                  ? 'var(--primary)' 
+                                  : isToday 
+                                    ? 'rgba(99, 102, 241, 0.15)' 
+                                    : 'rgba(255, 255, 255, 0.02)',
+                                border: isSelected 
+                                  ? '1px solid var(--primary)' 
+                                  : isToday 
+                                    ? '1px solid var(--primary)' 
+                                    : '1px solid var(--border-color)',
+                                borderRadius: 'var(--border-radius-sm)',
+                                color: isSelected ? '#ffffff' : 'var(--text-primary)',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '0.15rem',
+                                transition: 'var(--transition-smooth)',
+                                position: 'relative',
+                                padding: '0.2rem'
+                              }}
+                              className="calendar-day-btn"
+                            >
+                              <span style={{ fontSize: '0.9rem', fontWeight: (isSelected || isToday) ? 700 : 500 }}>{dayNum}</span>
+                              
+                              {/* Tiny dots representing logs */}
+                              {dayLogs.length > 0 && (
+                                <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap', justifyContent: 'center', maxWidth: '100%' }}>
+                                  {dayLogs.slice(0, 3).map((log, idx) => (
+                                    <span
+                                      key={idx}
+                                      style={{
+                                        width: '5px',
+                                        height: '5px',
+                                        borderRadius: '50%',
+                                        backgroundColor: log.status === 'PRESENT' 
+                                          ? 'var(--success)' 
+                                          : log.status === 'ABSENT' 
+                                            ? 'var(--secondary)' 
+                                            : 'var(--warning)',
+                                      }}
+                                    />
+                                  ))}
+                                  {dayLogs.length > 3 && (
+                                    <span style={{ fontSize: '0.55rem', color: isSelected ? '#fff' : 'var(--text-muted)', lineHeight: 1 }}>+</span>
+                                  )}
+                                </div>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {/* Legend */}
+                      <div style={{ display: 'flex', gap: '1rem', marginTop: '1.25rem', fontSize: '0.75rem', justifyContent: 'center', color: 'var(--text-muted)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                          <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--success)' }} />
+                          <span>Present</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                          <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--secondary)' }} />
+                          <span>Absent</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                          <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--warning)' }} />
+                          <span>Holiday</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right Column: Attendance Logger Panel */}
+                    <div className="glass-card" style={{ padding: '1.5rem', margin: 0 }}>
+                      <div style={{ marginBottom: '1.5rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem' }}>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+                          {selectedDayOfWeekName}
+                        </span>
+                        <h3 style={{ fontSize: '1.4rem', marginTop: '0.15rem' }}>
+                          {new Date(selectedDate).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                        </h3>
+                      </div>
+
+                      {/* SECTION 1: TIMETABLE SCHEDULE FOR THIS DAY */}
+                      <div style={{ marginBottom: '1.5rem' }}>
+                        <h4 style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                          <Clock size={16} className="text-primary" />
+                          <span>Routine Scheduled Classes ({scheduledSlotsForDay.length})</span>
+                        </h4>
+
+                        {scheduledSlotsForDay.length === 0 ? (
+                          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', padding: '0.75rem', background: 'rgba(255,255,255,0.01)', borderRadius: 'var(--border-radius-sm)', border: '1px dashed var(--border-color)' }}>
+                            No classes are scheduled in your routine for this weekday.
+                          </p>
+                        ) : (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                            {scheduledSlotsForDay.map((slot) => {
+                              const sub = subjects.find(s => s.id === slot.subjectId);
+                              const slotLog = sub?.logs?.find(log => log.date.split('T')[0] === selectedDate);
+                              const status = slotLog?.status;
+
+                              return (
+                                <div 
+                                  key={slot.id} 
+                                  style={{ 
+                                    padding: '1rem', 
+                                    background: 'rgba(255,255,255,0.02)', 
+                                    border: '1px solid var(--border-color)', 
+                                    borderRadius: 'var(--border-radius-sm)',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    gap: '0.75rem'
+                                  }}
+                                >
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                    <div>
+                                      <span style={{ fontSize: '0.75rem', fontWeight: 700 }} className={`subject-badge ${slot.type.toLowerCase()}`}>
+                                        {slot.type}
+                                      </span>
+                                      <h5 style={{ fontSize: '1rem', marginTop: '0.2rem', fontWeight: 600 }}>{slot.subjectName}</h5>
+                                      <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.1rem' }}>
+                                        Time: {slot.startTime} - {slot.endTime}
+                                      </span>
+                                    </div>
+
+                                    {status && (
+                                      <span className={`status-badge status-${status.toLowerCase()}`} style={{ fontSize: '0.75rem' }}>
+                                        {status}
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  <div className="check-in-actions" style={{ marginTop: '0.25rem' }}>
+                                    <button
+                                      type="button"
+                                      className={`check-btn check-btn-present ${status === 'PRESENT' ? 'active' : ''}`}
+                                      disabled={inFlightChecks[slot.subjectId]}
+                                      onClick={() => handleCheckIn(slot.subjectId, status === 'PRESENT' ? 'REMOVE' : 'PRESENT', selectedDate)}
+                                      style={{ opacity: inFlightChecks[slot.subjectId] ? 0.5 : 1, cursor: inFlightChecks[slot.subjectId] ? 'not-allowed' : 'pointer' }}
+                                    >
+                                      Present
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className={`check-btn check-btn-absent ${status === 'ABSENT' ? 'active' : ''}`}
+                                      disabled={inFlightChecks[slot.subjectId]}
+                                      onClick={() => handleCheckIn(slot.subjectId, status === 'ABSENT' ? 'REMOVE' : 'ABSENT', selectedDate)}
+                                      style={{ opacity: inFlightChecks[slot.subjectId] ? 0.5 : 1, cursor: inFlightChecks[slot.subjectId] ? 'not-allowed' : 'pointer' }}
+                                    >
+                                      Absent
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className={`check-btn check-btn-holiday ${status === 'HOLIDAY' ? 'active' : ''}`}
+                                      disabled={inFlightChecks[slot.subjectId]}
+                                      onClick={() => handleCheckIn(slot.subjectId, status === 'HOLIDAY' ? 'REMOVE' : 'HOLIDAY', selectedDate)}
+                                      style={{ opacity: inFlightChecks[slot.subjectId] ? 0.5 : 1, cursor: inFlightChecks[slot.subjectId] ? 'not-allowed' : 'pointer' }}
+                                    >
+                                      Holiday
+                                    </button>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* SECTION 2: LOG OTHER SUBJECTS */}
+                      <div>
+                        <h4 style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                          <BookOpen size={16} className="text-secondary" />
+                          <span>Log Other Classes on this Date</span>
+                        </h4>
+
+                        {subjects.length === 0 ? (
+                          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>No subjects configured in this semester.</p>
+                        ) : (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '350px', overflowY: 'auto', paddingRight: '0.25rem' }}>
+                            {subjects.map((sub) => {
+                              const slotLog = sub.logs?.find(log => log.date.split('T')[0] === selectedDate);
+                              const status = slotLog?.status;
+
+                              return (
+                                <div 
+                                  key={sub.id} 
+                                  style={{ 
+                                    padding: '0.75rem', 
+                                    background: 'rgba(255,255,255,0.01)', 
+                                    border: '1px solid var(--border-color)', 
+                                    borderRadius: 'var(--border-radius-sm)',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    gap: '0.5rem'
+                                  }}
+                                >
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                      <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.35rem' }} className={`subject-badge ${sub.type.toLowerCase()}`}>
+                                        {sub.type}
+                                      </span>
+                                      <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>{sub.name}</span>
+                                    </div>
+                                    {status && (
+                                      <span className={`status-badge status-${status.toLowerCase()}`} style={{ fontSize: '0.7rem', padding: '0.1rem 0.4rem' }}>
+                                        {status}
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  <div className="check-in-actions" style={{ marginTop: '0.15rem' }}>
+                                    <button
+                                      type="button"
+                                      className={`check-btn check-btn-present ${status === 'PRESENT' ? 'active' : ''}`}
+                                      disabled={inFlightChecks[sub.id]}
+                                      onClick={() => handleCheckIn(sub.id, status === 'PRESENT' ? 'REMOVE' : 'PRESENT', selectedDate)}
+                                      style={{ padding: '0.3rem 0.5rem', fontSize: '0.75rem', opacity: inFlightChecks[sub.id] ? 0.5 : 1 }}
+                                    >
+                                      Present
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className={`check-btn check-btn-absent ${status === 'ABSENT' ? 'active' : ''}`}
+                                      disabled={inFlightChecks[sub.id]}
+                                      onClick={() => handleCheckIn(sub.id, status === 'ABSENT' ? 'REMOVE' : 'ABSENT', selectedDate)}
+                                      style={{ padding: '0.3rem 0.5rem', fontSize: '0.75rem', opacity: inFlightChecks[sub.id] ? 0.5 : 1 }}
+                                    >
+                                      Absent
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className={`check-btn check-btn-holiday ${status === 'HOLIDAY' ? 'active' : ''}`}
+                                      disabled={inFlightChecks[sub.id]}
+                                      onClick={() => handleCheckIn(sub.id, status === 'HOLIDAY' ? 'REMOVE' : 'HOLIDAY', selectedDate)}
+                                      style={{ padding: '0.3rem 0.5rem', fontSize: '0.75rem', opacity: inFlightChecks[sub.id] ? 0.5 : 1 }}
+                                    >
+                                      Holiday
+                                    </button>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
           </>
         )}
       </main>

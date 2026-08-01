@@ -152,7 +152,7 @@ export async function GET() {
           total,
           percentage: Math.round(percentage * 10) / 10, // Round to 1 decimal place
         },
-        logs: sub.attendanceLogs.slice(0, 15), // Return recent 15 logs
+        logs: sub.attendanceLogs, // Return all logs
       };
     });
 
