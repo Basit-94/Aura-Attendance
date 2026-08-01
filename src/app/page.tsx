@@ -2949,6 +2949,31 @@ export default function Home() {
                 <TrendingUp size={16} />
                 <span>Analytics & Predictors</span>
               </button>
+              <button
+                type="button"
+                className={`tab-btn ${activeTab === 'calendar' ? 'active' : ''}`}
+                onClick={() => setActiveTab('calendar')}
+                style={{
+                  flex: 1,
+                  minWidth: '120px',
+                  padding: '0.75rem 1rem',
+                  fontSize: '0.9rem',
+                  fontWeight: 600,
+                  borderRadius: 'var(--border-radius-sm)',
+                  border: 'none',
+                  background: activeTab === 'calendar' ? 'var(--primary-glow)' : 'transparent',
+                  color: activeTab === 'calendar' ? 'var(--text-primary)' : 'var(--text-secondary)',
+                  cursor: 'pointer',
+                  transition: 'var(--transition-smooth)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem'
+                }}
+              >
+                <Clock size={16} />
+                <span>Calendar Logger</span>
+              </button>
             </div>
 
             {/* Beautiful Toast Error/Success Banners for active student view */}
