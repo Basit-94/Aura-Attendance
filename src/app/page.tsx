@@ -4249,6 +4249,7 @@ export default function Home() {
                 <input
                   className="form-input"
                   type="text"
+                  list="subject-names-list"
                   placeholder="e.g. Mathematics III"
                   value={addName}
                   onChange={(e) => setAddName(e.target.value)}
@@ -4499,21 +4500,8 @@ export default function Home() {
 
       {/* Modal 6: Review Extracted Routine */}
       {showReviewModal && (() => {
-        const combinedSubjectNames = Array.from(
-          new Set([
-            ...subjects.map((s) => s.name),
-            ...reviewSlots.map((s) => s.subjectName)
-          ])
-        ).filter((name) => name && name !== 'New Subject' && name !== '__NEW__');
-
         return (
           <div className="modal-overlay">
-            <datalist id="subject-names-list">
-              {combinedSubjectNames.map((name) => (
-                <option key={name} value={name} />
-              ))}
-            </datalist>
-
             <div className="glass-card modal-card" style={{ maxWidth: '750px', width: '90%' }}>
               <div className="flex-between" style={{ marginBottom: '1.5rem' }}>
                 <h3 style={{ fontSize: '1.3rem' }}>Verify Routine Schedule</h3>
@@ -4722,6 +4710,47 @@ export default function Home() {
           </span>
         </div>
       )}
+
+      <datalist id="subject-names-list">
+        {(() => {
+          const presetSuggestions = [
+            { name: "Operating Systems", search: "OS, Operating System" },
+            { name: "Object Oriented Programming", search: "OOP, Object-Oriented Programming" },
+            { name: "Compiler Design", search: "CD, Compiler design" },
+            { name: "Software Engineering", search: "SE, Software Engineering" },
+            { name: "Introduction to Industrial Management", search: "IIM, Industrial Management" },
+            { name: "Constitution of India", search: "COI, Constitution of India" },
+            { name: "Artificial Intelligence", search: "AI, Artificial Intelligence" },
+            { name: "Computer Graphics", search: "CG, Computer Graphics" },
+            { name: "Software Engineering Lab", search: "SE Lab, Software Engineering Lab" },
+            { name: "Operating Systems Lab", search: "OS Lab, Operating Systems Lab" },
+            { name: "Object Oriented Programming Lab", search: "OOP Lab, Object Oriented Programming Lab" },
+            { name: "Database Management Systems", search: "DBMS, Database Management Systems" },
+            { name: "Database Management Systems Lab", search: "DBMS Lab, Database Management Systems Lab" },
+            { name: "Computer Networks", search: "CN, Computer Networks" },
+            { name: "Computer Networks Lab", search: "CN Lab, Computer Networks Lab" },
+            { name: "Design and Analysis of Algorithms", search: "DAA, Design and Analysis of Algorithms" },
+            { name: "Design and Analysis of Algorithms Lab", search: "DAA Lab, Design and Analysis of Algorithms Lab" },
+            { name: "Data Structures and Algorithms", search: "DSA, Data Structures and Algorithms" },
+            { name: "Theory of Computation", search: "TOC, Theory of Computation, Automata" },
+            { name: "Web Technology", search: "WT, Web Technology, Web Dev" },
+            { name: "Web Technology Lab", search: "WT Lab, Web Technology Lab, Web Dev Dev" },
+            { name: "Machine Learning", search: "ML, Machine Learning" }
+          ];
+
+          const userSubjectNames = subjects.map(s => s.name);
+          const allSuggestions = [
+            ...presetSuggestions,
+            ...userSubjectNames.filter(name => !presetSuggestions.some(p => p.name.toLowerCase() === name.toLowerCase())).map(name => ({ name, search: name }))
+          ];
+
+          return allSuggestions.map((item) => (
+            <option key={item.name} value={item.name}>
+              {item.search}
+            </option>
+          ));
+        })()}
+      </datalist>
     </div>
   );
 }
