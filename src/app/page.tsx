@@ -3905,10 +3905,10 @@ export default function Home() {
 
               return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem', alignItems: 'start' }}>
+                  <div className="calendar-wrapper-grid">
                     
                     {/* Left Column: Interactive Month Calendar */}
-                    <div className="glass-card" style={{ padding: '1.5rem', margin: 0 }}>
+                    <div className="glass-card calendar-card" style={{ margin: 0 }}>
                       <div className="flex-between" style={{ marginBottom: '1.5rem' }}>
                         <h3 style={{ fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                           <Calendar className="text-primary" size={20} />
@@ -3942,14 +3942,17 @@ export default function Home() {
                       </div>
 
                       {/* Weekday Labels */}
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.5rem', textAlign: 'center', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                      <div className="calendar-grid weekday-labels">
                         {weekdayNames.map(name => (
-                          <div key={name}>{name}</div>
+                          <div key={name}>
+                            <span className="weekday-desktop">{name}</span>
+                            <span className="weekday-mobile">{name.substring(0, 2)}</span>
+                          </div>
                         ))}
                       </div>
 
                       {/* Calendar Days Grid */}
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.5rem' }}>
+                      <div className="calendar-grid">
                         {/* Empty padding cells for first day of the week */}
                         {Array(firstDayIndex).fill(null).map((_, idx) => (
                           <div key={`pad-${idx}`} style={{ aspectRatio: '1/1' }} />
@@ -3995,22 +3998,20 @@ export default function Home() {
                                 gap: '0.15rem',
                                 transition: 'var(--transition-smooth)',
                                 position: 'relative',
-                                padding: '0.2rem'
+                                padding: 'var(--calendar-day-padding, 0.2rem)'
                               }}
                               className="calendar-day-btn"
                             >
-                              <span style={{ fontSize: '0.9rem', fontWeight: (isSelected || isToday) ? 700 : 500 }}>{dayNum}</span>
+                              <span style={{ fontSize: 'var(--calendar-day-font-size, 0.9rem)', fontWeight: (isSelected || isToday) ? 700 : 500 }}>{dayNum}</span>
                               
                               {/* Tiny dots representing logs */}
                               {dayLogs.length > 0 && (
-                                <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap', justifyContent: 'center', maxWidth: '100%' }}>
+                                <div style={{ display: 'flex', gap: '2px', flexWrap: 'wrap', justifyContent: 'center', maxWidth: '100%' }}>
                                   {dayLogs.slice(0, 3).map((log, idx) => (
                                     <span
                                       key={idx}
+                                      className="calendar-dot"
                                       style={{
-                                        width: '5px',
-                                        height: '5px',
-                                        borderRadius: '50%',
                                         backgroundColor: log.status === 'PRESENT' 
                                           ? 'var(--success)' 
                                           : log.status === 'ABSENT' 
@@ -4047,7 +4048,7 @@ export default function Home() {
                     </div>
 
                     {/* Right Column: Attendance Logger Panel */}
-                    <div className="glass-card" style={{ padding: '1.5rem', margin: 0 }}>
+                    <div className="glass-card logger-card" style={{ margin: 0 }}>
                       <div style={{ marginBottom: '1.5rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem' }}>
                         <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>
                           {selectedDayOfWeekName}

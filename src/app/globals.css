@@ -1651,3 +1651,95 @@ button, input, select {
   margin-top: 0.1rem;
   flex-shrink: 0;
 }
+
+/* =========================================================================
+   RESPONSIVE CALENDAR LOGGER & GRID SYSTEM
+   ========================================================================= */
+.calendar-wrapper-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.calendar-card,
+.logger-card {
+  padding: 1.5rem;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.5rem;
+}
+
+.weekday-labels {
+  text-align: center;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.calendar-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  transition: var(--transition-smooth);
+}
+
+.weekday-desktop {
+  display: inline;
+}
+
+.weekday-mobile {
+  display: none;
+}
+
+/* Tablet & Mobile Layout Enhancements */
+@media (max-width: 768px) {
+  .dashboard-container {
+    padding: 1rem !important;
+    gap: 1.25rem !important;
+  }
+}
+
+/* Extra Small Devices Adjustments (Mobile Phones) */
+@media (max-width: 480px) {
+  :root {
+    --calendar-day-padding: 0.05rem;
+    --calendar-day-font-size: 0.75rem;
+  }
+  
+  .calendar-wrapper-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .calendar-card,
+  .logger-card {
+    padding: 0.75rem !important;
+  }
+  
+  .calendar-grid {
+    gap: 0.25rem;
+  }
+  
+  .weekday-labels {
+    font-size: 0.65rem;
+  }
+  
+  .weekday-desktop {
+    display: none;
+  }
+  
+  .weekday-mobile {
+    display: inline;
+  }
+  
+  .calendar-dot {
+    width: 4.5px;
+    height: 4.5px;
+  }
+}
+
