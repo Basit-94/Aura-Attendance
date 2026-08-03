@@ -1988,7 +1988,7 @@ export default function Home() {
 
       return (
         <div style={{ minHeight: '100vh', background: 'var(--bg-main)' }}>
-          <header className={`dashboard-header ${isHeaderExpanded ? 'mobile-expanded' : 'mobile-collapsed'}`}>
+          <header className={`dashboard-header ${isHeaderExpanded ? 'header-expanded' : 'header-collapsed'}`}>
             <div className="brand-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                 <Calendar className="text-secondary" size={26} />
@@ -1997,7 +1997,7 @@ export default function Home() {
               </div>
               <button 
                 type="button"
-                className="mobile-header-toggle" 
+                className="header-toggle" 
                 onClick={() => setIsHeaderExpanded(!isHeaderExpanded)}
                 aria-label="Toggle Header Actions"
               >
@@ -2163,7 +2163,7 @@ export default function Home() {
 
     return (
       <div style={{ minHeight: '100vh', background: 'var(--bg-main)' }}>
-        <header className={`dashboard-header ${isHeaderExpanded ? 'mobile-expanded' : 'mobile-collapsed'}`}>
+        <header className={`dashboard-header ${isHeaderExpanded ? 'header-expanded' : 'header-collapsed'}`}>
           <div className="brand-header">
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               <Calendar className="text-secondary" size={26} />
@@ -2172,7 +2172,7 @@ export default function Home() {
             </div>
             <button 
               type="button"
-              className="mobile-header-toggle" 
+              className="header-toggle" 
               onClick={() => setIsHeaderExpanded(!isHeaderExpanded)}
               aria-label="Toggle Header Actions"
             >
@@ -2680,7 +2680,7 @@ export default function Home() {
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-main)' }}>
       {/* Header */}
-      <header className={`dashboard-header ${isHeaderExpanded ? 'mobile-expanded' : 'mobile-collapsed'}`}>
+      <header className={`dashboard-header ${isHeaderExpanded ? 'header-expanded' : 'header-collapsed'}`}>
         <div className="brand-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <Calendar className="text-secondary" size={26} />
@@ -2688,7 +2688,7 @@ export default function Home() {
           </div>
           <button 
             type="button"
-            className="mobile-header-toggle" 
+            className="header-toggle" 
             onClick={() => setIsHeaderExpanded(!isHeaderExpanded)}
             aria-label="Toggle Header Actions"
           >
