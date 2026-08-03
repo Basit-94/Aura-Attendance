@@ -40,19 +40,21 @@ async function mergeDuplicateSubjects(semesterId: string) {
       }
 
       await db.$transaction(async (tx) => {
+        // Keep in-memory copies of canonical's slots and logs to avoid database checks in loops
+        const canonicalLogs = [...canonical.attendanceLogs];
+        const canonicalSlots = [...canonical.scheduleSlots];
+
         for (const duplicate of duplicates) {
           for (const log of duplicate.attendanceLogs) {
-            const existingLog = await tx.attendanceLog.findFirst({
-              where: {
-                subjectId: canonical.id,
-                date: log.date,
-              },
-            });
+            const existingLog = canonicalLogs.find(
+              (l) => new Date(l.date).getTime() === new Date(log.date).getTime()
+            );
             if (!existingLog) {
               await tx.attendanceLog.update({
                 where: { id: log.id },
                 data: { subjectId: canonical.id },
               });
+              canonicalLogs.push(log);
             } else {
               await tx.attendanceLog.delete({
                 where: { id: log.id },
@@ -61,19 +63,18 @@ async function mergeDuplicateSubjects(semesterId: string) {
           }
 
           for (const slot of duplicate.scheduleSlots) {
-            const existingSlot = await tx.scheduleSlot.findFirst({
-              where: {
-                subjectId: canonical.id,
-                dayOfWeek: slot.dayOfWeek,
-                startTime: slot.startTime,
-                endTime: slot.endTime,
-              },
-            });
+            const existingSlot = canonicalSlots.find(
+              (s) =>
+                s.dayOfWeek === slot.dayOfWeek &&
+                s.startTime === slot.startTime &&
+                s.endTime === slot.endTime
+            );
             if (!existingSlot) {
               await tx.scheduleSlot.update({
                 where: { id: slot.id },
                 data: { subjectId: canonical.id },
               });
+              canonicalSlots.push(slot);
             } else {
               await tx.scheduleSlot.delete({
                 where: { id: slot.id },
@@ -85,6 +86,9 @@ async function mergeDuplicateSubjects(semesterId: string) {
             where: { id: duplicate.id },
           });
         }
+      }, {
+        maxWait: 15000,
+        timeout: 30000,
       });
     } else if (list.length === 1) {
       const sub = list[0];

@@ -65,17 +65,23 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Invalid slots array' }, { status: 400 });
     }
 
-    // Load current active semester
+    // Load current active semester with subjects and their schedule slots
     const activeSemester = await db.semester.findFirst({
       where: { studentId: student.id, isActive: true },
-      include: { subjects: true },
+      include: {
+        subjects: {
+          include: {
+            scheduleSlots: true,
+          },
+        },
+      },
     });
 
     if (!activeSemester) {
       return NextResponse.json({ error: 'No active semester found' }, { status: 400 });
     }
 
-    // Save verified schedule slots safely inside a transaction block
+    // Save verified schedule slots safely inside a transaction block with a higher timeout
     await db.$transaction(async (tx) => {
       // Local tracker of subjects to prevent creating duplicates in this request
       const localSubjects = [...activeSemester.subjects];
@@ -106,7 +112,7 @@ export async function POST(req: Request) {
 
         if (!subject) {
           // If the subject doesn't exist, create it (default target 75%)
-          subject = await tx.subject.create({
+          const newSub = await tx.subject.create({
             data: {
               semesterId: activeSemester.id,
               name: normalizedName,
@@ -114,22 +120,24 @@ export async function POST(req: Request) {
               targetPercentage: 75.0,
             },
           });
-          localSubjects.push(subject);
+          subject = {
+            ...newSub,
+            scheduleSlots: [],
+          };
+          localSubjects.push(subject as any);
         }
 
-        // Check if schedule slot already exists to prevent duplicate entries
-        const existingSlot = await tx.scheduleSlot.findFirst({
-          where: {
-            subjectId: subject.id,
-            dayOfWeek: parsed.dayOfWeek.toUpperCase(),
-            startTime: parsed.startTime,
-            endTime: parsed.endTime,
-          }
-        });
+        // Check in-memory if schedule slot already exists to prevent duplicate entries
+        const existingSlot = (subject as any).scheduleSlots.find(
+          (slot: any) =>
+            slot.dayOfWeek === parsed.dayOfWeek.toUpperCase() &&
+            slot.startTime === parsed.startTime &&
+            slot.endTime === parsed.endTime
+        );
 
         if (!existingSlot) {
           // Create the new schedule slot linked to this subject
-          await tx.scheduleSlot.create({
+          const newSlot = await tx.scheduleSlot.create({
             data: {
               subjectId: subject.id,
               dayOfWeek: parsed.dayOfWeek.toUpperCase(),
@@ -137,8 +145,12 @@ export async function POST(req: Request) {
               endTime: parsed.endTime,
             },
           });
+          (subject as any).scheduleSlots.push(newSlot);
         }
       }
+    }, {
+      maxWait: 15000,
+      timeout: 30000,
     });
 
     return NextResponse.json({

@@ -77,7 +77,13 @@ export async function POST(req: Request) {
 
     const activeSemester = await db.semester.findFirst({
       where: { studentId: student.id, isActive: true },
-      include: { subjects: true }
+      include: {
+        subjects: {
+          include: {
+            scheduleSlots: true,
+          },
+        },
+      },
     });
 
     if (!activeSemester) {
@@ -99,7 +105,7 @@ export async function POST(req: Request) {
 
         if (!subject) {
           // If the subject doesn't exist, create it
-          subject = await tx.subject.create({
+          const newSub = await tx.subject.create({
             data: {
               semesterId: activeSemester.id,
               name: normalizedName,
@@ -107,23 +113,25 @@ export async function POST(req: Request) {
               targetPercentage: srcSub.targetPercentage
             }
           });
-          localSubjects.push(subject);
+          subject = {
+            ...newSub,
+            scheduleSlots: [],
+          };
+          localSubjects.push(subject as any);
         }
 
         // 3. Create schedule slots linked to this subject
         if (srcSub.scheduleSlots.length > 0) {
           for (const slot of srcSub.scheduleSlots) {
-            const existingSlot = await tx.scheduleSlot.findFirst({
-              where: {
-                subjectId: subject.id,
-                dayOfWeek: slot.dayOfWeek.toUpperCase(),
-                startTime: slot.startTime,
-                endTime: slot.endTime,
-              }
-            });
+            const existingSlot = (subject as any).scheduleSlots.find(
+              (s: any) =>
+                s.dayOfWeek === slot.dayOfWeek.toUpperCase() &&
+                s.startTime === slot.startTime &&
+                s.endTime === slot.endTime
+            );
 
             if (!existingSlot) {
-              await tx.scheduleSlot.create({
+              const newSlot = await tx.scheduleSlot.create({
                 data: {
                   subjectId: subject.id,
                   dayOfWeek: slot.dayOfWeek.toUpperCase(),
@@ -131,10 +139,14 @@ export async function POST(req: Request) {
                   endTime: slot.endTime
                 }
               });
+              (subject as any).scheduleSlots.push(newSlot);
             }
           }
         }
       }
+    }, {
+      maxWait: 15000,
+      timeout: 30000,
     });
 
     return NextResponse.json({ message: 'Routine imported successfully' });
