@@ -19,6 +19,8 @@ import {
   ShieldCheck,
   Award,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   TrendingUp,
   FileText,
   Sliders,
@@ -139,6 +141,7 @@ export default function Home() {
   const [studentSubMode, setStudentSubMode] = useState<'LOGIN' | 'SIGNUP'>('LOGIN');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [viewingHistory, setViewingHistory] = useState(false);
+  const [isHeaderExpanded, setIsHeaderExpanded] = useState(false);
   const [currentUser, setCurrentUser] = useState<{ email: string; uniqueCode: string } | null>(null);
 
   // Form Fields
@@ -1985,29 +1988,41 @@ export default function Home() {
 
       return (
         <div style={{ minHeight: '100vh', background: 'var(--bg-main)' }}>
-          <header className="dashboard-header">
+          <header className={`dashboard-header ${isHeaderExpanded ? 'mobile-expanded' : 'mobile-collapsed'}`}>
             <div className="brand-header">
-              <Calendar className="text-secondary" size={26} />
-              <span className="logo-text">AuraAttend Portal</span>
-              <span className="subject-badge" style={{ verticalAlign: 'middle', marginLeft: '10px' }}>Teacher Mode (Batch)</span>
-            </div>
-            <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <Calendar className="text-secondary" size={26} />
+                <span className="logo-text">AuraAttend Portal</span>
+                <span className="subject-badge" style={{ verticalAlign: 'middle', marginLeft: '10px' }}>Teacher Mode (Batch)</span>
+              </div>
               <button 
                 type="button"
-                className="copy-btn" 
-                onClick={toggleTheme} 
-                title="Toggle Dark/Light Mode" 
-                style={{ padding: '0.5rem', background: 'rgba(255,255,255,0.05)', borderRadius: '50%', border: '1px solid var(--border-color)', color: 'var(--text-primary)', display: 'flex', alignItems: 'center' }}
+                className="mobile-header-toggle" 
+                onClick={() => setIsHeaderExpanded(!isHeaderExpanded)}
+                aria-label="Toggle Header Actions"
               >
-                {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+                {isHeaderExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
               </button>
-              <button className="btn-logout" onClick={() => {
-                setTeacherViewingData(null);
-                setIsBatchModeActive(false);
-                setBatchStudents([]);
-              }}>
-                Exit Batch Mirror
-              </button>
+            </div>
+            <div className="header-actions-wrapper">
+              <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <button 
+                  type="button"
+                  className="copy-btn" 
+                  onClick={toggleTheme} 
+                  title="Toggle Dark/Light Mode" 
+                  style={{ padding: '0.5rem', background: 'rgba(255,255,255,0.05)', borderRadius: '50%', border: '1px solid var(--border-color)', color: 'var(--text-primary)', display: 'flex', alignItems: 'center' }}
+                >
+                  {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+                </button>
+                <button className="btn-logout" onClick={() => {
+                  setTeacherViewingData(null);
+                  setIsBatchModeActive(false);
+                  setBatchStudents([]);
+                }}>
+                  Exit Batch Mirror
+                </button>
+              </div>
             </div>
           </header>
 
@@ -2148,33 +2163,45 @@ export default function Home() {
 
     return (
       <div style={{ minHeight: '100vh', background: 'var(--bg-main)' }}>
-        <header className="dashboard-header">
+        <header className={`dashboard-header ${isHeaderExpanded ? 'mobile-expanded' : 'mobile-collapsed'}`}>
           <div className="brand-header">
-            <Calendar className="text-secondary" size={26} />
-            <span className="logo-text">AuraAttend Portal</span>
-            <span className="subject-badge" style={{ verticalAlign: 'middle', marginLeft: '10px' }}>Teacher Mode</span>
-          </div>
-          <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <div className="student-info">
-              <span className="student-email">Viewing Student: {studentEmail}</span>
-              <span className="student-code">Student Code: {studentCode}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <Calendar className="text-secondary" size={26} />
+              <span className="logo-text">AuraAttend Portal</span>
+              <span className="subject-badge" style={{ verticalAlign: 'middle', marginLeft: '10px' }}>Teacher Mode</span>
             </div>
             <button 
               type="button"
-              className="copy-btn" 
-              onClick={toggleTheme} 
-              title="Toggle Dark/Light Mode" 
-              style={{ padding: '0.5rem', background: 'rgba(255,255,255,0.05)', borderRadius: '50%', border: '1px solid var(--border-color)', color: 'var(--text-primary)', display: 'flex', alignItems: 'center' }}
+              className="mobile-header-toggle" 
+              onClick={() => setIsHeaderExpanded(!isHeaderExpanded)}
+              aria-label="Toggle Header Actions"
             >
-              {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+              {isHeaderExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
             </button>
-            <button className="btn-logout" onClick={() => {
-              setTeacherViewingData(null);
-              setIsTeacherEditingUnlocked(false);
-              setEnteredEditPin('');
-            }}>
-              Exit Viewer
-            </button>
+          </div>
+          <div className="header-actions-wrapper">
+            <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <div className="student-info">
+                <span className="student-email">Viewing Student: {studentEmail}</span>
+                <span className="student-code">Student Code: {studentCode}</span>
+              </div>
+              <button 
+                type="button"
+                className="copy-btn" 
+                onClick={toggleTheme} 
+                title="Toggle Dark/Light Mode" 
+                style={{ padding: '0.5rem', background: 'rgba(255,255,255,0.05)', borderRadius: '50%', border: '1px solid var(--border-color)', color: 'var(--text-primary)', display: 'flex', alignItems: 'center' }}
+              >
+                {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+              </button>
+              <button className="btn-logout" onClick={() => {
+                setTeacherViewingData(null);
+                setIsTeacherEditingUnlocked(false);
+                setEnteredEditPin('');
+              }}>
+                Exit Viewer
+              </button>
+            </div>
           </div>
         </header>
 
@@ -2653,59 +2680,71 @@ export default function Home() {
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-main)' }}>
       {/* Header */}
-      <header className="dashboard-header">
+      <header className={`dashboard-header ${isHeaderExpanded ? 'mobile-expanded' : 'mobile-collapsed'}`}>
         <div className="brand-header">
-          <Calendar className="text-secondary" size={26} />
-          <span className="logo-text">AuraAttend</span>
-        </div>
-        <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          {viewingHistory ? (
-            <button className="btn-outline" onClick={() => setViewingHistory(false)}>
-              Back to Dashboard
-            </button>
-          ) : (
-            <button className="btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }} onClick={() => {
-              setViewingHistory(true);
-              fetchHistoryData();
-            }}>
-              <History size={16} />
-              <span>History Archives</span>
-            </button>
-          )}
-
-          <div className="student-info">
-            <span className="student-email">{currentUser?.email}</span>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.2rem' }}>
-              <span className="student-code">
-                Student Code: <span style={{ fontWeight: 'bold', color: 'var(--secondary)' }}>{currentUser?.uniqueCode}</span>
-                <button className="copy-btn" onClick={copyCodeToClipboard}>
-                  <Copy size={12} />
-                </button>
-                {copiedCode && <span style={{ color: 'var(--success)', fontSize: '0.7rem' }}>Copied!</span>}
-              </span>
-              <span className="student-code">
-                Teacher Edit PIN: <span style={{ fontWeight: 'bold', color: 'var(--primary)' }}>{teacherEditPin || '----'}</span>
-                <button className="copy-btn" title="Rotate PIN" onClick={rotateTeacherEditPin}>
-                  <RefreshCw size={12} />
-                </button>
-              </span>
-            </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <Calendar className="text-secondary" size={26} />
+            <span className="logo-text">AuraAttend</span>
           </div>
-
           <button 
             type="button"
-            className="copy-btn" 
-            onClick={toggleTheme} 
-            title="Toggle Dark/Light Mode" 
-            style={{ padding: '0.5rem', background: 'rgba(255,255,255,0.05)', borderRadius: '50%', border: '1px solid var(--border-color)', color: 'var(--text-primary)', display: 'flex', alignItems: 'center' }}
+            className="mobile-header-toggle" 
+            onClick={() => setIsHeaderExpanded(!isHeaderExpanded)}
+            aria-label="Toggle Header Actions"
           >
-            {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+            {isHeaderExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
           </button>
+        </div>
+        <div className="header-actions-wrapper">
+          <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            {viewingHistory ? (
+              <button className="btn-outline" onClick={() => setViewingHistory(false)}>
+                Back to Dashboard
+              </button>
+            ) : (
+              <button className="btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }} onClick={() => {
+                setViewingHistory(true);
+                fetchHistoryData();
+              }}>
+                <History size={16} />
+                <span>History Archives</span>
+              </button>
+            )}
 
-          <button className="btn-logout" onClick={handleLogout}>
-            <LogOut size={16} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
-            Log Out
-          </button>
+            <div className="student-info">
+              <span className="student-email">{currentUser?.email}</span>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.2rem' }}>
+                <span className="student-code">
+                  Student Code: <span style={{ fontWeight: 'bold', color: 'var(--secondary)' }}>{currentUser?.uniqueCode}</span>
+                  <button className="copy-btn" onClick={copyCodeToClipboard}>
+                    <Copy size={12} />
+                  </button>
+                  {copiedCode && <span style={{ color: 'var(--success)', fontSize: '0.7rem' }}>Copied!</span>}
+                </span>
+                <span className="student-code">
+                  Teacher Edit PIN: <span style={{ fontWeight: 'bold', color: 'var(--primary)' }}>{teacherEditPin || '----'}</span>
+                  <button className="copy-btn" title="Rotate PIN" onClick={rotateTeacherEditPin}>
+                    <RefreshCw size={12} />
+                  </button>
+                </span>
+              </div>
+            </div>
+
+            <button 
+              type="button"
+              className="copy-btn" 
+              onClick={toggleTheme} 
+              title="Toggle Dark/Light Mode" 
+              style={{ padding: '0.5rem', background: 'rgba(255,255,255,0.05)', borderRadius: '50%', border: '1px solid var(--border-color)', color: 'var(--text-primary)', display: 'flex', alignItems: 'center' }}
+            >
+              {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+            </button>
+
+            <button className="btn-logout" onClick={handleLogout}>
+              <LogOut size={16} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
+              Log Out
+            </button>
+          </div>
         </div>
       </header>
 
