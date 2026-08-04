@@ -1605,6 +1605,7 @@ export default function Home() {
       if (!res.ok) throw new Error(data.error);
 
       setSuccess('Timetable saved successfully and attendance records mapped!');
+      localStorage.setItem('timetable_uploaded_date', new Date().toISOString().split('T')[0]);
       setShowReviewModal(false);
       setReviewSlots([]);
       fetchDashboardData();
@@ -1689,6 +1690,7 @@ export default function Home() {
       if (!res.ok) throw new Error(data.error);
 
       setSuccess('Timetable slot scheduled successfully!');
+      localStorage.setItem('timetable_uploaded_date', new Date().toISOString().split('T')[0]);
       setShowAddSlot(false);
       setSlotSubjectId('');
       setSlotStartTime('');
@@ -1748,6 +1750,7 @@ export default function Home() {
       if (!res.ok) throw new Error(data.error);
 
       setSuccess('Friend\'s routine imported successfully!');
+      localStorage.setItem('timetable_uploaded_date', new Date().toISOString().split('T')[0]);
       setShowImportCodeModal(false);
       setFriendShareCodeInput('');
       fetchDashboardData();
@@ -1827,8 +1830,55 @@ export default function Home() {
     const missedDates: string[] = [];
     const today = new Date();
 
-    // Check last 14 days (up to yesterday, to avoid warning about classes that haven't happened/ended today)
-    for (let i = 14; i >= 1; i--) {
+    // Limit start date by active semester creation date
+    let checkStartDate = new Date();
+    checkStartDate.setDate(today.getDate() - 14);
+
+    const activeSem = semesters.find((s) => s.isActive);
+    if (activeSem && (activeSem as any).createdAt) {
+      const semCreatedDate = new Date((activeSem as any).createdAt);
+      if (semCreatedDate > checkStartDate) {
+        checkStartDate = semCreatedDate;
+      }
+    }
+
+    // Also limit by timetable upload date
+    const localUploadDateStr = localStorage.getItem('timetable_uploaded_date');
+    if (localUploadDateStr) {
+      const localUploadDate = new Date(localUploadDateStr);
+      if (localUploadDate > checkStartDate) {
+        checkStartDate = localUploadDate;
+      }
+    } else {
+      // Fallback: use earliest log date if available, or default to today (meaning no warnings for past dates before they started)
+      const allLogs = subjects.flatMap((s) => s.logs || []);
+      if (allLogs.length > 0) {
+        const sortedLogDates = allLogs
+          .map((log) => log.date.split('T')[0])
+          .sort();
+        const earliestLogDate = new Date(sortedLogDates[0]);
+        if (earliestLogDate > checkStartDate) {
+          checkStartDate = earliestLogDate;
+        }
+      } else {
+        checkStartDate = today;
+      }
+    }
+
+    // Set times to midnight for precise date calculations
+    checkStartDate.setHours(0, 0, 0, 0);
+    const yesterday = new Date();
+    yesterday.setDate(today.getDate() - 1);
+    yesterday.setHours(0, 0, 0, 0);
+
+    const oneDayMs = 24 * 60 * 60 * 1000;
+    const diffTime = yesterday.getTime() - checkStartDate.getTime();
+    const diffDays = Math.ceil(diffTime / oneDayMs);
+
+    if (diffDays < 0) return [];
+
+    // Loop from diffDays ago up to 1 day ago (yesterday)
+    for (let i = diffDays; i >= 1; i--) {
       const d = new Date();
       d.setDate(today.getDate() - i);
       
@@ -1865,6 +1915,118 @@ export default function Home() {
     }
 
     return missedDates;
+  };
+
+  // Bulk Check-in logic for a specific date and list of slots
+  const handleBulkCheckIn = async (
+    status: 'PRESENT' | 'ABSENT' | 'HOLIDAY',
+    dateStr: string,
+    slots: any[]
+  ) => {
+    if (slots.length === 0) return;
+
+    // Filter slots to only those that are not currently in-flight
+    const eligibleSlots = slots.filter((slot) => !inFlightChecks[slot.subjectId]);
+    if (eligibleSlots.length === 0) return;
+
+    // Set all to in-flight
+    const updatedInFlight = { ...inFlightChecks };
+    eligibleSlots.forEach((slot) => {
+      updatedInFlight[slot.subjectId] = true;
+    });
+    setInFlightChecks(updatedInFlight);
+
+    const previousSubjects = [...subjects];
+
+    // Optimistically update frontend state
+    setSubjects((prevSubjects) => {
+      return prevSubjects.map((sub) => {
+        const matchingSlot = eligibleSlots.find((slot) => slot.subjectId === sub.id);
+        if (!matchingSlot) return sub;
+
+        let updatedLogs = sub.logs ? [...sub.logs] : [];
+        const logIndex = updatedLogs.findIndex((log) => log.date.split('T')[0] === dateStr);
+
+        if (logIndex !== -1) {
+          updatedLogs[logIndex] = { ...updatedLogs[logIndex], status };
+        } else {
+          updatedLogs = [
+            {
+              id: `temp-${Date.now()}-${sub.id}`,
+              date: new Date(dateStr).toISOString(),
+              status,
+            },
+            ...updatedLogs,
+          ];
+        }
+
+        const oldLog = sub.logs?.find((log) => log.date.split('T')[0] === dateStr);
+        const oldStatus = oldLog?.status || 'NONE';
+
+        let presentDiff = 0;
+        let absentDiff = 0;
+        let holidayDiff = 0;
+
+        if (oldStatus === 'PRESENT') presentDiff--;
+        else if (oldStatus === 'ABSENT') absentDiff--;
+        else if (oldStatus === 'HOLIDAY') holidayDiff--;
+
+        if (status === 'PRESENT') presentDiff++;
+        else if (status === 'ABSENT') absentDiff++;
+        else if (status === 'HOLIDAY') holidayDiff++;
+
+        const newPresent = Math.max(0, sub.stats.present + presentDiff);
+        const newAbsent = Math.max(0, sub.stats.absent + absentDiff);
+        const newHoliday = Math.max(0, sub.stats.holiday + holidayDiff);
+        const newTotal = newPresent + newAbsent;
+        const newPercentage = newTotal > 0 ? (newPresent / newTotal) * 100 : 100.0;
+
+        return {
+          ...sub,
+          logs: updatedLogs,
+          stats: {
+            present: newPresent,
+            absent: newAbsent,
+            holiday: newHoliday,
+            total: newTotal,
+            percentage: Math.round(newPercentage * 10) / 10,
+          },
+        };
+      });
+    });
+
+    try {
+      // Fire parallel requests
+      await Promise.all(
+        eligibleSlots.map(async (slot) => {
+          const res = await fetch('/api/attendance/log', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              subjectId: slot.subjectId,
+              date: dateStr,
+              status,
+            }),
+          });
+          if (!res.ok) throw new Error('API failure');
+        })
+      );
+      setSuccess(`All classes marked as ${status.toLowerCase()} successfully!`);
+      await fetchDashboardData();
+    } catch (err) {
+      console.error('Bulk check-in failed:', err);
+      setError('Failed to mark all classes. Rolling back.');
+      setSubjects(previousSubjects);
+    } finally {
+      // Clear in-flight states
+      setInFlightChecks((prev) => {
+        const next = { ...prev };
+        eligibleSlots.forEach((slot) => {
+          delete next[slot.subjectId];
+        });
+        return next;
+      });
+    }
   };
 
   // Bunk Planner math logic
@@ -3289,11 +3451,89 @@ export default function Home() {
 
                   return (
                     <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                      <div className="flex-between">
-                        <h3 style={{ fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <div className="flex-between" style={{ flexWrap: 'wrap', gap: '0.75rem' }}>
+                        <h3 style={{ fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
                           <Calendar size={20} className="text-secondary" />
                           <span>Today&apos;s Class Checklist ({new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })})</span>
                         </h3>
+                        
+                        <div style={{ display: 'flex', gap: '0.4rem' }}>
+                          <button
+                            type="button"
+                            onClick={() => handleBulkCheckIn('PRESENT', todayDateStr, todaySlots)}
+                            style={{
+                              padding: '0.35rem 0.7rem',
+                              fontSize: '0.75rem',
+                              fontWeight: 600,
+                              background: 'rgba(16, 185, 129, 0.1)',
+                              border: '1px solid rgba(16, 185, 129, 0.3)',
+                              borderRadius: '20px',
+                              color: 'var(--success)',
+                              cursor: 'pointer',
+                              transition: 'var(--transition-smooth)'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.background = 'var(--success)';
+                              e.currentTarget.style.color = '#ffffff';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.background = 'rgba(16, 185, 129, 0.1)';
+                              e.currentTarget.style.color = 'var(--success)';
+                            }}
+                          >
+                            ✓ All Present
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleBulkCheckIn('ABSENT', todayDateStr, todaySlots)}
+                            style={{
+                              padding: '0.35rem 0.7rem',
+                              fontSize: '0.75rem',
+                              fontWeight: 600,
+                              background: 'rgba(244, 63, 94, 0.1)',
+                              border: '1px solid rgba(244, 63, 94, 0.3)',
+                              borderRadius: '20px',
+                              color: 'var(--secondary)',
+                              cursor: 'pointer',
+                              transition: 'var(--transition-smooth)'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.background = 'var(--secondary)';
+                              e.currentTarget.style.color = '#ffffff';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.background = 'rgba(244, 63, 94, 0.1)';
+                              e.currentTarget.style.color = 'var(--secondary)';
+                            }}
+                          >
+                            ✗ All Absent
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleBulkCheckIn('HOLIDAY', todayDateStr, todaySlots)}
+                            style={{
+                              padding: '0.35rem 0.7rem',
+                              fontSize: '0.75rem',
+                              fontWeight: 600,
+                              background: 'rgba(245, 158, 11, 0.1)',
+                              border: '1px solid rgba(245, 158, 11, 0.3)',
+                              borderRadius: '20px',
+                              color: 'var(--warning)',
+                              cursor: 'pointer',
+                              transition: 'var(--transition-smooth)'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.background = 'var(--warning)';
+                              e.currentTarget.style.color = '#ffffff';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.background = 'rgba(245, 158, 11, 0.1)';
+                              e.currentTarget.style.color = 'var(--warning)';
+                            }}
+                          >
+                            📅 All Holiday
+                          </button>
+                        </div>
                       </div>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1rem' }}>
                         {Object.keys(groupedTodaySlots).map((subjectId) => {
@@ -4224,10 +4464,92 @@ export default function Home() {
 
                       {/* SECTION 1: TIMETABLE SCHEDULE FOR THIS DAY */}
                       <div style={{ marginBottom: '1.5rem' }}>
-                        <h4 style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                          <Clock size={16} className="text-primary" />
-                          <span>Routine Scheduled Classes ({scheduledSlotsForDay.length})</span>
-                        </h4>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                          <h4 style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-secondary)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                            <Clock size={16} className="text-primary" />
+                            <span>Routine Scheduled Classes ({scheduledSlotsForDay.length})</span>
+                          </h4>
+                          
+                          {scheduledSlotsForDay.length > 0 && (
+                            <div style={{ display: 'flex', gap: '0.3rem' }}>
+                              <button
+                                type="button"
+                                onClick={() => handleBulkCheckIn('PRESENT', selectedDate, scheduledSlotsForDay)}
+                                style={{
+                                  padding: '0.25rem 0.5rem',
+                                  fontSize: '0.7rem',
+                                  fontWeight: 600,
+                                  background: 'rgba(16, 185, 129, 0.1)',
+                                  border: '1px solid rgba(16, 185, 129, 0.3)',
+                                  borderRadius: '20px',
+                                  color: 'var(--success)',
+                                  cursor: 'pointer',
+                                  transition: 'var(--transition-smooth)'
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.background = 'var(--success)';
+                                  e.currentTarget.style.color = '#ffffff';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.background = 'rgba(16, 185, 129, 0.1)';
+                                  e.currentTarget.style.color = 'var(--success)';
+                                }}
+                              >
+                                ✓ All Present
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleBulkCheckIn('ABSENT', selectedDate, scheduledSlotsForDay)}
+                                style={{
+                                  padding: '0.25rem 0.5rem',
+                                  fontSize: '0.7rem',
+                                  fontWeight: 600,
+                                  background: 'rgba(244, 63, 94, 0.1)',
+                                  border: '1px solid rgba(244, 63, 94, 0.3)',
+                                  borderRadius: '20px',
+                                  color: 'var(--secondary)',
+                                  cursor: 'pointer',
+                                  transition: 'var(--transition-smooth)'
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.background = 'var(--secondary)';
+                                  e.currentTarget.style.color = '#ffffff';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.background = 'rgba(244, 63, 94, 0.1)';
+                                  e.currentTarget.style.color = 'var(--secondary)';
+                                }}
+                              >
+                                ✗ All Absent
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleBulkCheckIn('HOLIDAY', selectedDate, scheduledSlotsForDay)}
+                                style={{
+                                  padding: '0.25rem 0.5rem',
+                                  fontSize: '0.7rem',
+                                  fontWeight: 600,
+                                  background: 'rgba(245, 158, 11, 0.1)',
+                                  border: '1px solid rgba(245, 158, 11, 0.3)',
+                                  borderRadius: '20px',
+                                  color: 'var(--warning)',
+                                  cursor: 'pointer',
+                                  transition: 'var(--transition-smooth)'
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.background = 'var(--warning)';
+                                  e.currentTarget.style.color = '#ffffff';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.background = 'rgba(245, 158, 11, 0.1)';
+                                  e.currentTarget.style.color = 'var(--warning)';
+                                }}
+                              >
+                                📅 All Holiday
+                              </button>
+                            </div>
+                          )}
+                        </div>
 
                         {scheduledSlotsForDay.length === 0 ? (
                           <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', padding: '0.75rem', background: 'rgba(255,255,255,0.01)', borderRadius: 'var(--border-radius-sm)', border: '1px dashed var(--border-color)' }}>
