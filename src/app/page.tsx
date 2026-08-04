@@ -1820,6 +1820,53 @@ export default function Home() {
     return getTypeStatsFull(subjectsList, type).percentage;
   };
 
+  // Helper: Get dates in the last 14 days where there was a scheduled class but no attendance log was recorded
+  const getMissedLogDates = () => {
+    if (subjects.length === 0 || timetable.length === 0) return [];
+
+    const missedDates: string[] = [];
+    const today = new Date();
+
+    // Check last 14 days (up to yesterday, to avoid warning about classes that haven't happened/ended today)
+    for (let i = 14; i >= 1; i--) {
+      const d = new Date();
+      d.setDate(today.getDate() - i);
+      
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      const dateStr = `${year}-${month}-${day}`;
+
+      const dayNames = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
+      const dayOfWeek = dayNames[d.getDay()];
+
+      // Check if there are scheduled classes on this weekday
+      const slots = timetable.filter((s) => s.dayOfWeek.toUpperCase() === dayOfWeek);
+      if (slots.length === 0) continue;
+
+      // Check if any slot is missing an attendance log
+      let hasMissedSlot = false;
+      for (const slot of slots) {
+        const sub = subjects.find((s) => s.id === slot.subjectId);
+        if (!sub) continue;
+
+        const hasLog = (sub.logs || []).some(
+          (log) => log.date.split('T')[0] === dateStr
+        );
+        if (!hasLog) {
+          hasMissedSlot = true;
+          break;
+        }
+      }
+
+      if (hasMissedSlot) {
+        missedDates.push(dateStr);
+      }
+    }
+
+    return missedDates;
+  };
+
   // Bunk Planner math logic
   const getPredictorResult = () => {
     const sub = subjects.find((s) => s.id === selectedSubjectId);
@@ -3036,6 +3083,84 @@ export default function Home() {
             {/* TAB CONTENT 1: DASHBOARD */}
             {activeTab === 'dashboard' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                
+                {/* Missing Attendance Warning Alert */}
+                {(() => {
+                  const missedDates = getMissedLogDates();
+                  if (missedDates.length === 0) return null;
+
+                  return (
+                    <div 
+                      className="glass-card" 
+                      style={{ 
+                        margin: 0, 
+                        border: '1px solid rgba(244, 63, 94, 0.25)', 
+                        background: 'rgba(244, 63, 94, 0.08)',
+                        boxShadow: '0 10px 30px rgba(244, 63, 94, 0.05)',
+                        padding: '1.25rem 1.5rem',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '0.75rem',
+                        borderRadius: 'var(--border-radius-lg)',
+                        transition: 'var(--transition-smooth)'
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', color: 'var(--secondary)' }}>
+                        <AlertCircle size={20} style={{ flexShrink: 0 }} />
+                        <h4 style={{ fontSize: '1.05rem', fontWeight: 700, margin: 0 }}>
+                          Unmarked Attendance Detected
+                        </h4>
+                      </div>
+                      <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', margin: 0, lineHeight: '1.45' }}>
+                        You missed logging attendance for scheduled classes on the following dates. Select a date to mark it in the Calendar Logger:
+                      </p>
+                      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.25rem' }}>
+                        {missedDates.map((dateStr) => {
+                          const [y, m, d] = dateStr.split('-').map(Number);
+                          const dateObj = new Date(y, m - 1, d);
+                          const formattedDate = dateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric', weekday: 'short' });
+                          return (
+                            <button
+                              key={dateStr}
+                              onClick={() => {
+                                setSelectedDate(dateStr);
+                                setCurrentCalendarMonth(new Date(y, m - 1, 1));
+                                setActiveTab('calendar');
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                              }}
+                              className="missed-date-btn"
+                              style={{
+                                padding: '0.4rem 0.8rem',
+                                background: 'rgba(20, 26, 42, 0.75)',
+                                border: '1px solid rgba(244, 63, 94, 0.25)',
+                                borderRadius: '20px',
+                                color: 'var(--text-primary)',
+                                fontSize: '0.8rem',
+                                fontWeight: 600,
+                                cursor: 'pointer',
+                                transition: 'var(--transition-smooth)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.25rem'
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.borderColor = 'var(--secondary)';
+                                e.currentTarget.style.background = 'rgba(244, 63, 94, 0.15)';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.borderColor = 'rgba(244, 63, 94, 0.25)';
+                                e.currentTarget.style.background = 'rgba(20, 26, 42, 0.75)';
+                              }}
+                            >
+                              <Calendar size={12} style={{ color: 'var(--secondary)' }} />
+                              <span>{formattedDate}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })()}
                 
                 {/* Top Widgets Grid */}
                 <div className="widgets-grid" style={{ marginBottom: 0 }}>
