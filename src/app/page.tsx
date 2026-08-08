@@ -2047,6 +2047,118 @@ export default function Home() {
     }
   };
 
+  const handleMarkAllUnmarked = async (status: 'PRESENT' | 'ABSENT' | 'HOLIDAY') => {
+    const missedDates = getMissedLogDates();
+    if (missedDates.length === 0) return;
+
+    const missedOps: Array<{ subjectId: string; date: string }> = [];
+
+    missedDates.forEach((dateStr) => {
+      const [y, m, d] = dateStr.split('-').map(Number);
+      const dateObj = new Date(y, m - 1, d);
+      const dayNames = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
+      const dayOfWeek = dayNames[dateObj.getDay()];
+
+      const slots = timetable.filter((s) => s.dayOfWeek.toUpperCase() === dayOfWeek);
+      slots.forEach((slot) => {
+        const sub = subjects.find((s) => s.id === slot.subjectId);
+        if (!sub) return;
+
+        const hasLog = (sub.logs || []).some(
+          (log) => log.date.split('T')[0] === dateStr
+        );
+        if (!hasLog) {
+          missedOps.push({ subjectId: slot.subjectId, date: dateStr });
+        }
+      });
+    });
+
+    if (missedOps.length === 0) return;
+
+    const previousSubjects = [...subjects];
+
+    setSubjects((prevSubjects) => {
+      return prevSubjects.map((sub) => {
+        const opsForSub = missedOps.filter((op) => op.subjectId === sub.id);
+        if (opsForSub.length === 0) return sub;
+
+        let updatedLogs = sub.logs ? [...sub.logs] : [];
+        let presentDiff = 0;
+        let absentDiff = 0;
+        let holidayDiff = 0;
+
+        opsForSub.forEach((op) => {
+          updatedLogs = [
+            {
+              id: `temp-${Date.now()}-${sub.id}-${op.date}`,
+              date: new Date(op.date).toISOString(),
+              status,
+            },
+            ...updatedLogs,
+          ];
+
+          if (status === 'PRESENT') presentDiff++;
+          else if (status === 'ABSENT') absentDiff++;
+          else if (status === 'HOLIDAY') holidayDiff++;
+        });
+
+        const newPresent = Math.max(0, sub.stats.present + presentDiff);
+        const newAbsent = Math.max(0, sub.stats.absent + absentDiff);
+        const newHoliday = Math.max(0, sub.stats.holiday + holidayDiff);
+        const newTotal = newPresent + newAbsent;
+        const newPercentage = newTotal > 0 ? (newPresent / newTotal) * 100 : 100.0;
+
+        return {
+          ...sub,
+          logs: updatedLogs,
+          stats: {
+            ...sub.stats,
+            present: newPresent,
+            absent: newAbsent,
+            holiday: newHoliday,
+            total: newTotal,
+            percentage: Math.round(newPercentage * 10) / 10,
+          },
+        };
+      });
+    });
+
+    try {
+      await Promise.all(
+        missedOps.map(async (op) => {
+          if (checkInAbortControllers.current[op.subjectId]) {
+            checkInAbortControllers.current[op.subjectId].abort();
+          }
+          const controller = new AbortController();
+          checkInAbortControllers.current[op.subjectId] = controller;
+
+          try {
+            const res = await fetch('/api/attendance/log', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                subjectId: op.subjectId,
+                date: op.date,
+                status,
+              }),
+              signal: controller.signal,
+            });
+            if (!res.ok) throw new Error('API failure');
+          } finally {
+            if (checkInAbortControllers.current[op.subjectId] === controller) {
+              delete checkInAbortControllers.current[op.subjectId];
+            }
+          }
+        })
+      );
+      setSuccess(`All ${missedOps.length} unmarked classes marked as ${status.toLowerCase()} successfully!`);
+    } catch (err) {
+      console.error('Marking unmarked classes failed:', err);
+      setError('Failed to mark all unmarked classes. Rolling back.');
+      setSubjects(previousSubjects);
+    }
+  };
+
   // Bunk Planner math logic
   const getPredictorResult = () => {
     const sub = subjects.find((s) => s.id === selectedSubjectId);
@@ -3337,6 +3449,50 @@ export default function Home() {
                             </button>
                           );
                         })}
+                      </div>
+                      
+                      <div style={{ marginTop: '0.25rem', borderTop: '1px dashed rgba(244, 63, 94, 0.2)', paddingTop: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
+                          Or bulk mark all unmarked classes as:
+                        </span>
+                        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (confirm('Are you sure you want to mark all unmarked classes as PRESENT?')) {
+                                handleMarkAllUnmarked('PRESENT');
+                              }
+                            }}
+                            className="check-btn check-btn-present"
+                            style={{ padding: '0.35rem 0.75rem', fontSize: '0.75rem', border: '1px solid rgba(16, 185, 129, 0.3)', background: 'rgba(16, 185, 129, 0.1)', color: 'var(--success)' }}
+                          >
+                            ✓ Present
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (confirm('Are you sure you want to mark all unmarked classes as ABSENT?')) {
+                                handleMarkAllUnmarked('ABSENT');
+                              }
+                            }}
+                            className="check-btn check-btn-absent"
+                            style={{ padding: '0.35rem 0.75rem', fontSize: '0.75rem', border: '1px solid rgba(239, 68, 68, 0.3)', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--secondary)' }}
+                          >
+                            ✗ Absent
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (confirm('Are you sure you want to mark all unmarked classes as HOLIDAY?')) {
+                                handleMarkAllUnmarked('HOLIDAY');
+                              }
+                            }}
+                            className="check-btn check-btn-holiday"
+                            style={{ padding: '0.35rem 0.75rem', fontSize: '0.75rem', border: '1px solid rgba(245, 158, 11, 0.3)', background: 'rgba(245, 158, 11, 0.1)', color: 'var(--warning)' }}
+                          >
+                            📅 Holiday
+                          </button>
+                        </div>
                       </div>
                     </div>
                   );
