@@ -132,6 +132,13 @@ const calculateAdvice = (present: number, total: number, target: number) => {
   }
 };
 
+const getLocalDateString = (date = new Date()) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 export default function Home() {
   // Global Mock Mode Check
   const isMockMode = process.env.NEXT_PUBLIC_MOCK_MODE === 'true';
@@ -232,7 +239,7 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'timetable' | 'analytics' | 'calendar'>('dashboard');
 
   // Calendar Logger state
-  const [selectedDate, setSelectedDate] = useState<string>(() => new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState<string>(() => getLocalDateString());
   const [currentCalendarMonth, setCurrentCalendarMonth] = useState<Date>(() => new Date());
 
   // Subject Filter State
@@ -382,7 +389,7 @@ export default function Home() {
   };
 
   const addToOfflineQueue = (subjectId: string, status: string, dateOverride?: string) => {
-    const todayStr = dateOverride || new Date().toISOString().split('T')[0];
+    const todayStr = dateOverride || getLocalDateString();
     const logItem = {
       subjectId,
       date: todayStr,
@@ -638,7 +645,7 @@ export default function Home() {
       return prevSubjects.map(sub => {
         if (sub.id !== subjectId) return sub;
 
-        const todayDateStr = dateOverride || new Date().toISOString().split('T')[0];
+        const todayDateStr = dateOverride || getLocalDateString();
         let updatedLogs = sub.logs ? [...sub.logs] : [];
         const todayLogIndex = updatedLogs.findIndex(log => log.date.split('T')[0] === todayDateStr);
 
@@ -650,7 +657,7 @@ export default function Home() {
           if (todayLogIndex !== -1) {
             updatedLogs[todayLogIndex] = { ...updatedLogs[todayLogIndex], status };
           } else {
-            updatedLogs = [{ id: `temp-${Date.now()}`, date: dateOverride ? new Date(dateOverride).toISOString() : new Date().toISOString(), status }, ...updatedLogs];
+            updatedLogs = [{ id: `temp-${Date.now()}`, date: dateOverride ? new Date(dateOverride).toISOString() : new Date(getLocalDateString()).toISOString(), status }, ...updatedLogs];
           }
         }
 
@@ -696,7 +703,7 @@ export default function Home() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           subjectId,
-          date: dateOverride || new Date().toISOString().split('T')[0],
+          date: dateOverride || getLocalDateString(),
           status,
         }),
         signal: controller.signal,
@@ -741,7 +748,7 @@ export default function Home() {
       const updatedSubjects = prev.subjects.map(sub => {
         if (sub.id !== subjectId) return sub;
 
-        const todayDateStr = new Date().toISOString().split('T')[0];
+        const todayDateStr = getLocalDateString();
         let updatedLogs = sub.logs ? [...sub.logs] : [];
         const todayLogIndex = updatedLogs.findIndex(log => log.date.split('T')[0] === todayDateStr);
 
@@ -753,7 +760,7 @@ export default function Home() {
           if (todayLogIndex !== -1) {
             updatedLogs[todayLogIndex] = { ...updatedLogs[todayLogIndex], status };
           } else {
-            updatedLogs = [{ id: `temp-${Date.now()}`, date: new Date().toISOString(), status }, ...updatedLogs];
+            updatedLogs = [{ id: `temp-${Date.now()}`, date: new Date(getLocalDateString()).toISOString(), status }, ...updatedLogs];
           }
         }
 
@@ -800,7 +807,7 @@ export default function Home() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           subjectId,
-          date: new Date().toISOString().split('T')[0],
+          date: getLocalDateString(),
           status,
           studentCode: teacherViewingData.studentCode,
           teacherEditPin: enteredEditPin,
@@ -859,7 +866,7 @@ export default function Home() {
     for (let i = 29; i >= 0; i--) {
       const d = new Date();
       d.setDate(d.getDate() - i);
-      dates.push(d.toISOString().split('T')[0]);
+      dates.push(getLocalDateString(d));
     }
     return dates;
   };
@@ -945,7 +952,7 @@ export default function Home() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             subjectId: matchingSub.id,
-            date: new Date().toISOString().split('T')[0],
+            date: getLocalDateString(),
             status: batchTargetStatus,
             studentCode: student.studentCode,
             teacherEditPin: student.pin,
@@ -1629,7 +1636,7 @@ export default function Home() {
       if (!res.ok) throw new Error(data.error);
 
       setSuccess('Timetable saved successfully and attendance records mapped!');
-      localStorage.setItem('timetable_uploaded_date', new Date().toISOString().split('T')[0]);
+      localStorage.setItem('timetable_uploaded_date', getLocalDateString());
       setShowReviewModal(false);
       setReviewSlots([]);
       fetchDashboardData();
@@ -1714,7 +1721,7 @@ export default function Home() {
       if (!res.ok) throw new Error(data.error);
 
       setSuccess('Timetable slot scheduled successfully!');
-      localStorage.setItem('timetable_uploaded_date', new Date().toISOString().split('T')[0]);
+      localStorage.setItem('timetable_uploaded_date', getLocalDateString());
       setShowAddSlot(false);
       setSlotSubjectId('');
       setSlotStartTime('');
@@ -1774,7 +1781,7 @@ export default function Home() {
       if (!res.ok) throw new Error(data.error);
 
       setSuccess('Friend\'s routine imported successfully!');
-      localStorage.setItem('timetable_uploaded_date', new Date().toISOString().split('T')[0]);
+      localStorage.setItem('timetable_uploaded_date', getLocalDateString());
       setShowImportCodeModal(false);
       setFriendShareCodeInput('');
       fetchDashboardData();
@@ -2676,7 +2683,7 @@ export default function Home() {
             <div className="subjects-grid">
               {teacherSubs.map((sub) => {
                 const todayLog = sub.logs?.find(
-                  (log) => log.date.split('T')[0] === new Date().toISOString().split('T')[0]
+                  (log) => log.date.split('T')[0] === getLocalDateString()
                 );
 
                 return (
@@ -3621,7 +3628,7 @@ export default function Home() {
                     groupedTodaySlots[slot.subjectId].push(slot);
                   }
 
-                  const todayDateStr = new Date().toISOString().split('T')[0];
+                  const todayDateStr = getLocalDateString();
 
                   return (
                     <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -3870,7 +3877,7 @@ export default function Home() {
                       <div className="subjects-grid">
                         {filteredSubjects.map((sub) => {
                           const todayLog = sub.logs.find(
-                            (log) => log.date.split('T')[0] === new Date().toISOString().split('T')[0]
+                            (log) => log.date.split('T')[0] === getLocalDateString()
                           );
 
                           return (
@@ -4540,7 +4547,7 @@ export default function Home() {
                         {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((dayNum) => {
                           const dateStr = `${year}-${String(monthIndex + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
                           const isSelected = selectedDate === dateStr;
-                          const isToday = new Date().toISOString().split('T')[0] === dateStr;
+                          const isToday = getLocalDateString() === dateStr;
                           
                           // Find logs for this day
                           const dayLogs = subjects.flatMap(sub => 
