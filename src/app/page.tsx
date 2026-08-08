@@ -211,6 +211,7 @@ export default function Home() {
   const [addSemName, setAddSemName] = useState('');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const checkInAbortControllers = useRef<Record<string, AbortController>>({});
 
   // Custom Criteria Thresholds
   const [criteriaA, setCriteriaA] = useState<number>(75);
@@ -624,8 +625,12 @@ export default function Home() {
 
   // Quick Check-in Actions
   const handleCheckIn = async (subjectId: string, status: 'PRESENT' | 'ABSENT' | 'HOLIDAY' | 'REMOVE', dateOverride?: string) => {
-    if (inFlightChecks[subjectId]) return;
-    setInFlightChecks((prev) => ({ ...prev, [subjectId]: true }));
+    // Abort previous request for this subject if it exists
+    if (checkInAbortControllers.current[subjectId]) {
+      checkInAbortControllers.current[subjectId].abort();
+    }
+    const controller = new AbortController();
+    checkInAbortControllers.current[subjectId] = controller;
     
     // Optimistic Update
     const previousSubjects = [...subjects];
@@ -674,6 +679,7 @@ export default function Home() {
           ...sub,
           logs: updatedLogs,
           stats: {
+            ...sub.stats,
             present: newPresent,
             absent: newAbsent,
             holiday: newHoliday,
@@ -690,28 +696,41 @@ export default function Home() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           subjectId,
-          date: dateOverride || new Date().toISOString().split('T')[0], // Log for today's calendar date
+          date: dateOverride || new Date().toISOString().split('T')[0],
           status,
         }),
+        signal: controller.signal,
       });
       if (!res.ok) {
         // Rollback on error
         setSubjects(previousSubjects);
-      } else {
-        await fetchDashboardData();
+        const data = await res.json();
+        setError(data.error || 'Failed to update attendance');
       }
-    } catch (err) {
+    } catch (err: any) {
+      if (err.name === 'AbortError') {
+        console.log('[handleCheckIn] Request aborted for subject:', subjectId);
+        return;
+      }
       console.warn('[handleCheckIn] Network request failed. Saving check-in locally.', err);
       addToOfflineQueue(subjectId, status, dateOverride);
       setSuccess('Offline Mode: Attendance saved locally. We will sync it when connection returns.');
     } finally {
-      setInFlightChecks((prev) => ({ ...prev, [subjectId]: false }));
+      if (checkInAbortControllers.current[subjectId] === controller) {
+        delete checkInAbortControllers.current[subjectId];
+      }
     }
   };
 
   const handleTeacherCheckIn = async (subjectId: string, status: 'PRESENT' | 'ABSENT' | 'HOLIDAY' | 'REMOVE') => {
-    if (!teacherViewingData || inFlightChecks[subjectId]) return;
-    setInFlightChecks((prev) => ({ ...prev, [subjectId]: true }));
+    if (!teacherViewingData) return;
+    
+    if (checkInAbortControllers.current[subjectId]) {
+      checkInAbortControllers.current[subjectId].abort();
+    }
+    const controller = new AbortController();
+    checkInAbortControllers.current[subjectId] = controller;
+
     setError('');
     setSuccess('');
 
@@ -763,6 +782,7 @@ export default function Home() {
           ...sub,
           logs: updatedLogs,
           stats: {
+            ...sub.stats,
             present: newPresent,
             absent: newAbsent,
             holiday: newHoliday,
@@ -780,27 +800,31 @@ export default function Home() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           subjectId,
-          date: new Date().toISOString().split('T')[0], // Today's date only
+          date: new Date().toISOString().split('T')[0],
           status,
           studentCode: teacherViewingData.studentCode,
           teacherEditPin: enteredEditPin,
         }),
+        signal: controller.signal,
       });
       const data = await res.json();
       if (!res.ok) {
-        // Rollback on error
         setTeacherViewingData(previousTeacherViewingData);
         throw new Error(data.error);
       }
 
       setSuccess('Attendance logged successfully!');
-      await refreshTeacherMirrorData();
     } catch (err: any) {
+      if (err.name === 'AbortError') {
+        console.log('[handleTeacherCheckIn] Request aborted for subject:', subjectId);
+        return;
+      }
       setError(err.message || 'Failed to update attendance');
-      // Rollback on error
       setTeacherViewingData(previousTeacherViewingData);
     } finally {
-      setInFlightChecks((prev) => ({ ...prev, [subjectId]: false }));
+      if (checkInAbortControllers.current[subjectId] === controller) {
+        delete checkInAbortControllers.current[subjectId];
+      }
     }
   };
 

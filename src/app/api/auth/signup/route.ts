@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { hashPassword, generateToken } from '@/lib/auth';
+import { containsProfanity } from '@/lib/validation';
 
 export async function POST(req: Request) {
   try {
@@ -16,6 +17,13 @@ export async function POST(req: Request) {
     }
 
     const normalizedEmail = email.toLowerCase().trim();
+
+    if (containsProfanity(normalizedEmail)) {
+      return NextResponse.json(
+        { error: 'This email address contains prohibited or inappropriate language' },
+        { status: 400 }
+      );
+    }
 
     // Check if student already exists
     const existingUser = await db.student.findUnique({
