@@ -1947,18 +1947,8 @@ export default function Home() {
     dateStr: string,
     slots: any[]
   ) => {
-    if (slots.length === 0) return;
-
-    // Filter slots to only those that are not currently in-flight
-    const eligibleSlots = slots.filter((slot) => !inFlightChecks[slot.subjectId]);
+    const eligibleSlots = slots;
     if (eligibleSlots.length === 0) return;
-
-    // Set all to in-flight
-    const updatedInFlight = { ...inFlightChecks };
-    eligibleSlots.forEach((slot) => {
-      updatedInFlight[slot.subjectId] = true;
-    });
-    setInFlightChecks(updatedInFlight);
 
     const previousSubjects = [...subjects];
 
@@ -2009,6 +1999,7 @@ export default function Home() {
           ...sub,
           logs: updatedLogs,
           stats: {
+            ...sub.stats,
             present: newPresent,
             absent: newAbsent,
             holiday: newHoliday,
@@ -2023,33 +2014,36 @@ export default function Home() {
       // Fire parallel requests
       await Promise.all(
         eligibleSlots.map(async (slot) => {
-          const res = await fetch('/api/attendance/log', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              subjectId: slot.subjectId,
-              date: dateStr,
-              status,
-            }),
-          });
-          if (!res.ok) throw new Error('API failure');
+          if (checkInAbortControllers.current[slot.subjectId]) {
+            checkInAbortControllers.current[slot.subjectId].abort();
+          }
+          const controller = new AbortController();
+          checkInAbortControllers.current[slot.subjectId] = controller;
+
+          try {
+            const res = await fetch('/api/attendance/log', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                subjectId: slot.subjectId,
+                date: dateStr,
+                status,
+              }),
+              signal: controller.signal,
+            });
+            if (!res.ok) throw new Error('API failure');
+          } finally {
+            if (checkInAbortControllers.current[slot.subjectId] === controller) {
+              delete checkInAbortControllers.current[slot.subjectId];
+            }
+          }
         })
       );
       setSuccess(`All classes marked as ${status.toLowerCase()} successfully!`);
-      await fetchDashboardData();
     } catch (err) {
       console.error('Bulk check-in failed:', err);
       setError('Failed to mark all classes. Rolling back.');
       setSubjects(previousSubjects);
-    } finally {
-      // Clear in-flight states
-      setInFlightChecks((prev) => {
-        const next = { ...prev };
-        eligibleSlots.forEach((slot) => {
-          delete next[slot.subjectId];
-        });
-        return next;
-      });
     }
   };
 
