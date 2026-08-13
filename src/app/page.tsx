@@ -1950,7 +1950,7 @@ export default function Home() {
 
   // Bulk Check-in logic for a specific date and list of slots
   const handleBulkCheckIn = async (
-    status: 'PRESENT' | 'ABSENT' | 'HOLIDAY',
+    status: 'PRESENT' | 'ABSENT' | 'HOLIDAY' | 'REMOVE',
     dateStr: string,
     slots: any[]
   ) => {
@@ -1968,17 +1968,23 @@ export default function Home() {
         let updatedLogs = sub.logs ? [...sub.logs] : [];
         const logIndex = updatedLogs.findIndex((log) => log.date.split('T')[0] === dateStr);
 
-        if (logIndex !== -1) {
-          updatedLogs[logIndex] = { ...updatedLogs[logIndex], status };
+        if (status === 'REMOVE') {
+          if (logIndex !== -1) {
+            updatedLogs.splice(logIndex, 1);
+          }
         } else {
-          updatedLogs = [
-            {
-              id: `temp-${Date.now()}-${sub.id}`,
-              date: new Date(dateStr).toISOString(),
-              status,
-            },
-            ...updatedLogs,
-          ];
+          if (logIndex !== -1) {
+            updatedLogs[logIndex] = { ...updatedLogs[logIndex], status };
+          } else {
+            updatedLogs = [
+              {
+                id: `temp-${Date.now()}-${sub.id}`,
+                date: new Date(dateStr).toISOString(),
+                status,
+              },
+              ...updatedLogs,
+            ];
+          }
         }
 
         const oldLog = sub.logs?.find((log) => log.date.split('T')[0] === dateStr);
@@ -2021,6 +2027,13 @@ export default function Home() {
       // Fire parallel requests
       await Promise.all(
         eligibleSlots.map(async (slot) => {
+          // If status is REMOVE, only call API for subjects that actually have a log on this date
+          if (status === 'REMOVE') {
+            const sub = previousSubjects.find((s) => s.id === slot.subjectId);
+            const hasLog = sub?.logs?.some((log) => log.date.split('T')[0] === dateStr);
+            if (!hasLog) return;
+          }
+
           if (checkInAbortControllers.current[slot.subjectId]) {
             checkInAbortControllers.current[slot.subjectId].abort();
           }
@@ -2046,10 +2059,14 @@ export default function Home() {
           }
         })
       );
-      setSuccess(`All classes marked as ${status.toLowerCase()} successfully!`);
+      if (status === 'REMOVE') {
+        setSuccess('All class attendance cleared successfully!');
+      } else {
+        setSuccess(`All classes marked as ${status.toLowerCase()} successfully!`);
+      }
     } catch (err) {
       console.error('Bulk check-in failed:', err);
-      setError('Failed to mark all classes. Rolling back.');
+      setError(status === 'REMOVE' ? 'Failed to clear all classes. Rolling back.' : 'Failed to mark all classes. Rolling back.');
       setSubjects(previousSubjects);
     }
   };
@@ -3638,7 +3655,7 @@ export default function Home() {
                           <span>Today&apos;s Class Checklist ({new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })})</span>
                         </h3>
                         
-                        <div style={{ display: 'flex', gap: '0.4rem' }}>
+                        <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
                           <button
                             type="button"
                             onClick={() => handleBulkCheckIn('PRESENT', todayDateStr, todaySlots)}
@@ -3713,6 +3730,35 @@ export default function Home() {
                             }}
                           >
                             📅 All Holiday
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (confirm('Are you sure you want to clear all attendance markings for today?')) {
+                                handleBulkCheckIn('REMOVE', todayDateStr, todaySlots);
+                              }
+                            }}
+                            style={{
+                              padding: '0.35rem 0.7rem',
+                              fontSize: '0.75rem',
+                              fontWeight: 600,
+                              background: 'rgba(148, 163, 184, 0.1)',
+                              border: '1px solid rgba(148, 163, 184, 0.3)',
+                              borderRadius: '20px',
+                              color: 'var(--text-muted)',
+                              cursor: 'pointer',
+                              transition: 'var(--transition-smooth)'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.background = 'var(--text-muted)';
+                              e.currentTarget.style.color = '#ffffff';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.background = 'rgba(148, 163, 184, 0.1)';
+                              e.currentTarget.style.color = 'var(--text-muted)';
+                            }}
+                          >
+                            🧹 Clear All
                           </button>
                         </div>
                       </div>
@@ -4652,7 +4698,7 @@ export default function Home() {
                           </h4>
                           
                           {scheduledSlotsForDay.length > 0 && (
-                            <div style={{ display: 'flex', gap: '0.3rem' }}>
+                            <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap' }}>
                               <button
                                 type="button"
                                 onClick={() => handleBulkCheckIn('PRESENT', selectedDate, scheduledSlotsForDay)}
@@ -4727,6 +4773,35 @@ export default function Home() {
                                 }}
                               >
                                 📅 All Holiday
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (confirm(`Are you sure you want to clear all attendance markings for ${new Date(selectedDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}?`)) {
+                                    handleBulkCheckIn('REMOVE', selectedDate, scheduledSlotsForDay);
+                                  }
+                                }}
+                                style={{
+                                  padding: '0.25rem 0.5rem',
+                                  fontSize: '0.7rem',
+                                  fontWeight: 600,
+                                  background: 'rgba(148, 163, 184, 0.1)',
+                                  border: '1px solid rgba(148, 163, 184, 0.3)',
+                                  borderRadius: '20px',
+                                  color: 'var(--text-muted)',
+                                  cursor: 'pointer',
+                                  transition: 'var(--transition-smooth)'
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.background = 'var(--text-muted)';
+                                  e.currentTarget.style.color = '#ffffff';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.background = 'rgba(148, 163, 184, 0.1)';
+                                  e.currentTarget.style.color = 'var(--text-muted)';
+                                }}
+                              >
+                                🧹 Clear All
                               </button>
                             </div>
                           )}
