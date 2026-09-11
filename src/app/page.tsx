@@ -181,7 +181,7 @@ const OFFICIAL_CSE3_SLOTS = [
 ];
 
 // Cutoff timestamp: Existing accounts registered during/before the routine revision rollout
-const CSE3_ROUTINE_UPDATE_CUTOFF = new Date('2026-09-12T00:00:00+05:30').getTime();
+const CSE3_ROUTINE_UPDATE_CUTOFF = new Date('2026-09-30T00:00:00+05:30').getTime();
 
 const isUserEligibleForRoutineNotice = (user?: { createdAt?: string } | null) => {
   if (!user) return false;
@@ -533,7 +533,8 @@ export default function Home() {
       if ('caches' in window) {
         caches.keys().then((keys) => {
           keys.forEach((key) => {
-            if (key !== 'aura-attend-cache-v3') {
+            if (key !== 'aura-attend-cache-v4') {
+              console.log('[App] Clearing old cache:', key);
               caches.delete(key);
             }
           });
@@ -546,11 +547,26 @@ export default function Home() {
             console.log('ServiceWorker registration successful with scope: ', registration.scope);
             // Proactively check for SW updates
             registration.update().catch(() => {});
+
+            // If a worker is waiting, tell it to skip waiting immediately
+            if (registration.waiting) {
+              registration.waiting.postMessage({ action: 'skipWaiting' });
+            }
           },
           (err) => {
             console.log('ServiceWorker registration failed: ', err);
           }
         );
+
+        // Also update all existing registrations
+        navigator.serviceWorker.getRegistrations().then((registrations) => {
+          registrations.forEach((reg) => {
+            reg.update().catch(() => {});
+            if (reg.waiting) {
+              reg.waiting.postMessage({ action: 'skipWaiting' });
+            }
+          });
+        }).catch(() => {});
       };
 
       if (document.readyState === 'complete') {
@@ -562,6 +578,14 @@ export default function Home() {
       let hasRefreshed = false;
       navigator.serviceWorker.addEventListener('controllerchange', () => {
         if (!hasRefreshed) {
+          hasRefreshed = true;
+          window.location.reload();
+        }
+      });
+
+      // Handle message from sw to force reload
+      navigator.serviceWorker.addEventListener('message', (event) => {
+        if (event.data && event.data.type === 'FORCE_REFRESH_PWA' && !hasRefreshed) {
           hasRefreshed = true;
           window.location.reload();
         }

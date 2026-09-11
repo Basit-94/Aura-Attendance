@@ -1,4 +1,4 @@
-const CACHE_NAME = 'aura-attend-cache-v3';
+const CACHE_NAME = 'aura-attend-cache-v4';
 const urlsToCache = [
   '/',
   '/globals.css',
@@ -14,7 +14,7 @@ self.addEventListener('install', event => {
   );
 });
 
-// Activate: Purge all older caches immediately (like aura-attend-cache-v1) and claim clients
+// Activate: Purge all older caches immediately and force-navigate any active clients
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(cacheNames => {
@@ -26,8 +26,29 @@ self.addEventListener('activate', event => {
           }
         })
       );
-    }).then(() => self.clients.claim())
+    })
+    .then(() => self.clients.claim())
+    .then(() => {
+      // Find all running PWA windows / WebAPK clients and reload them so the new shell takes effect immediately
+      return self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    })
+    .then(clients => {
+      clients.forEach(client => {
+        if ('navigate' in client && client.url) {
+          client.navigate(client.url);
+        } else if (client.postMessage) {
+          client.postMessage({ type: 'FORCE_REFRESH_PWA' });
+        }
+      });
+    })
   );
+});
+
+// Listen for explicit message triggers
+self.addEventListener('message', event => {
+  if (event.data && event.data.action === 'skipWaiting') {
+    self.skipWaiting();
+  }
 });
 
 // Fetch: NETWORK-FIRST for HTML navigation to ensure installed PWAs always load the newest version
