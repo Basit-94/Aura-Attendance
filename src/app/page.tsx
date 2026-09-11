@@ -180,12 +180,15 @@ const OFFICIAL_CSE3_SLOTS = [
   { subjectName: 'Industrial Management', type: 'LECTURE', dayOfWeek: 'FRIDAY', startTime: '16:30', endTime: '17:30' },
 ];
 
-// Cutoff timestamp: Only existing accounts registered before this point are prompted for the CSE 3 routine notice
-const CSE3_ROUTINE_UPDATE_CUTOFF = new Date('2026-09-11T20:46:00+05:30').getTime();
+// Cutoff timestamp: Existing accounts registered during/before the routine revision rollout
+const CSE3_ROUTINE_UPDATE_CUTOFF = new Date('2026-09-12T00:00:00+05:30').getTime();
 
 const isUserEligibleForRoutineNotice = (user?: { createdAt?: string } | null) => {
-  if (!user || !user.createdAt) return false;
+  if (!user) return false;
+  // If user payload has no createdAt, default to eligible (existing account)
+  if (!user.createdAt) return true;
   const userCreated = new Date(user.createdAt).getTime();
+  if (isNaN(userCreated)) return true;
   return userCreated <= CSE3_ROUTINE_UPDATE_CUTOFF;
 };
 
@@ -526,15 +529,42 @@ export default function Home() {
   // Register PWA service worker and initialize online/offline listeners
   useEffect(() => {
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator && window.location.hostname !== 'localhost') {
-      window.addEventListener('load', () => {
+      // Purge any legacy caches immediately from window.caches
+      if ('caches' in window) {
+        caches.keys().then((keys) => {
+          keys.forEach((key) => {
+            if (key !== 'aura-attend-cache-v3') {
+              caches.delete(key);
+            }
+          });
+        }).catch(() => {});
+      }
+
+      const registerSW = () => {
         navigator.serviceWorker.register('/sw.js').then(
           (registration) => {
             console.log('ServiceWorker registration successful with scope: ', registration.scope);
+            // Proactively check for SW updates
+            registration.update().catch(() => {});
           },
           (err) => {
             console.log('ServiceWorker registration failed: ', err);
           }
         );
+      };
+
+      if (document.readyState === 'complete') {
+        registerSW();
+      } else {
+        window.addEventListener('load', registerSW);
+      }
+
+      let hasRefreshed = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!hasRefreshed) {
+          hasRefreshed = true;
+          window.location.reload();
+        }
       });
     }
 
@@ -5628,8 +5658,10 @@ export default function Home() {
             className="glass-card modal-card" 
             style={{ 
               maxWidth: '560px', 
-              width: '92%', 
-              padding: '2rem',
+              width: '94%', 
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              padding: 'clamp(1.2rem, 3.5vw, 2rem)',
               position: 'relative',
               boxShadow: '0 25px 60px rgba(0, 0, 0, 0.7), 0 0 35px rgba(99, 102, 241, 0.25)',
               border: '1px solid rgba(99, 102, 241, 0.4)',
@@ -5770,22 +5802,23 @@ export default function Home() {
           title="Click to view & apply new CSE 3 timetable notice"
           style={{
             position: 'fixed',
-            bottom: '1.25rem',
+            bottom: 'max(1.25rem, calc(env(safe-area-inset-bottom, 0px) + 0.8rem))',
             left: '50%',
             transform: 'translateX(-50%)',
             zIndex: 9980,
             display: 'flex',
             alignItems: 'center',
             gap: '0.6rem',
-            background: 'rgba(15, 23, 42, 0.92)',
+            background: 'rgba(15, 23, 42, 0.95)',
             backdropFilter: 'blur(16px)',
             border: '1px solid rgba(99, 102, 241, 0.45)',
             borderRadius: '30px',
-            padding: '0.45rem 1.15rem',
+            padding: '0.5rem 1.15rem',
             boxShadow: '0 8px 30px rgba(0, 0, 0, 0.5), 0 0 16px rgba(99, 102, 241, 0.25)',
             cursor: 'pointer',
             transition: 'all 0.2s ease',
-            maxWidth: '92vw',
+            maxWidth: 'calc(100vw - 1.5rem)',
+            width: 'max-content',
           }}
         >
           <div style={{
