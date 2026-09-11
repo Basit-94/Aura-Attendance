@@ -1,4 +1,4 @@
-const CACHE_NAME = 'aura-attend-cache-v4';
+const CACHE_NAME = 'aura-attend-cache-v5';
 const urlsToCache = [
   '/',
   '/globals.css',

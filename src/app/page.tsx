@@ -407,18 +407,47 @@ export default function Home() {
     }
   };
 
-  // Check if CSE 3 routine notice should be displayed upon login
+  // Check if CSE 3 routine notice should be displayed upon login or foreground resume
   useEffect(() => {
-    if (isLoggedIn && currentUser) {
-      const storedStatus = (localStorage.getItem('routine_notice_status_cse3_v3') || 'unanswered') as any;
-      setRoutineNoticeStatus(storedStatus);
-
-      const eligible = isUserEligibleForRoutineNotice(currentUser);
-      if (eligible && storedStatus !== 'dismissed_other_branch' && storedStatus !== 'applied_cse3' && storedStatus !== 'new_account') {
-        const timer = setTimeout(() => setShowRoutineNotice(true), 800);
-        return () => clearTimeout(timer);
-      }
+    // Reset stale test statuses from earlier versions to ensure all mobile users see the notice
+    if (typeof window !== 'undefined') {
+      try {
+        const storedRoutineVer = localStorage.getItem('aura_pwa_routine_version');
+        if (storedRoutineVer !== 'v5') {
+          localStorage.setItem('aura_pwa_routine_version', 'v5');
+          localStorage.removeItem('routine_notice_status_cse3_v3');
+          localStorage.removeItem('routine_notice_status_cse3_v4');
+        }
+      } catch (e) {}
     }
+
+    const checkAndTriggerNotice = () => {
+      if (isLoggedIn && currentUser) {
+        try {
+          const storedStatus = (localStorage.getItem('routine_notice_status_cse3_v5') || 'unanswered') as any;
+          setRoutineNoticeStatus(storedStatus);
+
+          const eligible = isUserEligibleForRoutineNotice(currentUser);
+          if (eligible && storedStatus !== 'dismissed_other_branch' && storedStatus !== 'applied_cse3' && storedStatus !== 'new_account') {
+            setShowRoutineNotice(true);
+          }
+        } catch (e) {}
+      }
+    };
+
+    const timer = setTimeout(checkAndTriggerNotice, 600);
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        checkAndTriggerNotice();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, [isLoggedIn, currentUser]);
 
   const fetchShareCode = async () => {
@@ -533,7 +562,7 @@ export default function Home() {
       if ('caches' in window) {
         caches.keys().then((keys) => {
           keys.forEach((key) => {
-            if (key !== 'aura-attend-cache-v4') {
+            if (key !== 'aura-attend-cache-v5') {
               console.log('[App] Clearing old cache:', key);
               caches.delete(key);
             }
@@ -666,7 +695,7 @@ export default function Home() {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error);
 
-        localStorage.setItem('routine_notice_status_cse3_v3', 'new_account');
+        localStorage.setItem('routine_notice_status_cse3_v5', 'new_account');
         setRoutineNoticeStatus('new_account');
         setCurrentUser(data.student);
         setIsLoggedIn(true);
@@ -1807,7 +1836,7 @@ export default function Home() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
 
-      localStorage.setItem('routine_notice_status_cse3_v3', 'applied_cse3');
+      localStorage.setItem('routine_notice_status_cse3_v5', 'applied_cse3');
       setRoutineNoticeStatus('applied_cse3');
       setShowRoutineNotice(false);
       await fetchDashboardData();
@@ -1821,14 +1850,14 @@ export default function Home() {
   };
 
   const handleDismissNoticeOtherBranch = () => {
-    localStorage.setItem('routine_notice_status_cse3_v3', 'dismissed_other_branch');
+    localStorage.setItem('routine_notice_status_cse3_v5', 'dismissed_other_branch');
     setRoutineNoticeStatus('dismissed_other_branch');
     setShowRoutineNotice(false);
   };
 
   const handleCloseNoticeCross = () => {
     // If closed via X without clicking Yes or No, allow persistent pill to stay visible and modal can reopen
-    localStorage.setItem('routine_notice_status_cse3_v3', 'temporary_closed');
+    localStorage.setItem('routine_notice_status_cse3_v5', 'temporary_closed');
     setRoutineNoticeStatus('temporary_closed');
     setShowRoutineNotice(false);
   };
@@ -3597,6 +3626,79 @@ export default function Home() {
             {activeTab === 'dashboard' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                 
+                {/* Routine Update Banner for CSE 3 */}
+                {isLoggedIn && isUserEligibleForRoutineNotice(currentUser) && routineNoticeStatus !== 'applied_cse3' && routineNoticeStatus !== 'dismissed_other_branch' && (
+                  <div 
+                    className="glass-card" 
+                    style={{ 
+                      margin: 0, 
+                      border: '1px solid rgba(99, 102, 241, 0.45)', 
+                      background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.14), rgba(168, 85, 247, 0.14))',
+                      boxShadow: '0 10px 30px rgba(99, 102, 241, 0.15)',
+                      padding: '1.15rem 1.4rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: '1rem',
+                      borderRadius: 'var(--border-radius-lg)',
+                      flexWrap: 'wrap'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', flex: 1, minWidth: '240px' }}>
+                      <div style={{
+                        width: '38px',
+                        height: '38px',
+                        borderRadius: '10px',
+                        background: 'linear-gradient(135deg, #6366f1, #a855f7)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#fff',
+                        flexShrink: 0
+                      }}>
+                        <Bell size={20} />
+                      </div>
+                      <div>
+                        <h4 style={{ fontSize: '0.98rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
+                          CSE 3 Class Routine Changed!
+                        </h4>
+                        <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: '0.2rem 0 0', lineHeight: 1.4 }}>
+                          Our college schedule has been updated. Are you in CSE 3? Apply your verified routine in 1 click.
+                        </p>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                      <button
+                        type="button"
+                        className="btn-outline"
+                        onClick={handleDismissNoticeOtherBranch}
+                        style={{ padding: '0.45rem 0.9rem', fontSize: '0.78rem', width: 'auto' }}
+                      >
+                        Dismiss
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-primary"
+                        onClick={() => setShowRoutineNotice(true)}
+                        style={{
+                          padding: '0.45rem 1.2rem',
+                          fontSize: '0.8rem',
+                          background: 'linear-gradient(135deg, #6366f1, #a855f7)',
+                          boxShadow: '0 4px 15px rgba(99, 102, 241, 0.35)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.4rem',
+                          fontWeight: 600,
+                          width: 'auto'
+                        }}
+                      >
+                        <Sparkles size={14} />
+                        View &amp; Apply Routine
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {/* Missing Attendance Warning Alert */}
                 {(() => {
                   const missedDates = getMissedLogDates();
@@ -4293,6 +4395,26 @@ export default function Home() {
                           {copiedShareCode ? <Check size={12} /> : <Copy size={12} />}
                         </div>
                       )}
+
+                      <button 
+                        className="btn-primary" 
+                        style={{ 
+                          padding: '0.4rem 0.85rem', 
+                          fontSize: '0.8rem', 
+                          background: 'linear-gradient(135deg, #6366f1, #a855f7)',
+                          boxShadow: '0 2px 10px rgba(99, 102, 241, 0.35)',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.35rem',
+                          fontWeight: 600,
+                          width: 'auto'
+                        }} 
+                        onClick={() => setShowRoutineNotice(true)}
+                        title="Click to preview & apply official CSE 3 timetable"
+                      >
+                        <Sparkles size={14} />
+                        Apply CSE 3 Routine
+                      </button>
 
                       <button className="btn-outline" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={() => setShowImportCodeModal(true)}>
                         <Copy size={14} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
