@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AuraAttend — Estimator 03: Luxury Editorial Paper</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;0,6..72,700;1,6..72,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #faf7f2;
+      --card-bg: #ffffff;
+      --border: #e7dfd5;
+      --border-dark: #d5c8b8;
+      --ink: #1c1917;
+      --ink-muted: #57534e;
+      --ink-faint: #78716c;
+      --terracotta: #c2410c;
+      --sage: #2d5a27;
+      --gold: #b45309;
+      --amber-bg: #fef3c7;
+      --shadow-paper: 0 4px 20px -2px rgba(28, 25, 23, 0.05), 0 2px 6px -1px rgba(28, 25, 23, 0.02);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      padding-bottom: 5rem;
+      background-image: 
+        radial-gradient(#d5c8b8 0.75px, transparent 0.75px),
+        linear-gradient(180deg, rgba(245, 240, 232, 0.4) 0%, rgba(250, 247, 242, 1) 100%);
+      background-size: 20px 20px, 100% 100%;
+    }
+    header {
+      background: rgba(250, 247, 242, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-dark);
+      padding: 1.1rem 2.5rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+    }
+    .brand-mark {
+      width: 40px;
+      height: 40px;
+      border: 1px solid var(--ink);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Newsreader', serif;
+      font-weight: 700;
+      font-style: italic;
+      font-size: 1.25rem;
+      color: var(--ink);
+      background: #ffffff;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 2.2rem auto;
+      padding: 0 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.8rem;
+    }
+    .paper-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.8rem;
+      box-shadow: var(--shadow-paper);
+      position: relative;
+    }
+    .term-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      padding: 1.4rem 1.8rem;
+      border-left: 4px solid var(--terracotta);
+    }
+    .serif-title {
+      font-family: 'Newsreader', serif;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+    .btn-paper {
+      padding: 0.6rem 1.2rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      border: 1px solid var(--border-dark);
+      background: #ffffff;
+      color: var(--ink);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      transition: all 0.2s ease;
+    }
+    .btn-paper:hover {
+      background: #fdfbf7;
+      border-color: var(--ink);
+    }
+    .btn-paper-primary {
+      background: var(--ink);
+      color: #faf7f2;
+      border-color: var(--ink);
+    }
+    .btn-paper-primary:hover {
+      background: #292524;
+      color: #faf7f2;
+    }
+    .tabs-bar {
+      display: flex;
+      gap: 1.8rem;
+      border-bottom: 1px solid var(--border-dark);
+      padding-bottom: 0.2rem;
+    }
+    .tab-btn {
+      padding: 0.5rem 0.2rem;
+      border: none;
+      font-size: 0.92rem;
+      font-weight: 500;
+      color: var(--ink-faint);
+      background: transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      position: relative;
+      transition: color 0.15s;
+    }
+    .tab-btn:hover {
+      color: var(--ink);
+    }
+    .tab-btn.active {
+      color: var(--ink);
+      font-weight: 700;
+    }
+    .tab-btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: -3px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--terracotta);
+    }
+
+    /* 3 Summary Widgets */
+    .widgets-grid {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr 1fr;
+      gap: 1.4rem;
+    }
+    @media (max-width: 950px) {
+      .widgets-grid { grid-template-columns: 1fr; }
+    }
+    .circle-wrap {
+      position: relative;
+      width: 96px;
+      height: 96px;
+      flex-shrink: 0;
+    }
+    .circle-wrap svg {
+      transform: rotate(-90deg);
+      width: 96px;
+      height: 96px;
+    }
+    .circle-bg {
+      fill: none;
+      stroke: #f5f0e8;
+      stroke-width: 7;
+    }
+    .circle-fg {
+      fill: none;
+      stroke: var(--terracotta);
+      stroke-width: 7;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 0.4s ease;
+    }
+    .circle-val {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: 'Newsreader', serif;
+      font-size: 1.45rem;
+      font-weight: 600;
+      color: var(--ink);
+    }
+    .paper-bar {
+      height: 6px;
+      background: #f5f0e8;
+      border-radius: 3px;
+      overflow: hidden;
+      margin: 0.85rem 0 0.4rem;
+    }
+    .paper-fill {
+      height: 100%;
+      background: var(--sage);
+      transition: width 0.35s ease;
+    }
+
+    /* Thumbnails */
+    .thumb-realtime {
+      width: 64px;
+      height: 64px;
+      border-radius: 6px;
+      object-fit: cover;
+      border: 1px solid var(--border);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      flex-shrink: 0;
+      background: #fdfbf7;
+      transition: transform 0.2s ease;
+    }
+    .thumb-realtime:hover {
+      transform: scale(1.04);
+    }
+    .thumb-mini {
+      width: 38px;
+      height: 38px;
+      border-radius: 4px;
+      object-fit: cover;
+      border: 1px solid var(--border);
+      background: #fdfbf7;
+    }
+    .check-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 0.95rem;
+      margin-top: 1rem;
+    }
+    .check-box {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.95rem 1.1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+    }
+
+    /* Subject Cards Grid */
+    .subj-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 1.4rem;
+    }
+    .subj-card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.6rem;
+      box-shadow: var(--shadow-paper);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 1.3rem;
+      transition: all 0.2s ease;
+    }
+    .subj-card:hover {
+      border-color: var(--border-dark);
+      box-shadow: 0 12px 28px -4px rgba(28, 25, 23, 0.08);
+      transform: translateY(-2px);
+    }
+    .badge-editorial {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 0.2rem 0.55rem;
+      border-radius: 4px;
+    }
+    .badge-lec {
+      background: #fef3c7;
+      color: #92400e;
+    }
+    .badge-lab {
+      background: #f1f5f9;
+      color: #334155;
+    }
+    .tech-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0.5rem;
+      padding-top: 0.9rem;
+      border-top: 1px solid #f5f0e8;
+    }
+    .act-btn {
+      padding: 0.55rem 0.4rem;
+      border-radius: 4px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      border: 1px solid var(--border-dark);
+      background: #ffffff;
+      color: var(--ink-muted);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .act-btn:hover {
+      border-color: var(--ink);
+      color: var(--ink);
+    }
+    .act-p.active {
+      background: var(--sage);
+      color: #ffffff;
+      border-color: var(--sage);
+    }
+    .act-a.active {
+      background: var(--terracotta);
+      color: #ffffff;
+      border-color: var(--terracotta);
+    }
+    .act-h.active {
+      background: var(--gold);
+      color: #ffffff;
+      border-color: var(--gold);
+    }
+
+    /* Modal */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(28, 25, 23, 0.45);
+      backdrop-filter: blur(6px);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-box {
+      background: #ffffff;
+      border: 1px solid var(--border-dark);
+      border-radius: 12px;
+      padding: 2.2rem;
+      max-width: 480px;
+      width: 90%;
+      box-shadow: 0 24px 48px rgba(28, 25, 23, 0.15);
+    }
+    .input-field {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1px solid var(--border-dark);
+      border-radius: 6px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      margin-top: 0.4rem;
+      outline: none;
+    }
+    .input-field:focus {
+      border-color: var(--terracotta);
+      box-shadow: 0 0 0 3px rgba(194, 65, 12, 0.1);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <div class="brand-mark">A</div>
+      <div>
+        <div class="serif-title" style="font-size: 1.4rem;">AuraAttend</div>
+        <div style="font-size: 0.75rem; color: var(--ink-faint); letter-spacing: 0.02em;">Estimator 03 • Luxury Editorial Paper</div>
+      </div>
+    </div>
+    <div style="display: flex; gap: 1.2rem; align-items: center; font-size: 0.88rem;">
+      <span class="badge-editorial badge-lec">CSE 3 Academic Term</span>
+      <span>Target Minimum: <strong style="color: var(--terracotta);">75.0%</strong></span>
+    </div>
+  </header>
+
+  <div class="container">
+    
+    <!-- Active Term Bar -->
+    <div class="paper-card term-bar">
+      <div>
+        <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--ink-faint); letter-spacing: 0.08em;">Academic Term Schedule</div>
+        <div class="serif-title" style="font-size: 1.6rem; color: var(--ink); margin-top: 0.15rem;">CSE 3 (Odd Semester 2026)</div>
+      </div>
+      <div style="display: flex; gap: 0.6rem;">
+        <button class="btn-paper" onclick="alert('Exporting formal attendance report...')">📄 Export Report</button>
+        <button class="btn-paper btn-paper-primary" id="btn-open-modal" onclick="openAddSubjectModal()">+ Add Any Subject (Real-Time AI)</button>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="tabs-bar">
+      <button class="tab-btn active">Dashboard</button>
+      <button class="tab-btn">Weekly Schedule</button>
+      <button class="tab-btn">Analytics & Predictors</button>
+      <button class="tab-btn">Calendar Logger</button>
+    </div>
+
+    <!-- 3 Summary Widgets -->
+    <div class="widgets-grid">
+      <!-- Widget 1: Overall -->
+      <div class="paper-card" style="display: flex; gap: 1.4rem; align-items: center;">
+        <div class="circle-wrap">
+          <svg viewBox="0 0 100 100">
+            <circle class="circle-bg" cx="50" cy="50" r="38"></circle>
+            <circle class="circle-fg" id="cm-circle-fg" cx="50" cy="50" r="38" stroke-dasharray="238" stroke-dashoffset="40"></circle>
+          </svg>
+          <div class="circle-val" id="cm-circle-txt">82%</div>
+        </div>
+        <div style="flex: 1;">
+          <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-faint);">Cumulative Attendance</div>
+          <div class="serif-title" style="font-size: 2.2rem; line-height: 1.1; margin-top: 0.15rem;" id="cm-overall-pct">82.3%</div>
+          <div style="font-size: 0.84rem; color: var(--ink-muted); margin-top: 0.25rem;">
+            <span id="cm-overall-att">102</span> of <span id="cm-overall-tot">124</span> Sessions Attended
+          </div>
+          <div style="margin-top: 0.6rem; display: flex; gap: 0.5rem; flex-wrap: wrap; font-size: 0.78rem;">
+            <span style="background: #f5f0e8; padding: 0.25rem 0.65rem; border-radius: 4px; font-weight: 600;" id="cm-adv-75">Safe to miss 12</span>
+            <span style="background: #f5f0e8; padding: 0.25rem 0.65rem; border-radius: 4px; font-weight: 600;" id="cm-adv-85">Attend +3</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Widget 2: Lecture Aggregate -->
+      <div class="paper-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-faint);">Theory Lectures</span>
+          <span class="badge-editorial badge-lec">Lectures</span>
+        </div>
+        <div class="serif-title" style="font-size: 2rem; margin-top: 0.4rem;" id="cm-lec-pct">81.8%</div>
+        <div style="font-size: 0.84rem; color: var(--ink-muted);">
+          <span id="cm-lec-att">81</span> of <span id="cm-lec-tot">99</span> Hours Logged
+        </div>
+        <div class="paper-bar">
+          <div class="paper-fill" id="cm-lec-fill" style="width: 81.8%;"></div>
+        </div>
+        <div style="font-size: 0.8rem; color: var(--ink-muted); margin-top: 0.4rem;" id="cm-lec-adv-75">
+          Requirement Status: Safe to miss 9
+        </div>
+      </div>
+
+      <!-- Widget 3: Lab Aggregate -->
+      <div class="paper-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-faint);">Practical Sessions</span>
+          <span class="badge-editorial badge-lab">Practicals</span>
+        </div>
+        <div class="serif-title" style="font-size: 2rem; margin-top: 0.4rem;" id="cm-lab-pct">84.0%</div>
+        <div style="font-size: 0.84rem; color: var(--ink-muted);">
+          <span id="cm-lab-att">21</span> of <span id="cm-lab-tot">25</span> Sessions Logged
+        </div>
+        <div class="paper-bar">
+          <div class="paper-fill" id="cm-lab-fill" style="width: 84%; background: var(--terracotta);"></div>
+        </div>
+        <div style="font-size: 0.8rem; color: var(--ink-muted); margin-top: 0.4rem;" id="cm-lab-adv-75">
+          Requirement Status: Safe to miss 3
+        </div>
+      </div>
+    </div>
+
+    <!-- Today's Class Checklist -->
+    <div class="paper-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+        <div>
+          <div style="display: flex; align-items: center; gap: 0.6rem;">
+            <h2 class="serif-title" style="font-size: 1.4rem;">Today's Curriculum (Friday)</h2>
+            <span class="badge-editorial" style="background: #f5f0e8; color: var(--ink);">5 Classes Scheduled</span>
+          </div>
+          <p style="font-size: 0.85rem; color: var(--ink-muted); margin-top: 0.2rem;">Prompt daily registry and attendance logging</p>
+        </div>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+          <button class="btn-paper" style="font-size: 0.82rem; padding: 0.45rem 0.85rem;" onclick="bulkCheckIn('PRESENT')">All Present</button>
+          <button class="btn-paper" style="font-size: 0.82rem; padding: 0.45rem 0.85rem;" onclick="bulkCheckIn('ABSENT')">All Absent</button>
+          <button class="btn-paper" style="font-size: 0.82rem; padding: 0.45rem 0.85rem;" onclick="bulkCheckIn('HOLIDAY')">All Holiday</button>
+        </div>
+      </div>
+
+      <div class="check-grid" id="cm-today-grid">
+        <!-- Injected via JavaScript -->
+      </div>
+    </div>
+
+    <!-- Subject Check-Ins Section -->
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-top: 0.5rem;">
+      <div>
+        <h2 class="serif-title" style="font-size: 1.6rem;">Subject Ledger & Real-Time AI Badges</h2>
+        <p style="font-size: 0.88rem; color: var(--ink-muted);">Every academic badge is dynamically generated live via AI for any discipline</p>
+      </div>
+      <div style="display: flex; gap: 0.4rem;">
+        <button class="btn-paper" style="padding: 0.4rem 0.85rem; font-size: 0.82rem;" onclick="setCMFilter('ALL', this)">All Courses</button>
+        <button class="btn-paper" style="padding: 0.4rem 0.85rem; font-size: 0.82rem;" onclick="setCMFilter('LECTURE', this)">Lectures Only</button>
+        <button class="btn-paper" style="padding: 0.4rem 0.85rem; font-size: 0.82rem;" onclick="setCMFilter('LAB', this)">Labs Only</button>
+      </div>
+    </div>
+
+    <!-- Subject Grid -->
+    <div class="subj-grid" id="cm-subj-grid">
+      <!-- Injected via JavaScript -->
+    </div>
+
+  </div>
+
+  <!-- Dynamic Subject Modal -->
+  <div class="modal-backdrop" id="add-modal">
+    <div class="modal-box">
+      <h3 class="serif-title" style="font-size: 1.5rem; margin-bottom: 0.4rem;">+ Add Course to Ledger</h3>
+      <p style="font-size: 0.85rem; color: var(--ink-muted); margin-bottom: 1.3rem;">
+        Specify any discipline (e.g. <em>"History"</em>, <em>"Philosophy"</em>). The neural badge synthesizer creates a custom icon badge immediately!
+      </p>
+
+      <div style="margin-bottom: 1rem;">
+        <label style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; color: var(--ink-faint); letter-spacing: 0.06em;">Course Name</label>
+        <input type="text" id="new-sub-name" class="input-field" placeholder="e.g. History or Macroeconomics" value="History">
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin-bottom: 1.4rem;">
+        <div>
+          <label style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; color: var(--ink-faint); letter-spacing: 0.06em;">Course Code</label>
+          <input type="text" id="new-sub-code" class="input-field" placeholder="e.g. HS301" value="HIST101">
+        </div>
+        <div>
+          <label style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; color: var(--ink-faint); letter-spacing: 0.06em;">Format</label>
+          <select id="new-sub-type" class="input-field">
+            <option value="LECTURE">LECTURE</option>
+            <option value="LAB">LAB</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 0.6rem;">
+        <button class="btn-paper" onclick="closeAddSubjectModal()">Cancel</button>
+        <button class="btn-paper btn-paper-primary" onclick="handleCreateDynamicSubject()">Synthesize & Add Live</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Real-Time Dynamic AI Icon Generator
+    function getLiveSubjectIcon(subjectName) {
+      const lower = subjectName.toLowerCase();
+      let visualKeyword = 'academic luxury editorial stationery classical book emblem';
+
+      if (lower.includes('history')) visualKeyword = 'ancient greek roman marble parthenon temple column hourglass antique parchment history relic';
+      else if (lower.includes('operat') || lower.includes('os')) visualKeyword = 'sleek mechanical cpu processor terminal window vintage computing machine';
+      else if (lower.includes('compil') || lower.includes('design')) visualKeyword = 'syntax parsing tree mechanical gears compiler blueprint';
+      else if (lower.includes('softw') || lower.includes('engin')) visualKeyword = 'interlocking architectural puzzle cubes software engineering structure';
+      else if (lower.includes('manage') || lower.includes('industr')) visualKeyword = 'classical finance growth chart hourglass industrial commerce medallion';
+      else if (lower.includes('constitut') || lower.includes('law')) visualKeyword = 'brass supreme court scales of justice legal leather book law gavel';
+      else if (lower.includes('math')) visualKeyword = 'antique brass compass geometry ruler calculus differential geometry';
+      else if (lower.includes('physic')) visualKeyword = 'atomic quantum orbit nucleus vintage optics laser prism physics';
+      else if (lower.includes('chem')) visualKeyword = 'laboratory delicate blown glass beaker chemical crystals';
+      else if (lower.includes('ai') || lower.includes('intel')) visualKeyword = 'artificial intelligence golden cybernetic brain neural network';
+
+      const prompt = `luxury editorial 3d icon badge of ${visualKeyword}, soft studio daylight, warm ivory and terracotta background, cinematic still 8k`;
+      return `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=256&height=256&nologo=true`;
+    }
+
+    function getFallbackSvg(subjectName) {
+      const lower = subjectName.toLowerCase();
+      let emoji = '📖';
+      let color = '#c2410c';
+      if (lower.includes('history')) { emoji = '🏛️'; color = '#c2410c'; }
+      else if (lower.includes('operat') || lower.includes('os')) { emoji = '💻'; color = '#2d5a27'; }
+      else if (lower.includes('compil')) { emoji = '⚙️'; color = '#b45309'; }
+      else if (lower.includes('softw')) { emoji = '🧩'; color = '#1c1917'; }
+      else if (lower.includes('manage')) { emoji = '📊'; color = '#92400e'; }
+      const raw = `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect width="62" height="62" x="1" y="1" rx="6" fill="#fdfbf7" stroke="#d5c8b8" stroke-width="1"/><text x="50%" y="55%" font-size="28" text-anchor="middle" dominant-baseline="middle">${emoji}</text></svg>`;
+      return 'data:image/svg+xml;utf8,' + encodeURIComponent(raw);
+    }
+
+    const subjects = [
+      { id: 'os', name: 'Operating Systems', code: 'CS501', type: 'LECTURE', attended: 22, total: 26, target: 75, icon: getLiveSubjectIcon('Operating Systems'), todayStatus: null, time: '14:30 - 15:30' },
+      { id: 'compiler', name: 'Compiler Design', code: 'CS502', type: 'LECTURE', attended: 18, total: 24, target: 75, icon: getLiveSubjectIcon('Compiler Design'), todayStatus: null, time: '12:45 - 13:45' },
+      { id: 'software', name: 'Software Engineering', code: 'CS503', type: 'LECTURE', attended: 21, total: 24, target: 75, icon: getLiveSubjectIcon('Software Engineering'), todayStatus: null, time: '15:30 - 16:30' },
+      { id: 'mgmt', name: 'Industrial Management', code: 'HU501', type: 'LECTURE', attended: 19, total: 22, target: 75, icon: getLiveSubjectIcon('Industrial Management'), todayStatus: null, time: '09:30 - 10:30' },
+      { id: 'const', name: 'Constitution of India', code: 'MC501', type: 'LECTURE', attended: 17, total: 22, target: 75, icon: getLiveSubjectIcon('Constitution of India'), todayStatus: null, time: '11:45 - 12:45' },
+      { id: 'os_lab', name: 'Operating Systems Lab', code: 'CS591', type: 'LAB', attended: 12, total: 14, target: 75, icon: getLiveSubjectIcon('Operating Systems Lab'), todayStatus: null, time: '09:30 - 13:45 (Tue)' },
+      { id: 'se_lab', name: 'Software Engineering Lab', code: 'CS593', type: 'LAB', attended: 10, total: 12, target: 75, icon: getLiveSubjectIcon('Software Engineering Lab'), todayStatus: null, time: '12:45 - 17:30 (Thu)' }
+    ];
+
+    let filter = 'ALL';
+
+    function setCMFilter(f, el) {
+      filter = f;
+      document.querySelectorAll('.subj-grid').forEach(g => {});
+      renderCM();
+    }
+
+    function calcAdvice(att, tot, goal) {
+      const g = goal / 100;
+      const pct = tot > 0 ? (att / tot) * 100 : 0;
+      if (pct >= goal) {
+        const canSkip = Math.floor((att - g * tot) / g);
+        return { isSafe: true, text: `Safe to miss ${canSkip} classes` };
+      } else {
+        const need = Math.ceil((g * tot - att) / (1 - g));
+        return { isSafe: false, text: `Attend +${need} classes` };
+      }
+    }
+
+    function renderCM() {
+      let totAtt = 0, totClasses = 0;
+      let lecAtt = 0, lecTot = 0;
+      let labAtt = 0, labTot = 0;
+
+      subjects.forEach(s => {
+        totAtt += s.attended;
+        totClasses += s.total;
+        if (s.type === 'LECTURE') {
+          lecAtt += s.attended;
+          lecTot += s.total;
+        } else {
+          labAtt += s.attended;
+          labTot += s.total;
+        }
+      });
+
+      const ovPct = totClasses > 0 ? ((totAtt / totClasses) * 100).toFixed(1) : 0;
+      const lPct = lecTot > 0 ? ((lecAtt / lecTot) * 100).toFixed(1) : 0;
+      const lbPct = labTot > 0 ? ((labAtt / labTot) * 100).toFixed(1) : 0;
+
+      document.getElementById('cm-overall-pct').innerText = ovPct + '%';
+      document.getElementById('cm-overall-att').innerText = totAtt;
+      document.getElementById('cm-overall-tot').innerText = totClasses;
+      document.getElementById('cm-circle-txt').innerText = Math.round(ovPct) + '%';
+      const offset = 238 - (238 * Math.min(ovPct, 100)) / 100;
+      document.getElementById('cm-circle-fg').style.strokeDashoffset = offset;
+      document.getElementById('cm-adv-75').innerText = calcAdvice(totAtt, totClasses, 75).text;
+      document.getElementById('cm-adv-85').innerText = calcAdvice(totAtt, totClasses, 85).text;
+
+      document.getElementById('cm-lec-pct').innerText = lPct + '%';
+      document.getElementById('cm-lec-att').innerText = lecAtt;
+      document.getElementById('cm-lec-tot').innerText = lecTot;
+      document.getElementById('cm-lec-fill').style.width = Math.min(lPct, 100) + '%';
+      document.getElementById('cm-lec-adv-75').innerText = calcAdvice(lecAtt, lecTot, 75).text;
+
+      document.getElementById('cm-lab-pct').innerText = lbPct + '%';
+      document.getElementById('cm-lab-att').innerText = labAtt;
+      document.getElementById('cm-lab-tot').innerText = labTot;
+      document.getElementById('cm-lab-fill').style.width = Math.min(lbPct, 100) + '%';
+      document.getElementById('cm-lab-adv-75').innerText = calcAdvice(labAtt, labTot, 75).text;
+
+      // Checklist
+      const checkGrid = document.getElementById('cm-today-grid');
+      checkGrid.innerHTML = '';
+      subjects.slice(0, 5).forEach((s, idx) => {
+        const item = document.createElement('div');
+        item.className = 'check-box';
+        item.innerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <img src="${s.icon}" alt="${s.name}" class="thumb-mini" onerror="this.src='${getFallbackSvg(s.name)}'">
+              <div>
+                <div style="font-weight: 700; font-size: 0.92rem;">${s.name}</div>
+                <div style="font-size: 0.76rem; color: var(--ink-faint);">${s.time}</div>
+              </div>
+            </div>
+            <span class="badge-editorial ${s.type === 'LECTURE' ? 'badge-lec' : 'badge-lab'}">${s.type}</span>
+          </div>
+          <div class="tech-actions" style="padding-top: 0.4rem; border-top: none;">
+            <button class="act-btn act-p ${s.todayStatus === 'PRESENT' ? 'active' : ''}" onclick="toggleToday(${idx}, 'PRESENT')">Present</button>
+            <button class="act-btn act-a ${s.todayStatus === 'ABSENT' ? 'active' : ''}" onclick="toggleToday(${idx}, 'ABSENT')">Absent</button>
+            <button class="act-btn act-h ${s.todayStatus === 'HOLIDAY' ? 'active' : ''}" onclick="toggleToday(${idx}, 'HOLIDAY')">Holiday</button>
+          </div>
+        `;
+        checkGrid.appendChild(item);
+      });
+
+      // Grid
+      const grid = document.getElementById('cm-subj-grid');
+      grid.innerHTML = '';
+      const filtered = subjects.filter(s => filter === 'ALL' || s.type === filter);
+
+      filtered.forEach(s => {
+        const origIdx = subjects.findIndex(item => item.id === s.id);
+        const pct = s.total > 0 ? ((s.attended / s.total) * 100).toFixed(1) : 0;
+        const isSafe = pct >= s.target;
+        const adv = calcAdvice(s.attended, s.total, s.target);
+
+        const card = document.createElement('div');
+        card.className = 'subj-card';
+        card.innerHTML = `
+          <div>
+            <div style="display: flex; gap: 1rem; align-items: center;">
+              <img src="${s.icon}" alt="${s.name}" class="thumb-realtime" onerror="this.src='${getFallbackSvg(s.name)}'">
+              <div style="flex: 1; min-width: 0;">
+                <div style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.2rem;">
+                  <span class="badge-editorial ${s.type === 'LECTURE' ? 'badge-lec' : 'badge-lab'}">${s.type}</span>
+                  <span style="font-size: 0.75rem; color: var(--ink-faint); font-weight: 600;">${s.code}</span>
+                </div>
+                <div class="serif-title" style="font-size: 1.25rem; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${s.name}">${s.name}</div>
+                <div style="font-size: 0.8rem; color: var(--ink-faint); margin-top: 0.15rem;">Objective: ${s.target}%</div>
+              </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.2rem;">
+              <div>
+                <div class="serif-title" style="font-size: 1.9rem; color: ${isSafe ? 'var(--sage)' : 'var(--terracotta)'}">${pct}%</div>
+                <div style="font-size: 0.8rem; color: var(--ink-muted);">${s.attended} of ${s.total} sessions logged</div>
+              </div>
+              <div style="font-size: 0.78rem; font-weight: 600; padding: 0.35rem 0.7rem; border-radius: 4px; background: ${isSafe ? '#ecfdf5' : '#fff1f2'}; color: ${isSafe ? 'var(--sage)' : 'var(--terracotta)'}">
+                ${adv.text}
+              </div>
+            </div>
+
+            <div class="paper-bar" style="margin-top: 0.85rem;">
+              <div class="paper-fill" style="width: ${Math.min(pct, 100)}%; background: ${isSafe ? 'var(--sage)' : 'var(--terracotta)'};"></div>
+            </div>
+
+            <div style="margin-top: 0.5rem; font-size: 0.76rem; color: var(--ink-faint); display: flex; justify-content: space-between;">
+              <span>75% Target: ${calcAdvice(s.attended, s.total, 75).text}</span>
+              <span>85% Target: ${calcAdvice(s.attended, s.total, 85).text}</span>
+            </div>
+          </div>
+
+          <div>
+            <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-faint); margin-bottom: 0.35rem;">Daily Registry:</div>
+            <div class="tech-actions">
+              <button class="act-btn act-p ${s.todayStatus === 'PRESENT' ? 'active' : ''}" onclick="toggleToday(${origIdx}, 'PRESENT')">Present</button>
+              <button class="act-btn act-a ${s.todayStatus === 'ABSENT' ? 'active' : ''}" onclick="toggleToday(${origIdx}, 'ABSENT')">Absent</button>
+              <button class="act-btn act-h ${s.todayStatus === 'HOLIDAY' ? 'active' : ''}" onclick="toggleToday(${origIdx}, 'HOLIDAY')">Holiday</button>
+            </div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function toggleToday(idx, status) {
+      const s = subjects[idx];
+      if (s.todayStatus === status) {
+        if (s.todayStatus === 'PRESENT') { s.attended -= 1; s.total -= 1; }
+        else if (s.todayStatus === 'ABSENT') { s.total -= 1; }
+        s.todayStatus = null;
+      } else {
+        if (s.todayStatus === 'PRESENT') { s.attended -= 1; s.total -= 1; }
+        else if (s.todayStatus === 'ABSENT') { s.total -= 1; }
+        s.todayStatus = status;
+        if (status === 'PRESENT') { s.attended += 1; s.total += 1; }
+        else if (status === 'ABSENT') { s.total += 1; }
+      }
+      renderCM();
+    }
+
+    function bulkCheckIn(status) {
+      for (let i = 0; i < 5; i++) {
+        const s = subjects[i];
+        if (s.todayStatus === status) {
+          if (s.todayStatus === 'PRESENT') { s.attended -= 1; s.total -= 1; }
+          else if (s.todayStatus === 'ABSENT') { s.total -= 1; }
+          s.todayStatus = status;
+          if (status === 'PRESENT') { s.attended += 1; s.total += 1; }
+          else if (status === 'ABSENT') { s.total += 1; }
+        } else {
+          s.todayStatus = status;
+          if (status === 'PRESENT') { s.attended += 1; s.total += 1; }
+          else if (status === 'ABSENT') { s.total += 1; }
+        }
+      }
+      renderCM();
+    }
+
+    function openAddSubjectModal() {
+      document.getElementById('add-modal').style.display = 'flex';
+      document.getElementById('new-sub-name').focus();
+    }
+
+    function closeAddSubjectModal() {
+      document.getElementById('add-modal').style.display = 'none';
+    }
+
+    function handleCreateDynamicSubject() {
+      const name = document.getElementById('new-sub-name').value.trim();
+      const code = document.getElementById('new-sub-code').value.trim() || 'SUB01';
+      const type = document.getElementById('new-sub-type').value;
+
+      if (!name) {
+        alert('Please enter a course name (e.g. "History")');
+        return;
+      }
+
+      const dynamicIcon = getLiveSubjectIcon(name);
+
+      subjects.push({
+        id: 'sub_' + Date.now(),
+        name: name,
+        code: code,
+        type: type,
+        attended: 14,
+        total: 16,
+        target: 75,
+        icon: dynamicIcon,
+        todayStatus: null,
+        time: '10:00 - 11:00'
+      });
+
+      closeAddSubjectModal();
+      renderCM();
+    }
+
+    renderCM();
+  </script>
+</body>
+</html>

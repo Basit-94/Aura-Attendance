@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AuraAttend — Notion Craft Zen</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #191919;
+      --card-bg: #202020;
+      --border: rgba(255, 255, 255, 0.08);
+      --text: #e6e6e6;
+      --text-muted: #9b9b9b;
+      --accent: #2eaadc;
+      --green: #44b556;
+      --rose: #eb5757;
+      --amber: #f2994a;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      min-height: 100vh;
+      padding-bottom: 5rem;
+    }
+    .cover-header {
+      height: 140px;
+      background: linear-gradient(135deg, #2b233a 0%, #1f2b38 50%, #1a2f2b 100%);
+      border-bottom: 1px solid var(--border);
+    }
+    .page-container {
+      max-width: 900px;
+      margin: -40px auto 0;
+      padding: 0 2rem;
+    }
+    .page-icon {
+      width: 78px;
+      height: 78px;
+      background: #252525;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      font-size: 2.5rem;
+      display: grid;
+      place-items: center;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+      margin-bottom: 1.25rem;
+    }
+    .page-title {
+      font-family: 'Newsreader', serif;
+      font-size: 2.8rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.5rem;
+    }
+    .page-properties {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      padding: 1rem 0 1.5rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 0.88rem;
+    }
+    .prop-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .prop-tag {
+      background: rgba(255, 255, 255, 0.06);
+      padding: 0.15rem 0.6rem;
+      border-radius: 4px;
+      color: var(--text);
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+
+    /* Notion Callout Box */
+    .callout {
+      background: rgba(46, 170, 220, 0.08);
+      border: 1px solid rgba(46, 170, 220, 0.2);
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      margin: 1.75rem 0;
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+    }
+    .callout-icon { font-size: 1.3rem; }
+    .callout-text h5 { font-size: 0.95rem; font-weight: 600; color: #7dd3fc; margin-bottom: 0.2rem; }
+    .callout-text p { font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; }
+
+    /* Minimalist Checklist Table */
+    .database-header {
+      font-family: 'Newsreader', serif;
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin: 2rem 0 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .notion-table {
+      width: 100%;
+      border-collapse: collapse;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      background: #1c1c1c;
+    }
+    .notion-table th {
+      text-align: left;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+      background: #232323;
+    }
+    .notion-table td {
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+      font-size: 0.88rem;
+    }
+    .notion-table tr:last-child td { border-bottom: none; }
+    .notion-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.35rem 0.75rem;
+      border-radius: 4px;
+      font-size: 0.78rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .notion-btn:hover { background: rgba(255, 255, 255, 0.1); }
+  </style>
+</head>
+<body>
+
+<div class="cover-header"></div>
+
+<main class="page-container">
+  <div class="page-icon">🎓</div>
+  <h1 class="page-title">CSE 3 Academic Attendance</h1>
+
+  <div class="page-properties">
+    <div class="prop-item">
+      <span>Status:</span>
+      <span class="prop-tag" style="background:rgba(68,181,86,0.15); color:#6ee7b7;">● 84.6% Safe</span>
+    </div>
+    <div class="prop-item">
+      <span>Branch:</span>
+      <span class="prop-tag">CSE 3 (CAC)</span>
+    </div>
+    <div class="prop-item">
+      <span>Semester:</span>
+      <span class="prop-tag">Semester 1 (Active)</span>
+    </div>
+    <div class="prop-item">
+      <span>Routine:</span>
+      <span class="prop-tag">25 Periods / Week</span>
+    </div>
+  </div>
+
+  <div class="callout">
+    <div class="callout-icon">💡</div>
+    <div class="callout-text">
+      <h5>Smart Bunk Telemetry Advisor</h5>
+      <p>You can skip up to <strong>4 lectures overall</strong> while remaining above the university required 75.0% threshold. Operating Systems is in optimal standing (+2 buffer).</p>
+    </div>
+  </div>
+
+  <div class="database-header">
+    <span>Course Attendance Database</span>
+    <span style="font-size:0.8rem; font-family:'Plus Jakarta Sans'; color:var(--text-muted);">5 registered records</span>
+  </div>
+
+  <table class="notion-table">
+    <thead>
+      <tr>
+        <th style="width:30%;">Course Name</th>
+        <th>Type</th>
+        <th>Recorded Rate</th>
+        <th>Buffer Status</th>
+        <th style="text-align:right;">Daily Check-In</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Operating Systems</strong></td>
+        <td><span class="prop-tag">Theory</span></td>
+        <td><strong>87.5%</strong> (14/16)</td>
+        <td><span style="color:var(--green); font-weight:600;">+2 Can Bunk</span></td>
+        <td style="text-align:right;">
+          <button class="notion-btn" style="color:var(--green);">✓ Present</button>
+          <button class="notion-btn" style="color:var(--rose);">✕ Absent</button>
+        </td>
+      </tr>
+      <tr>
+        <td><strong>Operating Systems Lab</strong></td>
+        <td><span class="prop-tag">Practical</span></td>
+        <td><strong>100%</strong> (6/6)</td>
+        <td><span style="color:var(--green); font-weight:600;">+2 Can Bunk</span></td>
+        <td style="text-align:right;">
+          <button class="notion-btn" style="color:var(--green);">✓ Present</button>
+          <button class="notion-btn" style="color:var(--rose);">✕ Absent</button>
+        </td>
+      </tr>
+      <tr>
+        <td><strong>Compiler Design</strong></td>
+        <td><span class="prop-tag">Theory</span></td>
+        <td><strong style="color:var(--rose);">71.4%</strong> (10/14)</td>
+        <td><span style="color:var(--rose); font-weight:600;">Attend Next 2</span></td>
+        <td style="text-align:right;">
+          <button class="notion-btn" style="color:var(--green);">✓ Present</button>
+          <button class="notion-btn" style="color:var(--rose);">✕ Absent</button>
+        </td>
+      </tr>
+      <tr>
+        <td><strong>Object Oriented Programming Lab</strong></td>
+        <td><span class="prop-tag">Practical</span></td>
+        <td><strong>80.0%</strong> (8/10)</td>
+        <td><span style="color:var(--green); font-weight:600;">+1 Can Bunk</span></td>
+        <td style="text-align:right;">
+          <button class="notion-btn" style="color:var(--green);">✓ Present</button>
+          <button class="notion-btn" style="color:var(--rose);">✕ Absent</button>
+        </td>
+      </tr>
+      <tr>
+        <td><strong>Software Engineering Lab</strong></td>
+        <td><span class="prop-tag">Practical</span></td>
+        <td><strong>87.5%</strong> (7/8)</td>
+        <td><span style="color:var(--green); font-weight:600;">+1 Can Bunk</span></td>
+        <td style="text-align:right;">
+          <button class="notion-btn" style="color:var(--green);">✓ Present</button>
+          <button class="notion-btn" style="color:var(--rose);">✕ Absent</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</main>
+
+</body>
+</html>

@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AuraAttend — Dark Estimator 02 (Spotify Glow & 3D Icons)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800;900&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #121212;
+      --card: #181818;
+      --card-hover: #222222;
+      --green: #1ed760;
+      --green-glow: rgba(30, 215, 96, 0.35);
+      --red: #f15e6c;
+      --text: #ffffff;
+      --text-muted: #a7a7a7;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      min-height: 100vh;
+      padding-bottom: 5rem;
+      background-image: 
+        radial-gradient(ellipse at 50% -10%, rgba(30, 215, 96, 0.18) 0%, transparent 60%),
+        linear-gradient(180deg, #18281e 0%, #121212 400px);
+      background-attachment: fixed;
+    }
+    header {
+      padding: 1.25rem 2.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(18, 18, 18, 0.85);
+      backdrop-filter: blur(20px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-weight: 900;
+      font-size: 1.3rem;
+      letter-spacing: -0.02em;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+    }
+    .hero-card {
+      background: #181818;
+      border-radius: 16px;
+      padding: 2.25rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2.5rem;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    .big-score {
+      font-size: 4.2rem;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      color: var(--green);
+      line-height: 1;
+      text-shadow: 0 0 25px var(--green-glow);
+    }
+    .capsule-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: var(--green);
+      color: #000;
+      font-weight: 800;
+      font-size: 0.82rem;
+      padding: 0.35rem 0.9rem;
+      border-radius: 30px;
+      margin-top: 0.6rem;
+    }
+    .subject-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+    .spotify-subject-row {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 1rem 1.4rem;
+      display: grid;
+      grid-template-columns: 80px 2.5fr 1fr 1fr 1.6fr;
+      align-items: center;
+      gap: 1.25rem;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      transition: all 0.2s;
+    }
+    .spotify-subject-row:hover {
+      background: var(--card-hover);
+      transform: scale(1.01);
+      border-color: rgba(30, 215, 96, 0.3);
+    }
+    .thumb-3d {
+      width: 72px;
+      height: 72px;
+      border-radius: 10px;
+      object-fit: cover;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.6);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .btn-capsule {
+      background: #fff;
+      color: #000;
+      border: none;
+      padding: 0.55rem 1.1rem;
+      border-radius: 30px;
+      font-weight: 800;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: transform 0.15s, background 0.15s;
+    }
+    .btn-capsule:hover {
+      transform: scale(1.05);
+      background: var(--green);
+    }
+    .btn-capsule-danger {
+      background: rgba(241, 94, 108, 0.15);
+      color: var(--red);
+      border: 1px solid rgba(241, 94, 108, 0.3);
+    }
+    .btn-capsule-danger:hover {
+      background: var(--red);
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div style="width:34px; height:34px; border-radius:50%; background:var(--green); display:grid; place-items:center; color:#000; font-weight:900;">
+      ✓
+    </div>
+    <span>AuraAttend</span>
+    <span style="font-size:0.75rem; background:rgba(30,215,96,0.15); color:var(--green); border:1px solid rgba(30,215,96,0.3); padding:0.2rem 0.6rem; border-radius:20px; font-weight:700;">
+      CSE 3
+    </span>
+  </div>
+  <button class="btn-capsule">+ Add Subject</button>
+</header>
+
+<main class="container">
+  <div class="hero-card">
+    <div>
+      <span style="font-size:0.8rem; color:var(--text-muted); font-weight:800; text-transform:uppercase; letter-spacing:0.08em;">
+        OVERALL ATTENDANCE SCORE
+      </span>
+      <div class="big-score">84.6%</div>
+      <div class="capsule-badge">🛡️ Bunk Advisor: +4 Classes Buffer</div>
+    </div>
+    <div style="text-align:right;">
+      <div style="font-size:1.6rem; font-weight:800;">52 of 61 Attended</div>
+      <div style="font-size:0.85rem; color:var(--text-muted); margin-top:0.3rem;">Required Goal: 75.0%</div>
+      <div style="font-size:0.8rem; color:var(--green); margin-top:0.3rem; font-weight:700;">All Streams Synchronized</div>
+    </div>
+  </div>
+
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
+    <h2 style="font-size:1.35rem; font-weight:800;">Registered Subjects (Obvious 3D Visuals)</h2>
+    <span style="color:var(--text-muted); font-size:0.85rem; font-weight:600;">6 Courses Active</span>
+  </div>
+
+  <div class="subject-list">
+    <!-- OS -->
+    <div class="spotify-subject-row">
+      <img src="icons/computer_os.jpg" alt="Computer Workstation" class="thumb-3d">
+      <div>
+        <h3 style="font-size:1.1rem; font-weight:800;">Operating Systems</h3>
+        <p style="font-size:0.8rem; color:var(--text-muted);">Mon, Wed, Fri (09:30) • Theory</p>
+      </div>
+      <div>
+        <strong style="font-size:1.2rem; color:var(--green); font-family:'JetBrains Mono';">87.5%</strong>
+        <div style="font-size:0.75rem; color:var(--text-muted);">14 / 16 Marked</div>
+      </div>
+      <div style="font-size:0.8rem; font-weight:700; color:var(--green);">+2 Safe</div>
+      <div style="display:flex; gap:0.5rem; justify-content:flex-end;">
+        <button class="btn-capsule">✓ Present</button>
+        <button class="btn-capsule btn-capsule-danger">✕ Absent</button>
+      </div>
+    </div>
+
+    <!-- OS Lab -->
+    <div class="spotify-subject-row">
+      <img src="icons/computer_os.jpg" alt="OS Lab" class="thumb-3d">
+      <div>
+        <h3 style="font-size:1.1rem; font-weight:800;">Operating Systems Lab</h3>
+        <p style="font-size:0.8rem; color:var(--text-muted);">Tue 09:30-13:45 • Practical</p>
+      </div>
+      <div>
+        <strong style="font-size:1.2rem; color:var(--green); font-family:'JetBrains Mono';">100%</strong>
+        <div style="font-size:0.75rem; color:var(--text-muted);">6 / 6 Marked</div>
+      </div>
+      <div style="font-size:0.8rem; font-weight:700; color:var(--green);">+2 Safe</div>
+      <div style="display:flex; gap:0.5rem; justify-content:flex-end;">
+        <button class="btn-capsule">✓ Present</button>
+        <button class="btn-capsule btn-capsule-danger">✕ Absent</button>
+      </div>
+    </div>
+
+    <!-- Compiler -->
+    <div class="spotify-subject-row" style="border-color:rgba(241,94,108,0.35);">
+      <img src="icons/compiler.jpg" alt="Compiler Terminal" class="thumb-3d">
+      <div>
+        <h3 style="font-size:1.1rem; font-weight:800; color:var(--red);">Compiler Design</h3>
+        <p style="font-size:0.8rem; color:var(--text-muted);">Tue, Wed, Fri • Theory</p>
+      </div>
+      <div>
+        <strong style="font-size:1.2rem; color:var(--red); font-family:'JetBrains Mono';">71.4%</strong>
+        <div style="font-size:0.75rem; color:var(--text-muted);">10 / 14 Marked</div>
+      </div>
+      <div style="font-size:0.8rem; font-weight:700; color:var(--red);">Attend 2!</div>
+      <div style="display:flex; gap:0.5rem; justify-content:flex-end;">
+        <button class="btn-capsule">✓ Present</button>
+        <button class="btn-capsule btn-capsule-danger">✕ Absent</button>
+      </div>
+    </div>
+
+    <!-- Software Engg Lab -->
+    <div class="spotify-subject-row">
+      <img src="icons/software_engg.jpg" alt="Software Engineering Lab" class="thumb-3d">
+      <div>
+        <h3 style="font-size:1.1rem; font-weight:800;">Software Engineering Lab</h3>
+        <p style="font-size:0.8rem; color:var(--text-muted);">Thu 12:45-17:30 • Practical</p>
+      </div>
+      <div>
+        <strong style="font-size:1.2rem; color:var(--green); font-family:'JetBrains Mono';">87.5%</strong>
+        <div style="font-size:0.75rem; color:var(--text-muted);">7 / 8 Marked</div>
+      </div>
+      <div style="font-size:0.8rem; font-weight:700; color:var(--green);">+1 Safe</div>
+      <div style="display:flex; gap:0.5rem; justify-content:flex-end;">
+        <button class="btn-capsule">✓ Present</button>
+        <button class="btn-capsule btn-capsule-danger">✕ Absent</button>
+      </div>
+    </div>
+
+    <!-- Industrial Mgmt -->
+    <div class="spotify-subject-row">
+      <img src="icons/industrial_mgmt.jpg" alt="Industrial Management" class="thumb-3d">
+      <div>
+        <h3 style="font-size:1.1rem; font-weight:800;">Industrial Management</h3>
+        <p style="font-size:0.8rem; color:var(--text-muted);">Thu, Fri • Theory</p>
+      </div>
+      <div>
+        <strong style="font-size:1.2rem; color:var(--green); font-family:'JetBrains Mono';">88.8%</strong>
+        <div style="font-size:0.75rem; color:var(--text-muted);">8 / 9 Marked</div>
+      </div>
+      <div style="font-size:0.8rem; font-weight:700; color:var(--green);">+1 Safe</div>
+      <div style="display:flex; gap:0.5rem; justify-content:flex-end;">
+        <button class="btn-capsule">✓ Present</button>
+        <button class="btn-capsule btn-capsule-danger">✕ Absent</button>
+      </div>
+    </div>
+
+    <!-- Constitution of India -->
+    <div class="spotify-subject-row">
+      <img src="icons/constitution.jpg" alt="Constitution of India" class="thumb-3d">
+      <div>
+        <h3 style="font-size:1.1rem; font-weight:800;">Constitution of India</h3>
+        <p style="font-size:0.8rem; color:var(--text-muted);">Thu, Fri (11:45) • Theory</p>
+      </div>
+      <div>
+        <strong style="font-size:1.2rem; color:var(--green); font-family:'JetBrains Mono';">87.5%</strong>
+        <div style="font-size:0.75rem; color:var(--text-muted);">7 / 8 Marked</div>
+      </div>
+      <div style="font-size:0.8rem; font-weight:700; color:var(--green);">+1 Safe</div>
+      <div style="display:flex; gap:0.5rem; justify-content:flex-end;">
+        <button class="btn-capsule">✓ Present</button>
+        <button class="btn-capsule btn-capsule-danger">✕ Absent</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+</body>
+</html>

@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AuraAttend — Estimator 03: Japanese Zen Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f7f5f0;
+      --surface: #edeae1;
+      --card: #ffffff;
+      --border: #e2ddd3;
+      --ink: #1f1e1d;
+      --sub: #5c5955;
+      --muted: #8c8780;
+      --matcha: #3f6212;
+      --cedar: #b45309;
+      --crimson: #991b1b;
+      --radius: 14px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      min-height: 100vh;
+      padding-bottom: 5rem;
+      background-image: 
+        radial-gradient(circle at 10% 10%, rgba(63, 98, 18, 0.03) 0%, transparent 40%),
+        radial-gradient(circle at 90% 90%, rgba(180, 83, 9, 0.03) 0%, transparent 40%);
+      background-attachment: fixed;
+    }
+    header {
+      background: rgba(247, 245, 240, 0.92);
+      backdrop-filter: blur(15px);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 2.2rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .brand-stamp {
+      width: 36px;
+      height: 36px;
+      border-radius: 6px;
+      background: var(--ink);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Shippori Mincho', serif;
+      font-weight: 700;
+      font-size: 1.15rem;
+    }
+    .container {
+      max-width: 1220px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    .zen-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.6rem;
+      box-shadow: 0 4px 16px rgba(31, 30, 29, 0.03);
+      transition: all 0.2s ease;
+    }
+    .term-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      padding: 1.2rem 1.6rem;
+      background: var(--surface);
+    }
+    .btn-zen {
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      border: 1px solid var(--border);
+      background: #ffffff;
+      color: var(--ink);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.15s;
+    }
+    .btn-zen:hover {
+      border-color: var(--ink);
+    }
+    .btn-zen-primary {
+      background: var(--ink);
+      color: #ffffff;
+      border-color: var(--ink);
+    }
+    .btn-zen-primary:hover {
+      background: #333230;
+    }
+    .tab-strip {
+      display: flex;
+      gap: 0.5rem;
+      background: var(--surface);
+      padding: 4px;
+      border-radius: 10px;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 0.65rem 1rem;
+      border-radius: 6px;
+      border: none;
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--sub);
+      background: transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      transition: all 0.15s;
+    }
+    .tab-btn.active {
+      background: #ffffff;
+      color: var(--ink);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+    }
+
+    /* Top 3 Widgets */
+    .widgets-grid {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr 1fr;
+      gap: 1.25rem;
+    }
+    @media (max-width: 950px) {
+      .widgets-grid { grid-template-columns: 1fr; }
+    }
+    .dial-wrap {
+      position: relative;
+      width: 92px;
+      height: 92px;
+      flex-shrink: 0;
+    }
+    .dial-wrap svg {
+      transform: rotate(-90deg);
+      width: 92px;
+      height: 92px;
+    }
+    .dial-bg {
+      fill: none;
+      stroke: var(--surface);
+      stroke-width: 7;
+    }
+    .dial-fg {
+      fill: none;
+      stroke: var(--matcha);
+      stroke-width: 7;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 0.4s ease;
+    }
+    .dial-val {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.25rem;
+      font-weight: 800;
+    }
+    .bamboo-bar {
+      height: 7px;
+      background: var(--surface);
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 0.75rem 0 0.4rem;
+    }
+    .bamboo-fill {
+      height: 100%;
+      border-radius: 10px;
+      transition: width 0.35s ease;
+    }
+
+    /* Checklist */
+    .thumb-zen {
+      width: 64px;
+      height: 64px;
+      border-radius: 10px;
+      object-fit: cover;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      border: 1px solid var(--border);
+      flex-shrink: 0;
+      background: var(--surface);
+    }
+    .thumb-mini {
+      width: 34px;
+      height: 34px;
+      border-radius: 6px;
+      object-fit: cover;
+      border: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .check-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 0.85rem;
+      margin-top: 1rem;
+    }
+    .check-card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.85rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    /* Subject Grid */
+    .subj-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 1.25rem;
+    }
+    .subj-card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 1.25rem;
+      transition: all 0.2s;
+    }
+    .subj-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 24px rgba(31, 30, 29, 0.06);
+      border-color: #cac4b8;
+    }
+    .badge-zen {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      letter-spacing: 0.03em;
+    }
+    .badge-lec {
+      background: #f0ede4;
+      color: var(--cedar);
+    }
+    .badge-lab {
+      background: #ecf0e6;
+      color: var(--matcha);
+    }
+    .zen-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0.45rem;
+      padding-top: 0.85rem;
+      border-top: 1px solid var(--surface);
+    }
+    .act-btn {
+      padding: 0.55rem 0.4rem;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      border: 1px solid var(--border);
+      background: #ffffff;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .act-btn:hover {
+      background: var(--surface);
+    }
+    .act-p.active {
+      background: var(--matcha);
+      color: #ffffff;
+      border-color: var(--matcha);
+    }
+    .act-a.active {
+      background: var(--crimson);
+      color: #ffffff;
+      border-color: var(--crimson);
+    }
+    .act-h.active {
+      background: var(--cedar);
+      color: #ffffff;
+      border-color: var(--cedar);
+    }
+
+    /* Modal */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(31, 30, 29, 0.4);
+      backdrop-filter: blur(8px);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-box {
+      background: #ffffff;
+      border-radius: 14px;
+      padding: 2rem;
+      max-width: 480px;
+      width: 90%;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      border: 1px solid var(--border);
+    }
+    .input-field {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      margin-top: 0.4rem;
+      outline: none;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <div class="brand-stamp">禅</div>
+      <div>
+        <div style="font-family: 'Shippori Mincho', serif; font-size: 1.35rem; font-weight: 700; letter-spacing: -0.01em;">AuraAttend</div>
+        <div style="font-size: 0.72rem; color: var(--muted); font-weight: 600;">Estimator 03 • Japanese Zen Studio</div>
+      </div>
+    </div>
+    <div style="display: flex; gap: 1rem; align-items: center; font-size: 0.85rem;">
+      <span style="background: var(--surface); color: var(--ink); padding: 0.35rem 0.85rem; border-radius: 6px; font-weight: 700;">CSE 3 Academic</span>
+      <span>Benchmark: <strong style="color: var(--matcha);">75.0%</strong></span>
+    </div>
+  </header>
+
+  <div class="container">
+    
+    <!-- Active Term Bar -->
+    <div class="zen-card term-bar">
+      <div>
+        <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--muted);">Active Term Routine</div>
+        <div style="font-family: 'Shippori Mincho', serif; font-size: 1.45rem; font-weight: 700;">CSE 3 (Odd Term 2026)</div>
+      </div>
+      <div style="display: flex; gap: 0.6rem;">
+        <button class="btn-zen" onclick="alert('Exporting PDF Summary...')">📄 Export PDF</button>
+        <button class="btn-zen btn-zen-primary" onclick="openAddSubjectModal()">+ Add Any Subject (Real-Time AI Icon)</button>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="tab-strip">
+      <button class="tab-btn active">Dashboard</button>
+      <button class="tab-btn">Weekly Schedule</button>
+      <button class="tab-btn">Analytics & Predictors</button>
+      <button class="tab-btn">Calendar Logger</button>
+    </div>
+
+    <!-- Top 3 Widgets Grid -->
+    <div class="widgets-grid">
+      <!-- Widget 1: Overall -->
+      <div class="zen-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--muted);">Overall Attendance</div>
+            <div style="font-size: 2rem; font-weight: 800; font-family: 'JetBrains Mono', monospace; margin: 0.2rem 0;" id="zen-overall-pct">82.3%</div>
+            <div style="font-size: 0.82rem; color: var(--sub);"><span id="zen-overall-att">107</span> of <span id="zen-overall-tot">130</span> attended</div>
+          </div>
+          <div class="dial-wrap">
+            <svg>
+              <circle cx="46" cy="46" r="38" class="dial-bg" />
+              <circle cx="46" cy="46" r="38" class="dial-fg" id="zen-dial-fg" style="stroke-dasharray: 238; stroke-dashoffset: 42;" />
+            </svg>
+            <div class="dial-val" id="zen-dial-txt">82%</div>
+          </div>
+        </div>
+        <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--surface); display: flex; gap: 1rem; font-size: 0.8rem;">
+          <div>
+            <span style="color: var(--muted); font-weight: 700;">75% Goal:</span>
+            <span style="color: var(--matcha); font-weight: 800; margin-left: 0.25rem;" id="zen-adv-75">Safe to miss 9 classes</span>
+          </div>
+          <div>
+            <span style="color: var(--muted); font-weight: 700;">85% Goal:</span>
+            <span style="color: var(--crimson); font-weight: 800; margin-left: 0.25rem;" id="zen-adv-85">Attend +18 classes</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Widget 2: Lecture Aggregate -->
+      <div class="zen-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+        <div>
+          <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--muted);">Lecture Aggregate</div>
+          <div style="font-size: 1.6rem; font-weight: 800; font-family: 'JetBrains Mono', monospace; margin-top: 0.2rem;" id="zen-lec-pct">81.7%</div>
+          <div class="bamboo-bar">
+            <div class="bamboo-fill" id="zen-lec-fill" style="width: 81.7%; background: var(--cedar);"></div>
+          </div>
+          <div style="font-size: 0.82rem; color: var(--sub);"><span id="zen-lec-att">85</span> of <span id="zen-lec-tot">104</span> lectures attended</div>
+        </div>
+        <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--surface); font-size: 0.8rem;">
+          <span style="color: var(--muted); font-weight: 700;">75% Goal:</span>
+          <span style="color: var(--matcha); font-weight: 800; margin-left: 0.25rem;" id="zen-lec-adv-75">Safe to miss 7 lectures</span>
+        </div>
+      </div>
+
+      <!-- Widget 3: Lab Aggregate -->
+      <div class="zen-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+        <div>
+          <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--muted);">Lab Aggregate</div>
+          <div style="font-size: 1.6rem; font-weight: 800; font-family: 'JetBrains Mono', monospace; margin-top: 0.2rem;" id="zen-lab-pct">84.6%</div>
+          <div class="bamboo-bar">
+            <div class="bamboo-fill" id="zen-lab-fill" style="width: 84.6%; background: var(--matcha);"></div>
+          </div>
+          <div style="font-size: 0.82rem; color: var(--sub);"><span id="zen-lab-att">22</span> of <span id="zen-lab-tot">26</span> lab sessions attended</div>
+        </div>
+        <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--surface); font-size: 0.8rem;">
+          <span style="color: var(--muted); font-weight: 700;">75% Goal:</span>
+          <span style="color: var(--matcha); font-weight: 800; margin-left: 0.25rem;" id="zen-lab-adv-75">Safe to miss 3 sessions</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Today's Class Checklist -->
+    <div class="zen-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+        <div>
+          <div style="font-family: 'Shippori Mincho', serif; font-size: 1.3rem; font-weight: 700;">Today's Register (Friday)</div>
+          <div style="font-size: 0.8rem; color: var(--sub);">Scheduled routine slots with real-time AI icons & instant check-in</div>
+        </div>
+        <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+          <button class="btn-zen" style="color: var(--matcha);" onclick="bulkCheckIn('PRESENT')">✓ All Present</button>
+          <button class="btn-zen" style="color: var(--crimson);" onclick="bulkCheckIn('ABSENT')">✗ All Absent</button>
+          <button class="btn-zen" style="color: var(--cedar);" onclick="bulkCheckIn('HOLIDAY')">📅 All Holiday</button>
+        </div>
+      </div>
+      <div class="check-grid" id="zen-today-grid">
+        <!-- Injected via JS -->
+      </div>
+    </div>
+
+    <!-- Subject Check-Ins Section -->
+    <div>
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;">
+        <h3 style="font-family: 'Shippori Mincho', serif; font-size: 1.5rem; font-weight: 700;">Subject Check-Ins</h3>
+        <div class="tab-strip" style="width: 250px; padding: 2px;">
+          <button class="tab-btn active" onclick="setZenFilter('ALL', this)">All</button>
+          <button class="tab-btn" onclick="setZenFilter('LECTURE', this)">Lectures</button>
+          <button class="tab-btn" onclick="setZenFilter('LAB', this)">Labs</button>
+        </div>
+      </div>
+
+      <div class="subj-grid" id="zen-subj-grid">
+        <!-- Injected via JS -->
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Modal for Dynamic Subject Addition -->
+  <div class="modal-backdrop" id="add-modal">
+    <div class="modal-box">
+      <h3 style="font-family: 'Shippori Mincho', serif; font-size: 1.35rem; font-weight: 700; margin-bottom: 0.5rem;">Add Any Subject</h3>
+      <p style="font-size: 0.85rem; color: var(--sub); margin-bottom: 1.25rem;">
+        Type any subject name (e.g. <em>"History"</em>, <em>"Philosophy"</em>, <em>"Genetics"</em>). Our real-time AI engine will parse and render a dedicated 3D icon!
+      </p>
+      
+      <div style="display: flex; flex-direction: column; gap: 0.85rem;">
+        <div>
+          <label style="font-size: 0.8rem; font-weight: 700;">Subject Name</label>
+          <input type="text" id="new-sub-name" class="input-field" placeholder="e.g. Ancient Asian History" required>
+        </div>
+        <div>
+          <label style="font-size: 0.8rem; font-weight: 700;">Course Code</label>
+          <input type="text" id="new-sub-code" class="input-field" placeholder="e.g. HS501" value="HS501">
+        </div>
+        <div>
+          <label style="font-size: 0.8rem; font-weight: 700;">Type</label>
+          <select id="new-sub-type" class="input-field">
+            <option value="LECTURE">LECTURE</option>
+            <option value="LAB">LAB</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 0.6rem; justify-content: flex-end; margin-top: 1.5rem;">
+        <button class="btn-zen" onclick="closeAddSubjectModal()">Cancel</button>
+        <button class="btn-zen btn-zen-primary" onclick="handleCreateDynamicSubject()">⚡ Generate Real-Time AI Icon</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function getDynamicSubjectIcon(subjectName) {
+      const name = subjectName.trim().toLowerCase();
+      let keyword = subjectName;
+
+      if (name.includes('history')) keyword = 'ancient history stone monument parchment scroll calligraphy quill';
+      else if (name.includes('operat') || name.includes('os')) keyword = 'minimalist computer processor microchip zen studio render';
+      else if (name.includes('compil')) keyword = 'compiler code terminal binary screen clean octane render';
+      else if (name.includes('softw') || name.includes('se')) keyword = 'software engineering code blocks ceramic clean test';
+      else if (name.includes('manage') || name.includes('mgmt')) keyword = 'minimalist ceramic gears analytics zen plant';
+      else if (name.includes('constitut') || name.includes('law')) keyword = 'wooden scales of justice leather law book emblem';
+      else if (name.includes('math') || name.includes('calc')) keyword = 'mathematics geometry stone compass formula';
+      else if (name.includes('physic')) keyword = 'physics quantum atom serene particle sphere';
+      else if (name.includes('chem')) keyword = 'chemistry laboratory glass flask amber liquid';
+      else if (name.includes('bio')) keyword = 'biology botanical leaf microscope cell';
+
+      const prompt = `3d realistic serene icon of ${keyword}, wabi sabi ceramic and matte textures, studio soft morning light, app badge`;
+      return `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=256&height=256&nologo=true`;
+    }
+
+    const subjects = [
+      { id: 'os', name: 'Operating Systems', code: 'CS501', type: 'LECTURE', attended: 22, total: 26, target: 75, icon: getDynamicSubjectIcon('Operating Systems'), todayStatus: null, time: '14:30 - 15:30' },
+      { id: 'compiler', name: 'Compiler Design', code: 'CS502', type: 'LECTURE', attended: 18, total: 24, target: 75, icon: getDynamicSubjectIcon('Compiler Design'), todayStatus: null, time: '12:45 - 13:45' },
+      { id: 'software', name: 'Software Engineering', code: 'CS503', type: 'LECTURE', attended: 21, total: 24, target: 75, icon: getDynamicSubjectIcon('Software Engineering'), todayStatus: null, time: '15:30 - 16:30' },
+      { id: 'mgmt', name: 'Industrial Management', code: 'HU501', type: 'LECTURE', attended: 19, total: 22, target: 75, icon: getDynamicSubjectIcon('Industrial Management'), todayStatus: null, time: '09:30 - 10:30' },
+      { id: 'const', name: 'Constitution of India', code: 'MC501', type: 'LECTURE', attended: 17, total: 22, target: 75, icon: getDynamicSubjectIcon('Constitution of India'), todayStatus: null, time: '11:45 - 12:45' },
+      { id: 'os_lab', name: 'Operating Systems Lab', code: 'CS591', type: 'LAB', attended: 12, total: 14, target: 75, icon: getDynamicSubjectIcon('Operating Systems'), todayStatus: null, time: '09:30 - 13:45 (Tue)' },
+      { id: 'se_lab', name: 'Software Engineering Lab', code: 'CS593', type: 'LAB', attended: 10, total: 12, target: 75, icon: getDynamicSubjectIcon('Software Engineering'), todayStatus: null, time: '12:45 - 17:30 (Thu)' }
+    ];
+
+    let filter = 'ALL';
+
+    function setZenFilter(f, el) {
+      filter = f;
+      el.parentElement.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      el.classList.add('active');
+      renderZen();
+    }
+
+    function calcAdvice(att, tot, goal) {
+      const g = goal / 100;
+      const pct = tot > 0 ? (att / tot) * 100 : 0;
+      if (pct >= goal) {
+        const canSkip = Math.floor((att - g * tot) / g);
+        return { isSafe: true, text: `Safe to miss ${canSkip} classes` };
+      } else {
+        const need = Math.ceil((g * tot - att) / (1 - g));
+        return { isSafe: false, text: `Attend +${need} classes` };
+      }
+    }
+
+    function renderZen() {
+      let totAtt = 0, totClasses = 0;
+      let lecAtt = 0, lecTot = 0;
+      let labAtt = 0, labTot = 0;
+
+      subjects.forEach(s => {
+        totAtt += s.attended;
+        totClasses += s.total;
+        if (s.type === 'LECTURE') {
+          lecAtt += s.attended;
+          lecTot += s.total;
+        } else {
+          labAtt += s.attended;
+          labTot += s.total;
+        }
+      });
+
+      const ovPct = totClasses > 0 ? ((totAtt / totClasses) * 100).toFixed(1) : 0;
+      const lPct = lecTot > 0 ? ((lecAtt / lecTot) * 100).toFixed(1) : 0;
+      const lbPct = labTot > 0 ? ((labAtt / labTot) * 100).toFixed(1) : 0;
+
+      document.getElementById('zen-overall-pct').innerText = ovPct + '%';
+      document.getElementById('zen-overall-att').innerText = totAtt;
+      document.getElementById('zen-overall-tot').innerText = totClasses;
+      document.getElementById('zen-dial-txt').innerText = Math.round(ovPct) + '%';
+      const offset = 238 - (238 * Math.min(ovPct, 100)) / 100;
+      document.getElementById('zen-dial-fg').style.strokeDashoffset = offset;
+      document.getElementById('zen-adv-75').innerText = calcAdvice(totAtt, totClasses, 75).text;
+      document.getElementById('zen-adv-85').innerText = calcAdvice(totAtt, totClasses, 85).text;
+
+      document.getElementById('zen-lec-pct').innerText = lPct + '%';
+      document.getElementById('zen-lec-att').innerText = lecAtt;
+      document.getElementById('zen-lec-tot').innerText = lecTot;
+      document.getElementById('zen-lec-fill').style.width = Math.min(lPct, 100) + '%';
+      document.getElementById('zen-lec-adv-75').innerText = calcAdvice(lecAtt, lecTot, 75).text;
+
+      document.getElementById('zen-lab-pct').innerText = lbPct + '%';
+      document.getElementById('zen-lab-att').innerText = labAtt;
+      document.getElementById('zen-lab-tot').innerText = labTot;
+      document.getElementById('zen-lab-fill').style.width = Math.min(lbPct, 100) + '%';
+      document.getElementById('zen-lab-adv-75').innerText = calcAdvice(labAtt, labTot, 75).text;
+
+      // Checklist
+      const checkGrid = document.getElementById('zen-today-grid');
+      checkGrid.innerHTML = '';
+      subjects.slice(0, 5).forEach((s, idx) => {
+        const item = document.createElement('div');
+        item.className = 'check-card';
+        item.innerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 0.6rem;">
+              <img src="${s.icon}" alt="${s.name}" class="thumb-mini" onerror="this.src='icons/computer_os.jpg'">
+              <div>
+                <div style="font-weight: 700; font-size: 0.88rem;">${s.name}</div>
+                <div style="font-size: 0.75rem; color: var(--muted);">${s.time}</div>
+              </div>
+            </div>
+            <span class="badge-zen ${s.type === 'LECTURE' ? 'badge-lec' : 'badge-lab'}">${s.type}</span>
+          </div>
+          <div class="zen-actions" style="padding-top: 0.4rem; border-top: none;">
+            <button class="act-btn act-p ${s.todayStatus === 'PRESENT' ? 'active' : ''}" onclick="toggleToday(${idx}, 'PRESENT')">Present</button>
+            <button class="act-btn act-a ${s.todayStatus === 'ABSENT' ? 'active' : ''}" onclick="toggleToday(${idx}, 'ABSENT')">Absent</button>
+            <button class="act-btn act-h ${s.todayStatus === 'HOLIDAY' ? 'active' : ''}" onclick="toggleToday(${idx}, 'HOLIDAY')">Holiday</button>
+          </div>
+        `;
+        checkGrid.appendChild(item);
+      });
+
+      // Grid
+      const grid = document.getElementById('zen-subj-grid');
+      grid.innerHTML = '';
+      const filtered = subjects.filter(s => filter === 'ALL' || s.type === filter);
+
+      filtered.forEach(s => {
+        const origIdx = subjects.findIndex(item => item.id === s.id);
+        const pct = s.total > 0 ? ((s.attended / s.total) * 100).toFixed(1) : 0;
+        const isSafe = pct >= s.target;
+        const adv = calcAdvice(s.attended, s.total, s.target);
+
+        const card = document.createElement('div');
+        card.className = 'subj-card';
+        card.innerHTML = `
+          <div>
+            <div style="display: flex; gap: 1rem; align-items: center;">
+              <img src="${s.icon}" alt="${s.name}" class="thumb-zen" onerror="this.src='icons/computer_os.jpg'">
+              <div style="flex: 1; min-width: 0;">
+                <div style="display: flex; gap: 0.4rem; align-items: center; margin-bottom: 0.25rem;">
+                  <span class="badge-zen ${s.type === 'LECTURE' ? 'badge-lec' : 'badge-lab'}">${s.type}</span>
+                  <span style="font-size: 0.72rem; font-weight: 700; color: var(--muted); font-family: 'JetBrains Mono', monospace;">${s.code}</span>
+                </div>
+                <div style="font-weight: 800; font-size: 1.15rem; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${s.name}">${s.name}</div>
+                <div style="font-size: 0.78rem; color: var(--muted); margin-top: 0.15rem;">Target: ${s.target}%</div>
+              </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.1rem;">
+              <div>
+                <div style="font-size: 1.65rem; font-weight: 800; font-family: 'JetBrains Mono', monospace; color: ${isSafe ? 'var(--matcha)' : 'var(--crimson)'}">${pct}%</div>
+                <div style="font-size: 0.8rem; color: var(--sub);">${s.attended} / ${s.total} sessions logged</div>
+              </div>
+              <div style="font-size: 0.78rem; font-weight: 700; padding: 0.35rem 0.75rem; border-radius: 6px; background: ${isSafe ? '#ecfdf5' : '#fff1f2'}; color: ${isSafe ? 'var(--matcha)' : 'var(--crimson)'}">
+                ${adv.text}
+              </div>
+            </div>
+
+            <div class="bamboo-bar" style="margin-top: 0.85rem;">
+              <div class="bamboo-fill" style="width: ${Math.min(pct, 100)}%; background: ${isSafe ? 'var(--matcha)' : 'var(--crimson)'};"></div>
+            </div>
+
+            <div style="margin-top: 0.5rem; font-size: 0.76rem; color: var(--muted); display: flex; justify-content: space-between;">
+              <span>75% Target: ${calcAdvice(s.attended, s.total, 75).text}</span>
+              <span>85% Target: ${calcAdvice(s.attended, s.total, 85).text}</span>
+            </div>
+          </div>
+
+          <div>
+            <div style="font-size: 0.75rem; font-weight: 700; color: var(--muted); margin-bottom: 0.35rem;">Log Attendance Today:</div>
+            <div class="zen-actions">
+              <button class="act-btn act-p ${s.todayStatus === 'PRESENT' ? 'active' : ''}" onclick="toggleToday(${origIdx}, 'PRESENT')">Present</button>
+              <button class="act-btn act-a ${s.todayStatus === 'ABSENT' ? 'active' : ''}" onclick="toggleToday(${origIdx}, 'ABSENT')">Absent</button>
+              <button class="act-btn act-h ${s.todayStatus === 'HOLIDAY' ? 'active' : ''}" onclick="toggleToday(${origIdx}, 'HOLIDAY')">Holiday</button>
+            </div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function toggleToday(idx, status) {
+      const s = subjects[idx];
+      if (s.todayStatus === status) {
+        if (s.todayStatus === 'PRESENT') { s.attended -= 1; s.total -= 1; }
+        else if (s.todayStatus === 'ABSENT') { s.total -= 1; }
+        s.todayStatus = null;
+      } else {
+        if (s.todayStatus === 'PRESENT') { s.attended -= 1; s.total -= 1; }
+        else if (s.todayStatus === 'ABSENT') { s.total -= 1; }
+        s.todayStatus = status;
+        if (status === 'PRESENT') { s.attended += 1; s.total += 1; }
+        else if (status === 'ABSENT') { s.total += 1; }
+      }
+      renderZen();
+    }
+
+    function bulkCheckIn(status) {
+      for (let i = 0; i < 5; i++) {
+        const s = subjects[i];
+        if (s.todayStatus === status) {
+          if (s.todayStatus === 'PRESENT') { s.attended -= 1; s.total -= 1; }
+          else if (s.todayStatus === 'ABSENT') { s.total -= 1; }
+          s.todayStatus = status;
+          if (status === 'PRESENT') { s.attended += 1; s.total += 1; }
+          else if (status === 'ABSENT') { s.total += 1; }
+        } else {
+          s.todayStatus = status;
+          if (status === 'PRESENT') { s.attended += 1; s.total += 1; }
+          else if (status === 'ABSENT') { s.total += 1; }
+        }
+      }
+      renderZen();
+    }
+
+    function openAddSubjectModal() {
+      document.getElementById('add-modal').style.display = 'flex';
+      document.getElementById('new-sub-name').focus();
+    }
+
+    function closeAddSubjectModal() {
+      document.getElementById('add-modal').style.display = 'none';
+    }
+
+    function handleCreateDynamicSubject() {
+      const name = document.getElementById('new-sub-name').value.trim();
+      const code = document.getElementById('new-sub-code').value.trim() || 'SUB01';
+      const type = document.getElementById('new-sub-type').value;
+
+      if (!name) {
+        alert('Please enter a subject name (e.g. "History")');
+        return;
+      }
+
+      const dynamicIcon = getDynamicSubjectIcon(name);
+
+      subjects.push({
+        id: 'sub_' + Date.now(),
+        name: name,
+        code: code,
+        type: type,
+        attended: 14,
+        total: 16,
+        target: 75,
+        icon: dynamicIcon,
+        todayStatus: null,
+        time: '10:00 - 11:00'
+      });
+
+      closeAddSubjectModal();
+      renderZen();
+      alert(`Subject "${name}" added! Generating and loading real-time 3D AI icon.`);
+    }
+
+    renderZen();
+  </script>
+</body>
+</html>

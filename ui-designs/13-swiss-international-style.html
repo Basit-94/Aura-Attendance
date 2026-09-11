@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AuraAttend — Swiss International Style</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f4f4f4;
+      --orange: #ff4500;
+      --dark: #0a0a0a;
+      --border: #0a0a0a;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--dark);
+      font-family: 'Archivo', sans-serif;
+      min-height: 100vh;
+      border-top: 8px solid var(--orange);
+      padding-bottom: 5rem;
+    }
+    .grid-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 3rem;
+    }
+    .sidebar {
+      border-right: 2px solid var(--dark);
+      padding-right: 2rem;
+    }
+    .logo {
+      font-size: 2.2rem;
+      font-weight: 900;
+      letter-spacing: -0.05em;
+      line-height: 0.95;
+      margin-bottom: 2rem;
+    }
+    .swiss-meta {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      line-height: 1.8;
+      margin-bottom: 2rem;
+    }
+    .main-col {
+      display: flex;
+      flex-direction: column;
+      gap: 2.5rem;
+    }
+    .giant-stat {
+      font-size: 7rem;
+      font-weight: 900;
+      letter-spacing: -0.06em;
+      line-height: 0.85;
+      margin: 0.5rem 0 1rem;
+    }
+    .swiss-rule {
+      height: 2px;
+      background: var(--dark);
+      margin: 1.5rem 0;
+    }
+    .subject-entry {
+      border-bottom: 2px solid var(--dark);
+      padding: 1.5rem 0;
+      display: grid;
+      grid-template-columns: 3fr 1fr 1fr 1fr;
+      align-items: center;
+      gap: 1.5rem;
+    }
+    .swiss-btn {
+      background: var(--dark);
+      color: #fff;
+      border: 2px solid var(--dark);
+      padding: 0.6rem 1rem;
+      font-family: inherit;
+      font-weight: 800;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      border-radius: 0;
+      transition: all 0.1s;
+    }
+    .swiss-btn:hover {
+      background: var(--orange);
+      border-color: var(--orange);
+    }
+    .swiss-btn-outline {
+      background: transparent;
+      color: var(--dark);
+    }
+    .swiss-btn-outline:hover {
+      background: var(--dark);
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+
+<div class="grid-container">
+  <aside class="sidebar">
+    <div class="logo">
+      AURA<br>ATTEND.
+    </div>
+    <div class="swiss-meta">
+      <div>DISCIPLINE: CSE 3</div>
+      <div>SEMESTER: 01</div>
+      <div>ROUTINE: 25 PERIODS</div>
+      <div>VERIFICATION: SECURE</div>
+    </div>
+    <div style="background:var(--dark); color:#fff; padding:1.25rem;">
+      <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; color:var(--orange);">
+        RULE NO. 75
+      </div>
+      <p style="font-size:0.85rem; line-height:1.4; font-weight:600;">
+        A minimum of 75% aggregate attendance is strictly required by the university senate.
+      </p>
+    </div>
+  </aside>
+
+  <main class="main-col">
+    <div>
+      <div style="font-size:0.9rem; font-weight:800; text-transform:uppercase; letter-spacing:0.1em;">
+        OVERALL PRESENCE COEFFICIENT
+      </div>
+      <div class="giant-stat">84.6%</div>
+      <div style="font-size:1.1rem; font-weight:800; color:var(--orange);">
+        STATUS: SAFE / CAN BUNK NEXT 4 LECTURES
+      </div>
+    </div>
+
+    <div class="swiss-rule"></div>
+
+    <div>
+      <div style="font-size:0.9rem; font-weight:800; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem;">
+        COURSE DIRECTORY (5 ACTIVE)
+      </div>
+
+      <div class="subject-entry" style="border-top:2px solid var(--dark);">
+        <div>
+          <h3 style="font-size:1.3rem; font-weight:900; letter-spacing:-0.02em;">OPERATING SYSTEMS</h3>
+          <div style="font-size:0.8rem; font-weight:700; color:#666;">THEORY • MON, WED, FRI</div>
+        </div>
+        <div style="font-size:1.4rem; font-weight:900;">87.5%</div>
+        <div style="font-size:0.85rem; font-weight:800; color:var(--orange);">+2 CAN BUNK</div>
+        <div style="display:flex; gap:0.4rem; justify-content:flex-end;">
+          <button class="swiss-btn">+1</button>
+          <button class="swiss-btn swiss-btn-outline">-1</button>
+        </div>
+      </div>
+
+      <div class="subject-entry">
+        <div>
+          <h3 style="font-size:1.3rem; font-weight:900; letter-spacing:-0.02em;">OS LAB</h3>
+          <div style="font-size:0.8rem; font-weight:700; color:#666;">PRACTICAL • TUE 09:30-13:45</div>
+        </div>
+        <div style="font-size:1.4rem; font-weight:900;">100%</div>
+        <div style="font-size:0.85rem; font-weight:800; color:var(--orange);">+2 CAN BUNK</div>
+        <div style="display:flex; gap:0.4rem; justify-content:flex-end;">
+          <button class="swiss-btn">+1</button>
+          <button class="swiss-btn swiss-btn-outline">-1</button>
+        </div>
+      </div>
+
+      <div class="subject-entry">
+        <div>
+          <h3 style="font-size:1.3rem; font-weight:900; letter-spacing:-0.02em; color:var(--orange);">COMPILER DESIGN</h3>
+          <div style="font-size:0.8rem; font-weight:700; color:#666;">THEORY • TUE, WED, FRI</div>
+        </div>
+        <div style="font-size:1.4rem; font-weight:900; color:var(--orange);">71.4%</div>
+        <div style="font-size:0.85rem; font-weight:800; color:var(--orange);">ATTEND 2</div>
+        <div style="display:flex; gap:0.4rem; justify-content:flex-end;">
+          <button class="swiss-btn">+1</button>
+          <button class="swiss-btn swiss-btn-outline">-1</button>
+        </div>
+      </div>
+
+      <div class="subject-entry">
+        <div>
+          <h3 style="font-size:1.3rem; font-weight:900; letter-spacing:-0.02em;">OOP LAB</h3>
+          <div style="font-size:0.8rem; font-weight:700; color:#666;">PRACTICAL • MON 12:45-17:30</div>
+        </div>
+        <div style="font-size:1.4rem; font-weight:900;">80.0%</div>
+        <div style="font-size:0.85rem; font-weight:800; color:var(--orange);">+1 CAN BUNK</div>
+        <div style="display:flex; gap:0.4rem; justify-content:flex-end;">
+          <button class="swiss-btn">+1</button>
+          <button class="swiss-btn swiss-btn-outline">-1</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+</body>
+</html>

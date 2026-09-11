@@ -186,12 +186,18 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Subject name and type (LECTURE/LAB) are required' }, { status: 400 });
     }
 
-    const activeSemester = await db.semester.findFirst({
+    let activeSemester = await db.semester.findFirst({
       where: { studentId: student.id, isActive: true },
     });
 
     if (!activeSemester) {
-      return NextResponse.json({ error: 'No active semester found. Please create one.' }, { status: 400 });
+      activeSemester = await db.semester.create({
+        data: {
+          studentId: student.id,
+          name: 'Semester 1',
+          isActive: true,
+        },
+      });
     }
 
     const normalizedName = normalizeSubjectName(name);

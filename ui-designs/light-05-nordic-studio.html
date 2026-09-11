@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AuraAttend — Light UI 05: Nordic Architectural Minimal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #ffffff;
+      --surface: #fafafa;
+      --card-bg: #ffffff;
+      --border: #e4e4e7;
+      --border-dark: #18181b;
+      --text-main: #09090b;
+      --text-sub: #52525b;
+      --text-muted: #71717a;
+      --nordic-emerald: #059669;
+      --nordic-crimson: #e11d48;
+      --nordic-amber: #d97706;
+      --radius: 12px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text-main);
+      font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      min-height: 100vh;
+      padding-bottom: 5rem;
+      background-image: radial-gradient(#e4e4e7 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+    header {
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 2.2rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand-mark {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .brand-cube {
+      width: 34px;
+      height: 34px;
+      background: var(--border-dark);
+      color: #ffffff;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1rem;
+    }
+    .container {
+      max-width: 1220px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    .nordic-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.6rem;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .term-banner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      padding: 1.2rem 1.6rem;
+      background: var(--surface);
+    }
+    .btn-nordic {
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      border: 1px solid var(--border);
+      background: #ffffff;
+      color: var(--text-main);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.15s;
+    }
+    .btn-nordic:hover {
+      border-color: var(--border-dark);
+    }
+    .btn-nordic-primary {
+      background: var(--border-dark);
+      color: #ffffff;
+      border-color: var(--border-dark);
+    }
+    .btn-nordic-primary:hover {
+      background: #27272a;
+    }
+    .tab-strip {
+      display: flex;
+      gap: 0.5rem;
+      border: 1px solid var(--border);
+      background: #ffffff;
+      padding: 4px;
+      border-radius: 8px;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 0.65rem 1rem;
+      border-radius: 6px;
+      border: none;
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--text-sub);
+      background: transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      transition: all 0.15s;
+    }
+    .tab-btn.active {
+      background: var(--border-dark);
+      color: #ffffff;
+    }
+
+    /* Top Widgets Grid */
+    .widgets-grid {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr 1fr;
+      gap: 1.25rem;
+    }
+    @media (max-width: 950px) {
+      .widgets-grid { grid-template-columns: 1fr; }
+    }
+    .dial-wrap {
+      position: relative;
+      width: 92px;
+      height: 92px;
+      flex-shrink: 0;
+    }
+    .dial-wrap svg {
+      transform: rotate(-90deg);
+      width: 92px;
+      height: 92px;
+    }
+    .dial-bg {
+      fill: none;
+      stroke: #e4e4e7;
+      stroke-width: 8;
+    }
+    .dial-fg {
+      fill: none;
+      stroke: var(--border-dark);
+      stroke-width: 8;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 0.4s ease;
+    }
+    .dial-val {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.25rem;
+      font-weight: 800;
+    }
+    .nordic-bar {
+      height: 6px;
+      background: #e4e4e7;
+      border-radius: 4px;
+      overflow: hidden;
+      margin: 0.75rem 0 0.4rem;
+    }
+    .nordic-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.35s ease;
+    }
+
+    /* Checklist */
+    .thumb-frame {
+      width: 64px;
+      height: 64px;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+      flex-shrink: 0;
+    }
+    .thumb-frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .thumb-frame-mini {
+      width: 34px;
+      height: 34px;
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .thumb-frame-mini img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .check-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 0.85rem;
+      margin-top: 1rem;
+    }
+    .check-item {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.85rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    /* Subject Cards Grid */
+    .subj-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 1.25rem;
+    }
+    .subj-card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 1.25rem;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .subj-card:hover {
+      border-color: #a1a1aa;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px -4px rgba(0,0,0,0.06);
+    }
+    .code-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      background: #f4f4f5;
+      color: #3f3f46;
+    }
+    .actions-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0.45rem;
+      padding-top: 0.85rem;
+      border-top: 1px solid var(--border);
+    }
+    .action-btn {
+      padding: 0.55rem 0.4rem;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      border: 1px solid var(--border);
+      background: #ffffff;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .action-btn:hover {
+      border-color: var(--border-dark);
+    }
+    .act-p.active {
+      background: var(--nordic-emerald);
+      color: #ffffff;
+      border-color: var(--nordic-emerald);
+    }
+    .act-a.active {
+      background: var(--nordic-crimson);
+      color: #ffffff;
+      border-color: var(--nordic-crimson);
+    }
+    .act-h.active {
+      background: var(--nordic-amber);
+      color: #ffffff;
+      border-color: var(--nordic-amber);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand-mark">
+      <div class="brand-cube">N</div>
+      <div>
+        <div style="font-size: 1.15rem; font-weight: 800; letter-spacing: -0.02em;">AuraAttend</div>
+        <div style="font-size: 0.72rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace;">Light UI 05 • Nordic Minimal Studio</div>
+      </div>
+    </div>
+    <div style="display: flex; gap: 1rem; align-items: center; font-size: 0.85rem;">
+      <span style="background: #f4f4f5; color: var(--text-main); padding: 0.35rem 0.85rem; border-radius: 6px; font-weight: 700; border: 1px solid var(--border);">CSE 3 Division</span>
+      <span>Benchmark: <strong style="color: var(--nordic-emerald);">75.0%</strong></span>
+    </div>
+  </header>
+
+  <div class="container">
+    
+    <!-- Active Term Banner -->
+    <div class="nordic-card term-banner">
+      <div>
+        <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Current Active Ledger</div>
+        <div style="font-size: 1.35rem; font-weight: 800; color: var(--text-main);">CSE 3 (Odd Term 2026)</div>
+      </div>
+      <div style="display: flex; gap: 0.6rem;">
+        <button class="btn-nordic">Export PDF Report</button>
+        <button class="btn-nordic btn-nordic-primary">+ Add Subject</button>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="tab-strip">
+      <button class="tab-btn active">Dashboard</button>
+      <button class="tab-btn">Weekly Schedule</button>
+      <button class="tab-btn">Analytics & Predictors</button>
+      <button class="tab-btn">Calendar Logger</button>
+    </div>
+
+    <!-- Top 3 Widgets Grid -->
+    <div class="widgets-grid">
+      <!-- Widget 1: Overall -->
+      <div class="nordic-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <div style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted);">Overall Attendance</div>
+            <div style="font-size: 2rem; font-weight: 800; font-family: 'JetBrains Mono', monospace; margin: 0.2rem 0;" id="nor-overall-pct">82.3%</div>
+            <div style="font-size: 0.82rem; color: var(--text-sub);"><span id="nor-overall-att">107</span> of <span id="nor-overall-tot">130</span> classes attended</div>
+          </div>
+          <div class="dial-wrap">
+            <svg>
+              <circle cx="46" cy="46" r="38" class="dial-bg" />
+              <circle cx="46" cy="46" r="38" class="dial-fg" id="nor-dial-fg" style="stroke-dasharray: 238; stroke-dashoffset: 42;" />
+            </svg>
+            <div class="dial-val" id="nor-dial-txt">82%</div>
+          </div>
+        </div>
+        <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--border); display: flex; gap: 1rem; font-size: 0.8rem;">
+          <div>
+            <span style="color: var(--text-muted); font-weight: 700;">75% Goal:</span>
+            <span style="color: var(--nordic-emerald); font-weight: 800; margin-left: 0.25rem;" id="nor-adv-75">Safe to miss 9 classes</span>
+          </div>
+          <div>
+            <span style="color: var(--text-muted); font-weight: 700;">85% Goal:</span>
+            <span style="color: var(--nordic-crimson); font-weight: 800; margin-left: 0.25rem;" id="nor-adv-85">Attend +18 classes</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Widget 2: Lecture Aggregate -->
+      <div class="nordic-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+        <div>
+          <div style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted);">Lecture Aggregate</div>
+          <div style="font-size: 1.6rem; font-weight: 800; font-family: 'JetBrains Mono', monospace; margin-top: 0.2rem;" id="nor-lec-pct">81.7%</div>
+          <div class="nordic-bar">
+            <div class="nordic-bar-fill" id="nor-lec-fill" style="width: 81.7%; background: var(--border-dark);"></div>
+          </div>
+          <div style="font-size: 0.82rem; color: var(--text-sub);"><span id="nor-lec-att">85</span> of <span id="nor-lec-tot">104</span> lectures attended</div>
+        </div>
+        <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--border); font-size: 0.8rem;">
+          <span style="color: var(--text-muted); font-weight: 700;">75% Goal:</span>
+          <span style="color: var(--nordic-emerald); font-weight: 800; margin-left: 0.25rem;" id="nor-lec-adv-75">Safe to miss 7 lectures</span>
+        </div>
+      </div>
+
+      <!-- Widget 3: Lab Aggregate -->
+      <div class="nordic-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+        <div>
+          <div style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted);">Lab Aggregate</div>
+          <div style="font-size: 1.6rem; font-weight: 800; font-family: 'JetBrains Mono', monospace; margin-top: 0.2rem;" id="nor-lab-pct">84.6%</div>
+          <div class="nordic-bar">
+            <div class="nordic-bar-fill" id="nor-lab-fill" style="width: 84.6%; background: var(--nordic-emerald);"></div>
+          </div>
+          <div style="font-size: 0.82rem; color: var(--text-sub);"><span id="nor-lab-att">22</span> of <span id="nor-lab-tot">26</span> lab sessions attended</div>
+        </div>
+        <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--border); font-size: 0.8rem;">
+          <span style="color: var(--text-muted); font-weight: 700;">75% Goal:</span>
+          <span style="color: var(--nordic-emerald); font-weight: 800; margin-left: 0.25rem;" id="nor-lab-adv-75">Safe to miss 3 sessions</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Today's Class Checklist -->
+    <div class="nordic-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+        <div>
+          <div style="font-size: 1.15rem; font-weight: 800;">Today's Class Checklist (Friday)</div>
+          <div style="font-size: 0.8rem; color: var(--text-sub);">Scheduled routine slots for today with instant check-in</div>
+        </div>
+        <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+          <button class="btn-nordic" style="font-size: 0.78rem; padding: 0.35rem 0.75rem; color: var(--nordic-emerald);" onclick="bulkCheckIn('PRESENT')">✓ All Present</button>
+          <button class="btn-nordic" style="font-size: 0.78rem; padding: 0.35rem 0.75rem; color: var(--nordic-crimson);" onclick="bulkCheckIn('ABSENT')">✗ All Absent</button>
+          <button class="btn-nordic" style="font-size: 0.78rem; padding: 0.35rem 0.75rem; color: var(--nordic-amber);" onclick="bulkCheckIn('HOLIDAY')">📅 All Holiday</button>
+        </div>
+      </div>
+      <div class="check-grid" id="nor-today-grid">
+        <!-- Injected via JS -->
+      </div>
+    </div>
+
+    <!-- Subject Check-Ins Section -->
+    <div>
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;">
+        <h3 style="font-size: 1.4rem; font-weight: 800;">Subject Check-Ins</h3>
+        <div class="tab-strip" style="width: 250px; padding: 2px;">
+          <button class="tab-btn active" onclick="setNorFilter('ALL', this)">All</button>
+          <button class="tab-btn" onclick="setNorFilter('LECTURE', this)">Lectures</button>
+          <button class="tab-btn" onclick="setNorFilter('LAB', this)">Labs</button>
+        </div>
+      </div>
+
+      <div class="subj-grid" id="nor-subj-grid">
+        <!-- Injected via JS -->
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const subjects = [
+      { id: 'os', name: 'Operating Systems', code: 'CS501', type: 'LECTURE', attended: 22, total: 26, target: 75, icon: 'icons/computer_os.jpg', todayStatus: null, time: '14:30 - 15:30' },
+      { id: 'compiler', name: 'Compiler Design', code: 'CS502', type: 'LECTURE', attended: 18, total: 24, target: 75, icon: 'icons/compiler.jpg', todayStatus: null, time: '12:45 - 13:45' },
+      { id: 'software', name: 'Software Engineering', code: 'CS503', type: 'LECTURE', attended: 21, total: 24, target: 75, icon: 'icons/software_engg.jpg', todayStatus: null, time: '15:30 - 16:30' },
+      { id: 'mgmt', name: 'Industrial Management', code: 'HU501', type: 'LECTURE', attended: 19, total: 22, target: 75, icon: 'icons/industrial_mgmt.jpg', todayStatus: null, time: '09:30 - 10:30' },
+      { id: 'const', name: 'Constitution of India', code: 'MC501', type: 'LECTURE', attended: 17, total: 22, target: 75, icon: 'icons/constitution.jpg', todayStatus: null, time: '11:45 - 12:45' },
+      { id: 'os_lab', name: 'Operating Systems Lab', code: 'CS591', type: 'LAB', attended: 12, total: 14, target: 75, icon: 'icons/computer_os.jpg', todayStatus: null, time: '09:30 - 13:45 (Tue)' },
+      { id: 'se_lab', name: 'Software Engineering Lab', code: 'CS593', type: 'LAB', attended: 10, total: 12, target: 75, icon: 'icons/software_engg.jpg', todayStatus: null, time: '12:45 - 17:30 (Thu)' }
+    ];
+
+    let filter = 'ALL';
+
+    function setNorFilter(f, el) {
+      filter = f;
+      el.parentElement.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      el.classList.add('active');
+      renderNor();
+    }
+
+    function calcAdvice(att, tot, goal) {
+      const g = goal / 100;
+      const pct = tot > 0 ? (att / tot) * 100 : 0;
+      if (pct >= goal) {
+        const canSkip = Math.floor((att - g * tot) / g);
+        return { isSafe: true, text: `Safe to miss ${canSkip} classes` };
+      } else {
+        const need = Math.ceil((g * tot - att) / (1 - g));
+        return { isSafe: false, text: `Attend +${need} classes` };
+      }
+    }
+
+    function renderNor() {
+      let totAtt = 0, totClasses = 0;
+      let lecAtt = 0, lecTot = 0;
+      let labAtt = 0, labTot = 0;
+
+      subjects.forEach(s => {
+        totAtt += s.attended;
+        totClasses += s.total;
+        if (s.type === 'LECTURE') {
+          lecAtt += s.attended;
+          lecTot += s.total;
+        } else {
+          labAtt += s.attended;
+          labTot += s.total;
+        }
+      });
+
+      const ovPct = totClasses > 0 ? ((totAtt / totClasses) * 100).toFixed(1) : 0;
+      const lPct = lecTot > 0 ? ((lecAtt / lecTot) * 100).toFixed(1) : 0;
+      const lbPct = labTot > 0 ? ((labAtt / labTot) * 100).toFixed(1) : 0;
+
+      document.getElementById('nor-overall-pct').innerText = ovPct + '%';
+      document.getElementById('nor-overall-att').innerText = totAtt;
+      document.getElementById('nor-overall-tot').innerText = totClasses;
+      document.getElementById('nor-dial-txt').innerText = Math.round(ovPct) + '%';
+      const offset = 238 - (238 * Math.min(ovPct, 100)) / 100;
+      document.getElementById('nor-dial-fg').style.strokeDashoffset = offset;
+      document.getElementById('nor-adv-75').innerText = calcAdvice(totAtt, totClasses, 75).text;
+      document.getElementById('nor-adv-85').innerText = calcAdvice(totAtt, totClasses, 85).text;
+
+      document.getElementById('nor-lec-pct').innerText = lPct + '%';
+      document.getElementById('nor-lec-att').innerText = lecAtt;
+      document.getElementById('nor-lec-tot').innerText = lecTot;
+      document.getElementById('nor-lec-fill').style.width = Math.min(lPct, 100) + '%';
+      document.getElementById('nor-lec-adv-75').innerText = calcAdvice(lecAtt, lecTot, 75).text;
+
+      document.getElementById('nor-lab-pct').innerText = lbPct + '%';
+      document.getElementById('nor-lab-att').innerText = labAtt;
+      document.getElementById('nor-lab-tot').innerText = labTot;
+      document.getElementById('nor-lab-fill').style.width = Math.min(lbPct, 100) + '%';
+      document.getElementById('nor-lab-adv-75').innerText = calcAdvice(labAtt, labTot, 75).text;
+
+      // Checklist
+      const checkGrid = document.getElementById('nor-today-grid');
+      checkGrid.innerHTML = '';
+      subjects.slice(0, 5).forEach((s, idx) => {
+        const item = document.createElement('div');
+        item.className = 'check-item';
+        item.innerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 0.6rem;">
+              <div class="thumb-frame-mini">
+                <img src="${s.icon}" alt="${s.name}">
+              </div>
+              <div>
+                <div style="font-weight: 700; font-size: 0.88rem;">${s.name}</div>
+                <div style="font-size: 0.75rem; color: var(--text-muted);">${s.time}</div>
+              </div>
+            </div>
+            <span class="code-badge">${s.type}</span>
+          </div>
+          <div class="actions-grid" style="padding-top: 0.4rem; border-top: none;">
+            <button class="action-btn act-p ${s.todayStatus === 'PRESENT' ? 'active' : ''}" onclick="toggleToday(${idx}, 'PRESENT')">Present</button>
+            <button class="action-btn act-a ${s.todayStatus === 'ABSENT' ? 'active' : ''}" onclick="toggleToday(${idx}, 'ABSENT')">Absent</button>
+            <button class="action-btn act-h ${s.todayStatus === 'HOLIDAY' ? 'active' : ''}" onclick="toggleToday(${idx}, 'HOLIDAY')">Holiday</button>
+          </div>
+        `;
+        checkGrid.appendChild(item);
+      });
+
+      // Grid
+      const grid = document.getElementById('nor-subj-grid');
+      grid.innerHTML = '';
+      const filtered = subjects.filter(s => filter === 'ALL' || s.type === filter);
+
+      filtered.forEach(s => {
+        const origIdx = subjects.findIndex(item => item.id === s.id);
+        const pct = s.total > 0 ? ((s.attended / s.total) * 100).toFixed(1) : 0;
+        const isSafe = pct >= s.target;
+        const adv = calcAdvice(s.attended, s.total, s.target);
+
+        const card = document.createElement('div');
+        card.className = 'subj-card';
+        card.innerHTML = `
+          <div>
+            <div style="display: flex; gap: 1rem; align-items: center;">
+              <div class="thumb-frame">
+                <img src="${s.icon}" alt="${s.name}">
+              </div>
+              <div style="flex: 1; min-width: 0;">
+                <div style="display: flex; gap: 0.4rem; align-items: center; margin-bottom: 0.25rem;">
+                  <span class="code-badge">${s.type}</span>
+                  <span style="font-size: 0.72rem; font-weight: 700; color: var(--text-muted); font-family: 'JetBrains Mono', monospace;">${s.code}</span>
+                </div>
+                <div style="font-weight: 800; font-size: 1.15rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${s.name}">${s.name}</div>
+                <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.15rem;">Goal: ${s.target}%</div>
+              </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.1rem;">
+              <div>
+                <div style="font-size: 1.65rem; font-weight: 800; font-family: 'JetBrains Mono', monospace; color: ${isSafe ? 'var(--nordic-emerald)' : 'var(--nordic-crimson)'}">${pct}%</div>
+                <div style="font-size: 0.8rem; color: var(--text-sub);">${s.attended} / ${s.total} sessions logged</div>
+              </div>
+              <div style="font-size: 0.78rem; font-weight: 700; padding: 0.35rem 0.75rem; border-radius: 4px; background: ${isSafe ? '#ecfdf5' : '#fff1f2'}; color: ${isSafe ? 'var(--nordic-emerald)' : 'var(--nordic-crimson)'}">
+                ${adv.text}
+              </div>
+            </div>
+
+            <div class="nordic-bar" style="margin-top: 0.85rem;">
+              <div class="nordic-bar-fill" style="width: ${Math.min(pct, 100)}%; background: ${isSafe ? 'var(--nordic-emerald)' : 'var(--nordic-crimson)'};"></div>
+            </div>
+
+            <div style="margin-top: 0.5rem; font-size: 0.76rem; color: var(--text-muted); display: flex; justify-content: space-between;">
+              <span>75% Target: ${calcAdvice(s.attended, s.total, 75).text}</span>
+              <span>85% Target: ${calcAdvice(s.attended, s.total, 85).text}</span>
+            </div>
+          </div>
+
+          <div>
+            <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.35rem;">Log Attendance Today:</div>
+            <div class="actions-grid">
+              <button class="action-btn act-p ${s.todayStatus === 'PRESENT' ? 'active' : ''}" onclick="toggleToday(${origIdx}, 'PRESENT')">Present</button>
+              <button class="action-btn act-a ${s.todayStatus === 'ABSENT' ? 'active' : ''}" onclick="toggleToday(${origIdx}, 'ABSENT')">Absent</button>
+              <button class="action-btn act-h ${s.todayStatus === 'HOLIDAY' ? 'active' : ''}" onclick="toggleToday(${origIdx}, 'HOLIDAY')">Holiday</button>
+            </div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function toggleToday(idx, status) {
+      const s = subjects[idx];
+      if (s.todayStatus === status) {
+        if (s.todayStatus === 'PRESENT') { s.attended -= 1; s.total -= 1; }
+        else if (s.todayStatus === 'ABSENT') { s.total -= 1; }
+        s.todayStatus = null;
+      } else {
+        if (s.todayStatus === 'PRESENT') { s.attended -= 1; s.total -= 1; }
+        else if (s.todayStatus === 'ABSENT') { s.total -= 1; }
+        s.todayStatus = status;
+        if (status === 'PRESENT') { s.attended += 1; s.total += 1; }
+        else if (status === 'ABSENT') { s.total += 1; }
+      }
+      renderNor();
+    }
+
+    function bulkCheckIn(status) {
+      for (let i = 0; i < 5; i++) {
+        const s = subjects[i];
+        if (s.todayStatus === 'PRESENT') { s.attended -= 1; s.total -= 1; }
+        else if (s.todayStatus === 'ABSENT') { s.total -= 1; }
+        s.todayStatus = status;
+        if (status === 'PRESENT') { s.attended += 1; s.total += 1; }
+        else if (status === 'ABSENT') { s.total += 1; }
+      }
+      renderNor();
+    }
+
+    renderNor();
+  </script>
+</body>
+</html>

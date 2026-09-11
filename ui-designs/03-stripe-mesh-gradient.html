@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AuraAttend — Stripe Neo Mesh</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #635bff;
+      --primary-hover: #7a73ff;
+      --indigo: #0a2540;
+      --cyan: #00d4ff;
+      --teal: #00d924;
+      --rose: #df1b41;
+      --text: #0a2540;
+      --text-muted: #425466;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --border: #e6ebf1;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', -apple-system, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+    /* Stripe style gradient canopy */
+    .gradient-canopy {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 380px;
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 40%, #06b6d4 100%);
+      transform: skewY(-4deg);
+      transform-origin: top left;
+      z-index: -1;
+      box-shadow: 0 30px 60px rgba(79, 70, 229, 0.2);
+    }
+    header {
+      padding: 1.5rem 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: #fff;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-weight: 700;
+      font-size: 1.25rem;
+      letter-spacing: -0.02em;
+    }
+    .brand-pill {
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px);
+      padding: 0.2rem 0.6rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 1.5rem auto 4rem;
+      padding: 0 2rem;
+    }
+    .hero-banner {
+      color: #fff;
+      margin-bottom: 2.5rem;
+    }
+    .hero-banner h1 {
+      font-family: 'Cabinet Grotesk', sans-serif;
+      font-size: 2.8rem;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      margin-bottom: 0.6rem;
+    }
+    .hero-banner p {
+      color: rgba(255, 255, 255, 0.85);
+      font-size: 1.05rem;
+      max-width: 600px;
+    }
+
+    /* Stripe Elevated Metrics */
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 2.5rem;
+    }
+    .metric-card {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 13px 27px -5px rgba(50, 50, 93, 0.1), 0 8px 16px -8px rgba(0, 0, 0, 0.1);
+      border: 1px solid var(--border);
+      position: relative;
+    }
+    .metric-top {
+      font-size: 0.82rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+      display: flex;
+      justify-content: space-between;
+    }
+    .metric-val {
+      font-family: 'Cabinet Grotesk', sans-serif;
+      font-size: 2.5rem;
+      font-weight: 900;
+      color: var(--indigo);
+      letter-spacing: -0.03em;
+    }
+    .metric-pill {
+      display: inline-block;
+      margin-top: 0.5rem;
+      padding: 0.25rem 0.65rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+    .pill-green { background: #dcfce7; color: #15803d; }
+    .pill-purple { background: #ede9fe; color: #6d28d9; }
+
+    /* Stripe Table Layout */
+    .table-container {
+      background: var(--card);
+      border-radius: 12px;
+      box-shadow: 0 13px 27px -5px rgba(50, 50, 93, 0.1), 0 8px 16px -8px rgba(0, 0, 0, 0.1);
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+    .table-header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .table-header h3 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--indigo);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+    th {
+      background: #fafbfc;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0.9rem 1.5rem;
+      font-weight: 600;
+      border-bottom: 1px solid var(--border);
+    }
+    td {
+      padding: 1.1rem 1.5rem;
+      border-bottom: 1px solid #f1f5f9;
+      font-size: 0.9rem;
+      color: var(--text);
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #f8fafc; }
+    .stripe-btn {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.8rem;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(50, 50, 93, 0.11), 0 1px 3px rgba(0, 0, 0, 0.08);
+      transition: all 0.15s;
+    }
+    .stripe-btn:hover {
+      background: var(--primary-hover);
+      transform: translateY(-1px);
+    }
+    .stripe-btn-secondary {
+      background: #fff;
+      color: var(--text);
+      border: 1px solid var(--border);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .stripe-btn-secondary:hover {
+      background: #f8fafc;
+    }
+  </style>
+</head>
+<body>
+
+<div class="gradient-canopy"></div>
+
+<header>
+  <div class="brand">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+    <span>AuraAttend</span>
+    <span class="brand-pill">CSE 3 Live</span>
+  </div>
+  <div style="display:flex; gap:1rem;">
+    <button class="stripe-btn stripe-btn-secondary">Export Analytics</button>
+    <button class="stripe-btn">+ Add Subject</button>
+  </div>
+</header>
+
+<main class="container">
+  <div class="hero-banner">
+    <h1>Academic Attendance Infrastructure.</h1>
+    <p>Real-time threshold forecasting, smart bunk telemetry, and automated routine synchronization.</p>
+  </div>
+
+  <div class="metric-grid">
+    <div class="metric-card">
+      <div class="metric-top">
+        <span>Current Presence</span>
+        <span style="color:#15803d">● Compliant</span>
+      </div>
+      <div class="metric-val" style="color:#15803d">84.6%</div>
+      <div class="metric-pill pill-green">Safe to bunk 4 classes</div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-top">
+        <span>Active Semester</span>
+        <span>Semester 1</span>
+      </div>
+      <div class="metric-val">52 <span style="font-size:1.3rem; color:var(--text-muted); font-weight:400;">/ 61</span></div>
+      <div class="metric-pill pill-purple">85.2% Lecture • 82.5% Lab</div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-top">
+        <span>Routine Profile</span>
+        <span>Verified</span>
+      </div>
+      <div class="metric-val" style="font-size:2rem; margin-top:0.3rem;">CSE 3</div>
+      <div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.4rem;">25 Scheduled Sessions / Wk</div>
+    </div>
+  </div>
+
+  <div class="table-container">
+    <div class="table-header">
+      <div>
+        <h3>Registered Course Ledger</h3>
+        <p style="font-size:0.82rem; color:var(--text-muted); margin-top:0.2rem;">Mandatory Minimum Target: 75.0%</p>
+      </div>
+      <div style="display:flex; gap:0.5rem;">
+        <input type="text" placeholder="Search subjects..." style="padding:0.4rem 0.8rem; border:1px solid var(--border); border-radius:6px; font-size:0.8rem;">
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Course Title</th>
+          <th>Type</th>
+          <th>Attendance</th>
+          <th>Status</th>
+          <th>Bunk Forecast</th>
+          <th style="text-align:right;">Log Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Operating Systems</strong></td>
+          <td><span style="background:#e0e7ff; color:#3730a3; padding:0.2rem 0.5rem; border-radius:4px; font-size:0.75rem; font-weight:600;">Theory</span></td>
+          <td><strong>87.5%</strong> <span style="color:var(--text-muted); font-size:0.8rem;">(14/16)</span></td>
+          <td><span style="color:#15803d; font-weight:600;">● Safe</span></td>
+          <td><span class="metric-pill pill-green">Can skip 2</span></td>
+          <td style="text-align:right;">
+            <button class="stripe-btn" style="padding:0.35rem 0.75rem; font-size:0.75rem; background:#16a34a;">Present</button>
+            <button class="stripe-btn stripe-btn-secondary" style="padding:0.35rem 0.75rem; font-size:0.75rem;">Absent</button>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Operating Systems Lab</strong></td>
+          <td><span style="background:#ccfbf1; color:#115e59; padding:0.2rem 0.5rem; border-radius:4px; font-size:0.75rem; font-weight:600;">Practical</span></td>
+          <td><strong>100%</strong> <span style="color:var(--text-muted); font-size:0.8rem;">(6/6)</span></td>
+          <td><span style="color:#15803d; font-weight:600;">● Safe</span></td>
+          <td><span class="metric-pill pill-green">Can skip 2</span></td>
+          <td style="text-align:right;">
+            <button class="stripe-btn" style="padding:0.35rem 0.75rem; font-size:0.75rem; background:#16a34a;">Present</button>
+            <button class="stripe-btn stripe-btn-secondary" style="padding:0.35rem 0.75rem; font-size:0.75rem;">Absent</button>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Compiler Design</strong></td>
+          <td><span style="background:#e0e7ff; color:#3730a3; padding:0.2rem 0.5rem; border-radius:4px; font-size:0.75rem; font-weight:600;">Theory</span></td>
+          <td><strong style="color:var(--rose)">71.4%</strong> <span style="color:var(--text-muted); font-size:0.8rem;">(10/14)</span></td>
+          <td><span style="color:var(--rose); font-weight:600;">● Danger</span></td>
+          <td><span style="background:#ffe4e6; color:#be123c; padding:0.25rem 0.65rem; border-radius:6px; font-size:0.75rem; font-weight:700;">Attend Next 2</span></td>
+          <td style="text-align:right;">
+            <button class="stripe-btn" style="padding:0.35rem 0.75rem; font-size:0.75rem; background:#16a34a;">Present</button>
+            <button class="stripe-btn stripe-btn-secondary" style="padding:0.35rem 0.75rem; font-size:0.75rem;">Absent</button>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Object Oriented Prog Lab</strong></td>
+          <td><span style="background:#ccfbf1; color:#115e59; padding:0.2rem 0.5rem; border-radius:4px; font-size:0.75rem; font-weight:600;">Practical</span></td>
+          <td><strong>80.0%</strong> <span style="color:var(--text-muted); font-size:0.8rem;">(8/10)</span></td>
+          <td><span style="color:#15803d; font-weight:600;">● Safe</span></td>
+          <td><span class="metric-pill pill-green">Can skip 1</span></td>
+          <td style="text-align:right;">
+            <button class="stripe-btn" style="padding:0.35rem 0.75rem; font-size:0.75rem; background:#16a34a;">Present</button>
+            <button class="stripe-btn stripe-btn-secondary" style="padding:0.35rem 0.75rem; font-size:0.75rem;">Absent</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+
+</body>
+</html>

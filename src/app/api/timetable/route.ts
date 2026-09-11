@@ -65,88 +65,135 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Invalid slots array' }, { status: 400 });
     }
 
-    // Load current active semester with subjects and their schedule slots
-    const activeSemester = await db.semester.findFirst({
+    // Load current active semester with subjects, schedule slots, and attendance logs
+    let activeSemester = await db.semester.findFirst({
       where: { studentId: student.id, isActive: true },
       include: {
         subjects: {
           include: {
             scheduleSlots: true,
+            attendanceLogs: true,
           },
         },
       },
     });
 
     if (!activeSemester) {
-      return NextResponse.json({ error: 'No active semester found' }, { status: 400 });
+      activeSemester = await db.semester.create({
+        data: {
+          studentId: student.id,
+          name: 'Semester 1',
+          isActive: true,
+        },
+        include: {
+          subjects: {
+            include: {
+              scheduleSlots: true,
+              attendanceLogs: true,
+            },
+          },
+        },
+      });
     }
+
+    // Filter, validate, and normalize valid slots
+    const validSlots: Array<{
+      subjectName: string;
+      type: 'LECTURE' | 'LAB';
+      dayOfWeek: string;
+      startTime: string;
+      endTime: string;
+    }> = [];
+
+    const ignoreList = ['lunch', 'break', 'free', 'recess', 'library', 'sports', 'gap', 'self study', 'interval', 'leisure', 'assembly', 'recreation', 'unoccupied', 'vacant', 'free period', 'lunch break', 'recess break', 'campus drive'];
+
+    for (const parsed of slots) {
+      if (!parsed.subjectName || !parsed.subjectName.trim()) continue;
+      if (!parsed.startTime || !parsed.endTime) {
+        throw new Error('All slots must have start and end times.');
+      }
+      if (parsed.startTime >= parsed.endTime) {
+        throw new Error(`Start time must be before end time for "${parsed.subjectName || 'unnamed subject'}".`);
+      }
+
+      const normalizedName = normalizeSubjectName(parsed.subjectName);
+      if (!normalizedName || ignoreList.some(item => normalizedName.toLowerCase().includes(item))) {
+        continue;
+      }
+
+      validSlots.push({
+        subjectName: normalizedName,
+        type: parsed.type === 'LAB' ? 'LAB' : 'LECTURE',
+        dayOfWeek: parsed.dayOfWeek.trim().toUpperCase(),
+        startTime: parsed.startTime.trim(),
+        endTime: parsed.endTime.trim(),
+      });
+    }
+
+    const newSubjectKeySet = new Set(validSlots.map(s => `${s.subjectName.toLowerCase()}_${s.type}`));
 
     // Save verified schedule slots safely inside a transaction block with a higher timeout
     await db.$transaction(async (tx) => {
-      // Local tracker of subjects to prevent creating duplicates in this request
-      const localSubjects = [...activeSemester.subjects];
+      // 1. CLEAR ALL EXISTING SCHEDULE SLOTS FOR THE ACTIVE SEMESTER
+      // This ensures that when uploading a new timetable, old slots are completely replaced!
+      await tx.scheduleSlot.deleteMany({
+        where: {
+          subject: {
+            semesterId: activeSemester.id,
+          },
+        },
+      });
 
-      // 2. Loop through verified slots
-      for (const parsed of slots) {
-        if (!parsed.startTime || !parsed.endTime) {
-          throw new Error('All slots must have start and end times.');
+      // 2. Remove orphaned subjects from previous timetable that have ZERO attendance logs
+      // and are not part of the new timetable (preserves subjects with actual student logs!)
+      for (const sub of activeSemester.subjects) {
+        const subKey = `${sub.name.toLowerCase()}_${sub.type}`;
+        if (sub.attendanceLogs.length === 0 && !newSubjectKeySet.has(subKey)) {
+          await tx.subject.delete({
+            where: { id: sub.id },
+          }).catch((e) => console.warn(`Could not delete orphaned subject ${sub.name}:`, e));
         }
-        if (parsed.startTime >= parsed.endTime) {
-          throw new Error(`Start time must be before end time for "${parsed.subjectName || 'unnamed subject'}".`);
-        }
+      }
 
-        const normalizedName = normalizeSubjectName(parsed.subjectName);
-        
-        // Skip blanks, free periods, lunch, breaks, recess, library, etc.
-        const ignoreList = ['lunch', 'break', 'free', 'recess', 'library', 'sports', 'gap', 'self study', 'interval', 'leisure', 'assembly', 'recreation', 'unoccupied', 'vacant', 'free period', 'lunch break', 'recess break'];
-        if (!normalizedName || ignoreList.some(item => normalizedName.toLowerCase().includes(item))) {
-          continue;
-        }
+      // 3. Keep local map of subjects in active semester
+      const existingSubjects = await tx.subject.findMany({
+        where: { semesterId: activeSemester.id },
+      });
+      const subjectMap = new Map<string, typeof existingSubjects[0]>();
+      for (const sub of existingSubjects) {
+        subjectMap.set(`${sub.name.toLowerCase()}_${sub.type}`, sub);
+      }
 
-        const type = parsed.type === 'LAB' ? 'LAB' : 'LECTURE';
-
-        // Check if subject already exists
-        let subject = localSubjects.find(
-          (s) => s.name.toLowerCase() === normalizedName.toLowerCase() && s.type === type
-        );
-
-        if (!subject) {
-          // If the subject doesn't exist, create it (default target 75%)
+      // 4. Create missing subjects for the new timetable
+      for (const slot of validSlots) {
+        const key = `${slot.subjectName.toLowerCase()}_${slot.type}`;
+        if (!subjectMap.has(key)) {
           const newSub = await tx.subject.create({
             data: {
               semesterId: activeSemester.id,
-              name: normalizedName,
-              type,
+              name: slot.subjectName,
+              type: slot.type,
               targetPercentage: 75.0,
             },
           });
-          subject = {
-            ...newSub,
-            scheduleSlots: [],
-          };
-          localSubjects.push(subject as any);
+          subjectMap.set(key, newSub);
         }
+      }
 
-        // Check in-memory if schedule slot already exists to prevent duplicate entries
-        const existingSlot = (subject as any).scheduleSlots.find(
-          (slot: any) =>
-            slot.dayOfWeek === parsed.dayOfWeek.toUpperCase() &&
-            slot.startTime === parsed.startTime &&
-            slot.endTime === parsed.endTime
-        );
+      // 5. Insert all new schedule slots
+      for (const slot of validSlots) {
+        const key = `${slot.subjectName.toLowerCase()}_${slot.type}`;
+        const subject = subjectMap.get(key);
+        if (!subject) continue;
 
-        if (!existingSlot) {
-          // Create the new schedule slot linked to this subject
-          const newSlot = await tx.scheduleSlot.create({
-            data: {
-              subjectId: subject.id,
-              dayOfWeek: parsed.dayOfWeek.toUpperCase(),
-              startTime: parsed.startTime,
-              endTime: parsed.endTime,
-            },
-          });
-          (subject as any).scheduleSlots.push(newSlot);
-        }
+        await tx.scheduleSlot.create({
+          data: {
+            subjectId: subject.id,
+            dayOfWeek: slot.dayOfWeek,
+            startTime: slot.startTime,
+            endTime: slot.endTime,
+          },
+        });
       }
     }, {
       maxWait: 15000,
@@ -154,7 +201,8 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({
-      message: 'Timetable saved successfully!',
+      message: 'Timetable saved successfully and schedule updated!',
+      count: validSlots.length,
     });
   } catch (error: any) {
     console.error('Timetable saving endpoint error:', error);

@@ -26,7 +26,10 @@ import {
   Sliders,
   Sun,
   Moon,
-  Edit
+  Edit,
+  Sparkles,
+  Zap,
+  Bell
 } from 'lucide-react';
 
 const AttendanceChart = dynamic(() => import('@/components/AttendanceChart'), {
@@ -139,6 +142,53 @@ const getLocalDateString = (date = new Date()) => {
   return `${year}-${month}-${day}`;
 };
 
+// Official Verified Routine Slots for CAC 3 / CSE 3 (Updated Sept 2026)
+const OFFICIAL_CSE3_SLOTS = [
+  // MONDAY
+  { subjectName: 'Operating Systems', type: 'LECTURE', dayOfWeek: 'MONDAY', startTime: '09:30', endTime: '10:30' },
+  { subjectName: 'Computer Graphics & Artificial Intelligence', type: 'LECTURE', dayOfWeek: 'MONDAY', startTime: '10:30', endTime: '11:30' },
+  { subjectName: 'Software Engineering', type: 'LECTURE', dayOfWeek: 'MONDAY', startTime: '11:45', endTime: '12:45' },
+  { subjectName: 'Object Oriented Programming Lab', type: 'LAB', dayOfWeek: 'MONDAY', startTime: '12:45', endTime: '13:45' },
+  { subjectName: 'Object Oriented Programming Lab', type: 'LAB', dayOfWeek: 'MONDAY', startTime: '14:30', endTime: '17:30' },
+
+  // TUESDAY
+  { subjectName: 'Operating Systems Lab', type: 'LAB', dayOfWeek: 'TUESDAY', startTime: '09:30', endTime: '13:45' },
+  { subjectName: 'Compiler Design', type: 'LECTURE', dayOfWeek: 'TUESDAY', startTime: '14:30', endTime: '15:30' },
+  { subjectName: 'Computer Graphics & Artificial Intelligence', type: 'LECTURE', dayOfWeek: 'TUESDAY', startTime: '15:30', endTime: '16:30' },
+  { subjectName: 'Object Oriented Programming', type: 'LECTURE', dayOfWeek: 'TUESDAY', startTime: '16:30', endTime: '17:30' },
+
+  // WEDNESDAY
+  { subjectName: 'Object Oriented Programming', type: 'LECTURE', dayOfWeek: 'WEDNESDAY', startTime: '09:30', endTime: '10:30' },
+  { subjectName: 'Compiler Design', type: 'LECTURE', dayOfWeek: 'WEDNESDAY', startTime: '10:30', endTime: '11:30' },
+  { subjectName: 'Software Engineering', type: 'LECTURE', dayOfWeek: 'WEDNESDAY', startTime: '11:45', endTime: '12:45' },
+  { subjectName: 'Operating Systems', type: 'LECTURE', dayOfWeek: 'WEDNESDAY', startTime: '12:45', endTime: '13:45' },
+
+  // THURSDAY
+  { subjectName: 'Industrial Management', type: 'LECTURE', dayOfWeek: 'THURSDAY', startTime: '09:30', endTime: '10:30' },
+  { subjectName: 'Object Oriented Programming', type: 'LECTURE', dayOfWeek: 'THURSDAY', startTime: '10:30', endTime: '11:30' },
+  { subjectName: 'Constitution of India', type: 'LECTURE', dayOfWeek: 'THURSDAY', startTime: '11:45', endTime: '12:45' },
+  { subjectName: 'Software Engineering Lab', type: 'LAB', dayOfWeek: 'THURSDAY', startTime: '12:45', endTime: '13:45' },
+  { subjectName: 'Software Engineering Lab', type: 'LAB', dayOfWeek: 'THURSDAY', startTime: '14:30', endTime: '17:30' },
+
+  // FRIDAY
+  { subjectName: 'Industrial Management', type: 'LECTURE', dayOfWeek: 'FRIDAY', startTime: '09:30', endTime: '10:30' },
+  { subjectName: 'Computer Graphics & Artificial Intelligence', type: 'LECTURE', dayOfWeek: 'FRIDAY', startTime: '10:30', endTime: '11:30' },
+  { subjectName: 'Constitution of India', type: 'LECTURE', dayOfWeek: 'FRIDAY', startTime: '11:45', endTime: '12:45' },
+  { subjectName: 'Compiler Design', type: 'LECTURE', dayOfWeek: 'FRIDAY', startTime: '12:45', endTime: '13:45' },
+  { subjectName: 'Operating Systems', type: 'LECTURE', dayOfWeek: 'FRIDAY', startTime: '14:30', endTime: '15:30' },
+  { subjectName: 'Software Engineering', type: 'LECTURE', dayOfWeek: 'FRIDAY', startTime: '15:30', endTime: '16:30' },
+  { subjectName: 'Industrial Management', type: 'LECTURE', dayOfWeek: 'FRIDAY', startTime: '16:30', endTime: '17:30' },
+];
+
+// Cutoff timestamp: Only existing accounts registered before this point are prompted for the CSE 3 routine notice
+const CSE3_ROUTINE_UPDATE_CUTOFF = new Date('2026-09-11T20:46:00+05:30').getTime();
+
+const isUserEligibleForRoutineNotice = (user?: { createdAt?: string } | null) => {
+  if (!user || !user.createdAt) return false;
+  const userCreated = new Date(user.createdAt).getTime();
+  return userCreated <= CSE3_ROUTINE_UPDATE_CUTOFF;
+};
+
 export default function Home() {
   // Global Mock Mode Check
   const isMockMode = process.env.NEXT_PUBLIC_MOCK_MODE === 'true';
@@ -149,7 +199,7 @@ export default function Home() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [viewingHistory, setViewingHistory] = useState(false);
   const [isHeaderExpanded, setIsHeaderExpanded] = useState(false);
-  const [currentUser, setCurrentUser] = useState<{ email: string; uniqueCode: string } | null>(null);
+  const [currentUser, setCurrentUser] = useState<{ email: string; uniqueCode: string; createdAt?: string } | null>(null);
 
   // Form Fields
   const [email, setEmail] = useState('');
@@ -164,11 +214,18 @@ export default function Home() {
   const [detectedGroups, setDetectedGroups] = useState<string[]>([]);
   const [showWizardModal, setShowWizardModal] = useState(false);
   const [selectedStream, setSelectedStream] = useState('');
+  const [customStream, setCustomStream] = useState('');
   const [selectedGroup, setSelectedGroup] = useState('');
+  const [customGroup, setCustomGroup] = useState('');
 
   // Timetable review editor states
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [reviewSlots, setReviewSlots] = useState<any[]>([]);
+
+  // Routine Update Notice states
+  const [showRoutineNotice, setShowRoutineNotice] = useState(false);
+  const [routineNoticeStatus, setRoutineNoticeStatus] = useState<'unanswered' | 'temporary_closed' | 'dismissed_other_branch' | 'applied_cse3' | 'new_account'>('unanswered');
+  const [isApplyingRoutine, setIsApplyingRoutine] = useState(false);
 
   // Data States
   const [semesters, setSemesters] = useState<Semester[]>([]);
@@ -213,6 +270,8 @@ export default function Home() {
   const [addName, setAddName] = useState('');
   const [addType, setAddType] = useState<'LECTURE' | 'LAB'>('LECTURE');
   const [addTarget, setAddTarget] = useState(75);
+  const [isSubmittingSubject, setIsSubmittingSubject] = useState(false);
+  const [subjectError, setSubjectError] = useState('');
 
   const [showAddSemester, setShowAddSemester] = useState(false);
   const [addSemName, setAddSemName] = useState('');
@@ -344,6 +403,20 @@ export default function Home() {
       setIsLoading(false);
     }
   };
+
+  // Check if CSE 3 routine notice should be displayed upon login
+  useEffect(() => {
+    if (isLoggedIn && currentUser) {
+      const storedStatus = (localStorage.getItem('routine_notice_status_cse3_v3') || 'unanswered') as any;
+      setRoutineNoticeStatus(storedStatus);
+
+      const eligible = isUserEligibleForRoutineNotice(currentUser);
+      if (eligible && storedStatus !== 'dismissed_other_branch' && storedStatus !== 'applied_cse3' && storedStatus !== 'new_account') {
+        const timer = setTimeout(() => setShowRoutineNotice(true), 800);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [isLoggedIn, currentUser]);
 
   const fetchShareCode = async () => {
     try {
@@ -539,6 +612,8 @@ export default function Home() {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error);
 
+        localStorage.setItem('routine_notice_status_cse3_v3', 'new_account');
+        setRoutineNoticeStatus('new_account');
         setCurrentUser(data.student);
         setIsLoggedIn(true);
         fetchDashboardData();
@@ -1360,21 +1435,31 @@ export default function Home() {
   // Manual Add Subject
   const handleAddSubject = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!addName) return;
+    if (!addName.trim()) return;
+
+    setIsSubmittingSubject(true);
+    setSubjectError('');
 
     try {
       const res = await fetch('/api/subjects', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: addName, type: addType, targetPercentage: addTarget }),
+        body: JSON.stringify({ name: addName.trim(), type: addType, targetPercentage: addTarget }),
       });
-      if (res.ok) {
-        setShowAddSubject(false);
-        setAddName('');
-        fetchDashboardData();
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to create subject');
       }
-    } catch (err) {
-      console.error(err);
+
+      setShowAddSubject(false);
+      setAddName('');
+      setSuccess(`Subject "${addName.trim()}" created successfully!`);
+      fetchDashboardData();
+    } catch (err: any) {
+      console.error('handleAddSubject error:', err);
+      setSubjectError(err.message || 'Failed to add subject');
+    } finally {
+      setIsSubmittingSubject(false);
     }
   };
 
@@ -1537,8 +1622,14 @@ export default function Home() {
     e.preventDefault();
     if (!pendingTimetableFile) return;
 
+    const streamToUse = selectedStream === '__CUSTOM__' ? customStream.trim() : selectedStream;
+    const groupToUse = selectedGroup === '__CUSTOM__' ? customGroup.trim() : selectedGroup;
+
+    if (selectedStream === '__CUSTOM__') setSelectedStream(streamToUse);
+    if (selectedGroup === '__CUSTOM__') setSelectedGroup(groupToUse);
+
     setShowWizardModal(false);
-    await executeDirectUpload(pendingTimetableFile, selectedStream, selectedGroup);
+    await executeDirectUpload(pendingTimetableFile, streamToUse, groupToUse);
     setPendingTimetableFile(null);
   };
 
@@ -1639,12 +1730,53 @@ export default function Home() {
       localStorage.setItem('timetable_uploaded_date', getLocalDateString());
       setShowReviewModal(false);
       setReviewSlots([]);
-      fetchDashboardData();
+      await fetchDashboardData();
+      setActiveTab('timetable');
     } catch (err: any) {
       setError(err.message || 'Failed to save timetable.');
     } finally {
       setIsOcrLoading(false);
     }
+  };
+
+  const handleApplyOfficialCse3Routine = async () => {
+    setIsApplyingRoutine(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const res = await fetch('/api/timetable', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slots: OFFICIAL_CSE3_SLOTS }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      localStorage.setItem('routine_notice_status_cse3_v3', 'applied_cse3');
+      setRoutineNoticeStatus('applied_cse3');
+      setShowRoutineNotice(false);
+      await fetchDashboardData();
+      setActiveTab('timetable');
+      setSuccess('🎉 Success! Official CSE 3 timetable applied directly to your account.');
+    } catch (err: any) {
+      setError(err.message || 'Failed to apply CSE 3 routine.');
+    } finally {
+      setIsApplyingRoutine(false);
+    }
+  };
+
+  const handleDismissNoticeOtherBranch = () => {
+    localStorage.setItem('routine_notice_status_cse3_v3', 'dismissed_other_branch');
+    setRoutineNoticeStatus('dismissed_other_branch');
+    setShowRoutineNotice(false);
+  };
+
+  const handleCloseNoticeCross = () => {
+    // If closed via X without clicking Yes or No, allow persistent pill to stay visible and modal can reopen
+    localStorage.setItem('routine_notice_status_cse3_v3', 'temporary_closed');
+    setRoutineNoticeStatus('temporary_closed');
+    setShowRoutineNotice(false);
   };
 
   // Archive & Reset Current Semester logs
@@ -1795,7 +1927,8 @@ export default function Home() {
   // Click empty cell to pre-populate new slot details
   const handleEmptyCellClick = (day: string, time: string) => {
     if (subjects.length === 0) {
-      setError('Please add at least one subject first before scheduling classes.');
+      setSubjectError('Please create your first subject before scheduling classes.');
+      setShowAddSubject(true);
       return;
     }
     setSlotDay(day);
@@ -2962,24 +3095,34 @@ export default function Home() {
                   {studentSubMode === 'LOGIN' ? (
                     <>
                       Don&apos;t have an account?{' '}
-                      <span className="auth-link" onClick={() => {
-                        setStudentSubMode('SIGNUP');
-                        setError('');
-                        setSuccess('');
-                      }}>
+                      <button
+                        type="button"
+                        className="auth-link"
+                        style={{ background: 'none', border: 'none', padding: 0, font: 'inherit', cursor: 'pointer', color: 'var(--secondary)', textDecoration: 'underline' }}
+                        onClick={() => {
+                          setStudentSubMode('SIGNUP');
+                          setError('');
+                          setSuccess('');
+                        }}
+                      >
                         Sign Up
-                      </span>
+                      </button>
                     </>
                   ) : (
                     <>
                       Already have an account?{' '}
-                      <span className="auth-link" onClick={() => {
-                        setStudentSubMode('LOGIN');
-                        setError('');
-                        setSuccess('');
-                      }}>
+                      <button
+                        type="button"
+                        className="auth-link"
+                        style={{ background: 'none', border: 'none', padding: 0, font: 'inherit', cursor: 'pointer', color: 'var(--secondary)', textDecoration: 'underline' }}
+                        onClick={() => {
+                          setStudentSubMode('LOGIN');
+                          setError('');
+                          setSuccess('');
+                        }}
+                      >
                         Log In
-                      </span>
+                      </button>
                     </>
                   )}
                 </div>
@@ -4167,7 +4310,7 @@ export default function Home() {
                       </h4>
                       <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', maxWidth: '320px', margin: '0 auto', lineHeight: 1.5, textAlign: 'center' }}>
                         {pendingTimetableFile 
-                          ? `Extracting slots for stream "${selectedStream}" and group "${selectedGroup}"...`
+                          ? `Extracting slots for stream "${selectedStream === '__CUSTOM__' ? customStream : selectedStream}" and group "${selectedGroup === '__CUSTOM__' ? customGroup : selectedGroup}"...`
                           : "Pre-scanning routine layout for streams, branches, and lab groups..."}
                       </p>
                     </div>
@@ -4206,6 +4349,22 @@ export default function Home() {
                           Load Routine
                         </button>
                       </form>
+
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem', color: 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: 'bold', letterSpacing: '0.05em' }}>
+                        <div style={{ flex: 1, height: '1px', background: 'var(--border-color)' }} />
+                        <span>OR ENTER MANUALLY</span>
+                        <div style={{ flex: 1, height: '1px', background: 'var(--border-color)' }} />
+                      </div>
+
+                      <button
+                        type="button"
+                        className="btn-outline"
+                        onClick={handleManualTimetableEdit}
+                        style={{ width: '100%', padding: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontSize: '0.9rem' }}
+                      >
+                        <Edit size={16} />
+                        <span>Enter Routine Schedule Manually</span>
+                      </button>
                     </div>
                   ) : (
                     <div className="timetable-grid-wrapper">
@@ -4986,6 +5145,12 @@ export default function Home() {
               </button>
             </div>
             
+            {subjectError && (
+              <div className="toast toast-error" style={{ marginBottom: '1rem' }}>
+                {subjectError}
+              </div>
+            )}
+
             <form onSubmit={handleAddSubject}>
               <div className="form-group">
                 <label className="form-label">Subject Name</label>
@@ -5025,8 +5190,15 @@ export default function Home() {
                 />
               </div>
 
-              <button className="btn-primary" type="submit">
-                Create Subject
+              <button className="btn-primary" type="submit" disabled={isSubmittingSubject} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                {isSubmittingSubject ? (
+                  <>
+                    <div style={{ width: '14px', height: '14px', border: '2px solid transparent', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                    <span>Creating Subject...</span>
+                  </>
+                ) : (
+                  <span>Create Subject</span>
+                )}
               </button>
             </form>
           </div>
@@ -5087,7 +5259,19 @@ export default function Home() {
             
             <form onSubmit={handleCreateSlot}>
               <div className="form-group">
-                <label className="form-label">Subject</label>
+                <div className="flex-between" style={{ marginBottom: '0.4rem' }}>
+                  <label className="form-label" style={{ margin: 0 }}>Subject</label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAddSlot(false);
+                      setShowAddSubject(true);
+                    }}
+                    style={{ background: 'transparent', border: 'none', color: 'var(--secondary)', fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem', padding: 0 }}
+                  >
+                    <Plus size={13} /> Add New Subject
+                  </button>
+                </div>
                 <select
                   className="planner-select"
                   value={slotSubjectId}
@@ -5200,38 +5384,58 @@ export default function Home() {
                 We analyzed your routine and detected multiple streams or lab groups. Please select your configuration to filter the import:
               </p>
 
-              {detectedStreams.length > 0 && (
-                <div className="form-group">
-                  <label className="form-label">Select Stream / Branch / Section</label>
-                  <select
-                    className="planner-select"
-                    value={selectedStream}
-                    onChange={(e) => setSelectedStream(e.target.value)}
+              <div className="form-group">
+                <label className="form-label">Select Stream / Branch / Class / Section</label>
+                <select
+                  className="planner-select"
+                  value={selectedStream}
+                  onChange={(e) => setSelectedStream(e.target.value)}
+                  required
+                >
+                  {detectedStreams.map((stream) => (
+                    <option key={stream} value={stream}>{stream}</option>
+                  ))}
+                  <option value="__CUSTOM__">Other (Enter your branch/class manually...)</option>
+                </select>
+                {selectedStream === '__CUSTOM__' && (
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="e.g. BCA, CSE 3, AIML, IT, ECE..."
+                    value={customStream}
+                    onChange={(e) => setCustomStream(e.target.value)}
+                    style={{ marginTop: '0.5rem' }}
                     required
-                  >
-                    {detectedStreams.map((stream) => (
-                      <option key={stream} value={stream}>{stream}</option>
-                    ))}
-                  </select>
-                </div>
-              )}
+                  />
+                )}
+              </div>
 
-              {detectedGroups.length > 0 && (
-                <div className="form-group">
-                  <label className="form-label">Select Lab Group / Batch</label>
-                  <select
-                    className="planner-select"
-                    value={selectedGroup}
-                    onChange={(e) => setSelectedGroup(e.target.value)}
+              <div className="form-group">
+                <label className="form-label">Select Lab Group / Batch</label>
+                <select
+                  className="planner-select"
+                  value={selectedGroup}
+                  onChange={(e) => setSelectedGroup(e.target.value)}
+                  required
+                >
+                  <option value="None">None (Import all labs or no group split)</option>
+                  {detectedGroups.map((group) => (
+                    <option key={group} value={group}>{group}</option>
+                  ))}
+                  <option value="__CUSTOM__">Other (Enter lab group/batch manually...)</option>
+                </select>
+                {selectedGroup === '__CUSTOM__' && (
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="e.g. Group A, Grp B, Batch 1..."
+                    value={customGroup}
+                    onChange={(e) => setCustomGroup(e.target.value)}
+                    style={{ marginTop: '0.5rem' }}
                     required
-                  >
-                    <option value="None">None (Import all labs or no group split)</option>
-                    {detectedGroups.map((group) => (
-                      <option key={group} value={group}>{group}</option>
-                    ))}
-                  </select>
-                </div>
-              )}
+                  />
+                )}
+              </div>
 
               <button className="btn-primary" type="submit" style={{ marginTop: '0.5rem' }}>
                 Confirm & Import Routine
@@ -5416,6 +5620,190 @@ export default function Home() {
           </div>
         );
       })()}
+
+      {/* Modal 7: Routine Update Notice for CAC 3 / CSE 3 */}
+      {showRoutineNotice && (
+        <div className="modal-overlay" style={{ zIndex: 10000 }}>
+          <div 
+            className="glass-card modal-card" 
+            style={{ 
+              maxWidth: '560px', 
+              width: '92%', 
+              padding: '2rem',
+              position: 'relative',
+              boxShadow: '0 25px 60px rgba(0, 0, 0, 0.7), 0 0 35px rgba(99, 102, 241, 0.25)',
+              border: '1px solid rgba(99, 102, 241, 0.4)',
+              animation: 'fadeIn 0.25s ease'
+            }}
+          >
+            <button 
+              type="button" 
+              onClick={handleCloseNoticeCross}
+              style={{ 
+                position: 'absolute', 
+                top: '1.25rem', 
+                right: '1.25rem', 
+                background: 'transparent', 
+                border: 'none', 
+                color: 'var(--text-secondary)', 
+                cursor: 'pointer',
+                padding: '0.25rem',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'var(--transition-smooth)'
+              }}
+              title="Close notice"
+            >
+              <X size={20} />
+            </button>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', marginBottom: '1.25rem' }}>
+              <div style={{
+                width: '44px',
+                height: '44px',
+                borderRadius: '12px',
+                background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(168, 85, 247, 0.25))',
+                border: '1px solid rgba(99, 102, 241, 0.4)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'var(--secondary)',
+                boxShadow: '0 0 15px rgba(99, 102, 241, 0.3)'
+              }}>
+                <Bell size={22} />
+              </div>
+              <div>
+                <span style={{ fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700, color: 'var(--secondary)' }}>
+                  Semester Schedule Notice
+                </span>
+                <h3 style={{ fontSize: '1.3rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
+                  Class Routine Changed!
+                </h3>
+              </div>
+            </div>
+
+            <div style={{
+              background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(168, 85, 247, 0.08))',
+              border: '1px solid rgba(99, 102, 241, 0.25)',
+              borderRadius: 'var(--border-radius-md)',
+              padding: '1.15rem',
+              marginBottom: '1.25rem'
+            }}>
+              <h4 style={{ fontSize: '1.05rem', fontWeight: 600, color: '#f8fafc', marginBottom: '0.35rem' }}>
+                Are you in <span style={{ color: 'var(--secondary)' }}>CSE 3</span>?
+              </h4>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', lineHeight: 1.5, margin: 0 }}>
+                Our college class timetable has been officially revised. If you are in <strong>CSE 3</strong>, you can apply your full verified schedule in 1 click without typing class codes or uploading images.
+              </p>
+            </div>
+
+            <div style={{
+              background: 'rgba(255, 255, 255, 0.02)',
+              border: '1px solid var(--border-color)',
+              borderRadius: 'var(--border-radius-sm)',
+              padding: '0.9rem',
+              marginBottom: '1.5rem',
+              fontSize: '0.78rem'
+            }}>
+              <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <Calendar size={14} style={{ color: 'var(--secondary)' }} />
+                <span>Verified CSE 3 Highlights:</span>
+              </div>
+              <ul style={{ margin: 0, paddingLeft: '1.2rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                <li><strong>Mon:</strong> OS, CG/AI, SE + OOP Lab (12:45 – 17:30)</li>
+                <li><strong>Tue:</strong> OS Lab (09:30 – 13:45) + Compiler, CG/AI, OOP</li>
+                <li><strong>Wed:</strong> 4 Morning Lectures • Afternoon Campus Drive Free</li>
+                <li><strong>Thu:</strong> IM, OOP, Constitution + S/W Engg Lab</li>
+                <li><strong>Fri:</strong> Full 7-period schedule</li>
+              </ul>
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                className="btn-outline"
+                onClick={handleDismissNoticeOtherBranch}
+                style={{ width: 'auto', padding: '0.55rem 1.2rem', fontSize: '0.82rem' }}
+              >
+                No, I&apos;m from another branch
+              </button>
+              <button
+                type="button"
+                className="btn-primary"
+                disabled={isApplyingRoutine}
+                onClick={handleApplyOfficialCse3Routine}
+                style={{
+                  width: 'auto',
+                  padding: '0.55rem 1.4rem',
+                  fontSize: '0.82rem',
+                  background: 'linear-gradient(135deg, #6366f1, #a855f7)',
+                  boxShadow: '0 4px 20px rgba(99, 102, 241, 0.4)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  fontWeight: 600
+                }}
+              >
+                {isApplyingRoutine ? (
+                  <>
+                    <div style={{ width: '13px', height: '13px', border: '2px solid transparent', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                    <span>Applying...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles size={15} />
+                    <span>Yes, Apply CSE 3 Routine</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bottom Sticky Routine Notice Badge */}
+      {isLoggedIn && isUserEligibleForRoutineNotice(currentUser) && routineNoticeStatus !== 'dismissed_other_branch' && routineNoticeStatus !== 'applied_cse3' && routineNoticeStatus !== 'new_account' && (
+        <div 
+          onClick={() => setShowRoutineNotice(true)}
+          title="Click to view & apply new CSE 3 timetable notice"
+          style={{
+            position: 'fixed',
+            bottom: '1.25rem',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 9980,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.6rem',
+            background: 'rgba(15, 23, 42, 0.92)',
+            backdropFilter: 'blur(16px)',
+            border: '1px solid rgba(99, 102, 241, 0.45)',
+            borderRadius: '30px',
+            padding: '0.45rem 1.15rem',
+            boxShadow: '0 8px 30px rgba(0, 0, 0, 0.5), 0 0 16px rgba(99, 102, 241, 0.25)',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            maxWidth: '92vw',
+          }}
+        >
+          <div style={{
+            width: '8px',
+            height: '8px',
+            borderRadius: '50%',
+            background: '#10b981',
+            boxShadow: '0 0 8px #10b981',
+            animation: 'pulse 1.5s infinite'
+          }} />
+          <span style={{ fontSize: '0.8rem', color: '#f1f5f9', fontWeight: 500, whiteSpace: 'nowrap' }}>
+            Notice: CSE 3 Routine Changed
+          </span>
+          <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: 600, textDecoration: 'underline' }}>
+            View &amp; Apply &rarr;
+          </span>
+        </div>
+      )}
 
       {/* Offline Status indicator banner */}
       {(isBrowserOffline || isOfflineSyncPending) && (

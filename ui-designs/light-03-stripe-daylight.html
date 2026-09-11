@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AuraAttend — Light UI 03: Stripe Daylight Canvas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800;900&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --card-border: #e2e8f0;
+      --card-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.06), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
+      --stripe-purple: #635bff;
+      --stripe-teal: #00d4b6;
+      --stripe-emerald: #059669;
+      --stripe-coral: #df1b41;
+      --stripe-amber: #e57e00;
+      --text-main: #0a2540;
+      --text-sub: #425466;
+      --text-muted: #627d98;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text-main);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      min-height: 100vh;
+      padding-bottom: 5rem;
+      background-image: 
+        radial-gradient(circle at 10% 0%, rgba(99, 91, 255, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 90% 10%, rgba(0, 212, 182, 0.08) 0%, transparent 40%);
+      background-attachment: fixed;
+    }
+    header {
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--card-border);
+      padding: 0.95rem 2.2rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .brand-logo {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--stripe-purple), var(--stripe-teal));
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      box-shadow: 0 4px 14px rgba(99, 91, 255, 0.3);
+    }
+    .container {
+      max-width: 1220px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 1.6rem;
+      box-shadow: var(--card-shadow);
+      transition: all 0.2s ease;
+    }
+    .term-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      padding: 1.1rem 1.6rem;
+    }
+    .btn-stripe {
+      padding: 0.5rem 1rem;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      border: 1px solid var(--card-border);
+      background: #ffffff;
+      color: var(--text-main);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.15s;
+    }
+    .btn-stripe:hover {
+      border-color: var(--stripe-purple);
+      color: var(--stripe-purple);
+    }
+    .btn-stripe-primary {
+      background: var(--stripe-purple);
+      color: #ffffff;
+      border: none;
+      box-shadow: 0 4px 12px rgba(99, 91, 255, 0.25);
+    }
+    .btn-stripe-primary:hover {
+      background: #5046e5;
+      color: #ffffff;
+    }
+    .tabs-bar {
+      display: flex;
+      gap: 0.5rem;
+      background: #edf2f7;
+      padding: 4px;
+      border-radius: 14px;
+    }
+    .tab-pill {
+      flex: 1;
+      padding: 0.65rem 1rem;
+      border-radius: 10px;
+      border: none;
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--text-sub);
+      background: transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      transition: all 0.15s;
+    }
+    .tab-pill.active {
+      background: #ffffff;
+      color: var(--stripe-purple);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Top 3 Widgets Grid */
+    .widgets-grid {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr 1fr;
+      gap: 1.25rem;
+    }
+    @media (max-width: 950px) {
+      .widgets-grid { grid-template-columns: 1fr; }
+    }
+    .gauge-wrap {
+      position: relative;
+      width: 92px;
+      height: 92px;
+      flex-shrink: 0;
+    }
+    .gauge-wrap svg {
+      transform: rotate(-90deg);
+      width: 92px;
+      height: 92px;
+    }
+    .gauge-bg {
+      fill: none;
+      stroke: #edf2f7;
+      stroke-width: 8;
+    }
+    .gauge-fg {
+      fill: none;
+      stroke: var(--stripe-purple);
+      stroke-width: 8;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 0.4s ease;
+    }
+    .gauge-val {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+    .progress-line {
+      height: 8px;
+      background: #edf2f7;
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 0.75rem 0 0.4rem;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      border-radius: 10px;
+      transition: width 0.35s ease;
+    }
+
+    /* Checklist */
+    .thumb-3d {
+      width: 64px;
+      height: 64px;
+      border-radius: 14px;
+      object-fit: cover;
+      box-shadow: 0 4px 12px rgba(10, 37, 64, 0.08);
+      border: 1.5px solid #ffffff;
+      flex-shrink: 0;
+    }
+    .thumb-mini {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      object-fit: cover;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    }
+    .checklist-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 0.85rem;
+      margin-top: 1rem;
+    }
+    .check-box {
+      background: #ffffff;
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 0.85rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+    }
+
+    /* Subject Cards Grid */
+    .subj-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 1.25rem;
+    }
+    .subj-card {
+      background: #ffffff;
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 1.5rem;
+      box-shadow: var(--card-shadow);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 1.25rem;
+      transition: all 0.2s ease;
+    }
+    .subj-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 16px 32px -8px rgba(99, 91, 255, 0.12);
+      border-color: #cbd5e1;
+    }
+    .type-chip {
+      font-size: 0.72rem;
+      font-weight: 800;
+      padding: 0.18rem 0.55rem;
+      border-radius: 6px;
+      letter-spacing: 0.03em;
+    }
+    .type-lec {
+      background: rgba(99, 91, 255, 0.1);
+      color: var(--stripe-purple);
+    }
+    .type-lab {
+      background: rgba(0, 212, 182, 0.15);
+      color: #008f7a;
+    }
+    .actions-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0.45rem;
+      padding-top: 0.85rem;
+      border-top: 1px solid #edf2f7;
+    }
+    .act-btn {
+      padding: 0.55rem 0.4rem;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      border: 1px solid var(--card-border);
+      background: #ffffff;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .act-btn:hover {
+      transform: scale(1.02);
+    }
+    .act-p.active {
+      background: var(--stripe-emerald);
+      color: #ffffff;
+      border-color: var(--stripe-emerald);
+    }
+    .act-a.active {
+      background: var(--stripe-coral);
+      color: #ffffff;
+      border-color: var(--stripe-coral);
+    }
+    .act-h.active {
+      background: var(--stripe-amber);
+      color: #ffffff;
+      border-color: var(--stripe-amber);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand-group">
+      <div class="brand-logo">S</div>
+      <div>
+        <div style="font-size: 1.15rem; font-weight: 800; letter-spacing: -0.02em;">AuraAttend</div>
+        <div style="font-size: 0.72rem; color: var(--text-muted); font-weight: 600;">Light UI 03 • Stripe Daylight Canvas</div>
+      </div>
+    </div>
+    <div style="display: flex; gap: 1rem; align-items: center; font-size: 0.85rem;">
+      <span style="background: rgba(99, 91, 255, 0.08); color: var(--stripe-purple); padding: 0.35rem 0.85rem; border-radius: 20px; font-weight: 700;">CSE 3 Academic</span>
+      <span>Target: <strong style="color: var(--stripe-purple);">75.0%</strong></span>
+    </div>
+  </header>
+
+  <div class="container">
+    
+    <!-- Active Term Bar -->
+    <div class="card term-bar">
+      <div>
+        <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Current Active Term</div>
+        <div style="font-size: 1.25rem; font-weight: 900; color: var(--text-main);">CSE 3 (Odd 2026)</div>
+      </div>
+      <div style="display: flex; gap: 0.6rem;">
+        <button class="btn-stripe">Export PDF Report</button>
+        <button class="btn-stripe btn-stripe-primary">+ Add Subject</button>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="tabs-bar">
+      <button class="tab-pill active">📊 Dashboard</button>
+      <button class="tab-pill">📅 Weekly Schedule</button>
+      <button class="tab-pill">📈 Analytics & Predictors</button>
+      <button class="tab-pill">🗓 Calendar Logger</button>
+    </div>
+
+    <!-- Top 3 Widgets Grid -->
+    <div class="widgets-grid">
+      <!-- Widget 1: Overall -->
+      <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <div style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted);">Overall Attendance</div>
+            <div style="font-size: 2rem; font-weight: 900; font-family: 'JetBrains Mono', monospace; margin: 0.2rem 0;" id="str-overall-pct">82.3%</div>
+            <div style="font-size: 0.82rem; color: var(--text-sub);"><span id="str-overall-att">107</span> of <span id="str-overall-tot">130</span> classes attended</div>
+          </div>
+          <div class="gauge-wrap">
+            <svg>
+              <circle cx="46" cy="46" r="38" class="gauge-bg" />
+              <circle cx="46" cy="46" r="38" class="gauge-fg" id="str-gauge-fg" style="stroke-dasharray: 238; stroke-dashoffset: 42;" />
+            </svg>
+            <div class="gauge-val" id="str-gauge-txt">82%</div>
+          </div>
+        </div>
+        <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid #edf2f7; display: flex; gap: 1rem; font-size: 0.8rem;">
+          <div>
+            <span style="color: var(--text-muted); font-weight: 700;">75% Goal:</span>
+            <span style="color: var(--stripe-emerald); font-weight: 800; margin-left: 0.25rem;" id="str-adv-75">Safe to miss 9 classes</span>
+          </div>
+          <div>
+            <span style="color: var(--text-muted); font-weight: 700;">85% Goal:</span>
+            <span style="color: var(--stripe-coral); font-weight: 800; margin-left: 0.25rem;" id="str-adv-85">Attend +18 classes</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Widget 2: Lecture Aggregate -->
+      <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
+        <div>
+          <div style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted);">Lecture Aggregate</div>
+          <div style="font-size: 1.6rem; font-weight: 900; font-family: 'JetBrains Mono', monospace; margin-top: 0.2rem;" id="str-lec-pct">81.7%</div>
+          <div class="progress-line">
+            <div class="progress-bar-fill" id="str-lec-fill" style="width: 81.7%; background: linear-gradient(90deg, #635bff, #00d4b6);"></div>
+          </div>
+          <div style="font-size: 0.82rem; color: var(--text-sub);"><span id="str-lec-att">85</span> of <span id="str-lec-tot">104</span> lecture hours attended</div>
+        </div>
+        <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid #edf2f7; font-size: 0.8rem;">
+          <span style="color: var(--text-muted); font-weight: 700;">75% Goal:</span>
+          <span style="color: var(--stripe-emerald); font-weight: 800; margin-left: 0.25rem;" id="str-lec-adv-75">Safe to miss 7 lectures</span>
+        </div>
+      </div>
+
+      <!-- Widget 3: Lab Aggregate -->
+      <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
+        <div>
+          <div style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted);">Lab Aggregate</div>
+          <div style="font-size: 1.6rem; font-weight: 900; font-family: 'JetBrains Mono', monospace; margin-top: 0.2rem;" id="str-lab-pct">84.6%</div>
+          <div class="progress-line">
+            <div class="progress-bar-fill" id="str-lab-fill" style="width: 84.6%; background: var(--stripe-teal);"></div>
+          </div>
+          <div style="font-size: 0.82rem; color: var(--text-sub);"><span id="str-lab-att">22</span> of <span id="str-lab-tot">26</span> lab sessions attended</div>
+        </div>
+        <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid #edf2f7; font-size: 0.8rem;">
+          <span style="color: var(--text-muted); font-weight: 700;">75% Goal:</span>
+          <span style="color: var(--stripe-emerald); font-weight: 800; margin-left: 0.25rem;" id="str-lab-adv-75">Safe to miss 3 sessions</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Today's Class Checklist -->
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+        <div>
+          <div style="font-size: 1.15rem; font-weight: 800;">Today's Class Checklist (Friday)</div>
+          <div style="font-size: 0.8rem; color: var(--text-sub);">Scheduled routine slots for today with instant check-in</div>
+        </div>
+        <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+          <button class="btn-stripe" style="font-size: 0.78rem; padding: 0.35rem 0.75rem; color: var(--stripe-emerald);" onclick="bulkCheckIn('PRESENT')">✓ All Present</button>
+          <button class="btn-stripe" style="font-size: 0.78rem; padding: 0.35rem 0.75rem; color: var(--stripe-coral);" onclick="bulkCheckIn('ABSENT')">✗ All Absent</button>
+          <button class="btn-stripe" style="font-size: 0.78rem; padding: 0.35rem 0.75rem; color: var(--stripe-amber);" onclick="bulkCheckIn('HOLIDAY')">📅 All Holiday</button>
+        </div>
+      </div>
+      <div class="checklist-grid" id="str-today-grid">
+        <!-- Dynamic Checklist Items -->
+      </div>
+    </div>
+
+    <!-- Subject Check-Ins Section -->
+    <div>
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;">
+        <h3 style="font-size: 1.4rem; font-weight: 900;">Subject Check-Ins</h3>
+        <div class="tabs-bar" style="width: 250px; padding: 2px;">
+          <button class="tab-pill active" onclick="setStripeFilter('ALL', this)">All</button>
+          <button class="tab-pill" onclick="setStripeFilter('LECTURE', this)">Lectures</button>
+          <button class="tab-pill" onclick="setStripeFilter('LAB', this)">Labs</button>
+        </div>
+      </div>
+
+      <div class="subj-grid" id="str-subj-grid">
+        <!-- Dynamic Subject Cards -->
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const subjects = [
+      { id: 'os', name: 'Operating Systems', code: 'CS501', type: 'LECTURE', attended: 22, total: 26, target: 75, icon: 'icons/computer_os.jpg', todayStatus: null, time: '14:30 - 15:30' },
+      { id: 'compiler', name: 'Compiler Design', code: 'CS502', type: 'LECTURE', attended: 18, total: 24, target: 75, icon: 'icons/compiler.jpg', todayStatus: null, time: '12:45 - 13:45' },
+      { id: 'software', name: 'Software Engineering', code: 'CS503', type: 'LECTURE', attended: 21, total: 24, target: 75, icon: 'icons/software_engg.jpg', todayStatus: null, time: '15:30 - 16:30' },
+      { id: 'mgmt', name: 'Industrial Management', code: 'HU501', type: 'LECTURE', attended: 19, total: 22, target: 75, icon: 'icons/industrial_mgmt.jpg', todayStatus: null, time: '09:30 - 10:30' },
+      { id: 'const', name: 'Constitution of India', code: 'MC501', type: 'LECTURE', attended: 17, total: 22, target: 75, icon: 'icons/constitution.jpg', todayStatus: null, time: '11:45 - 12:45' },
+      { id: 'os_lab', name: 'Operating Systems Lab', code: 'CS591', type: 'LAB', attended: 12, total: 14, target: 75, icon: 'icons/computer_os.jpg', todayStatus: null, time: '09:30 - 13:45 (Tue)' },
+      { id: 'se_lab', name: 'Software Engineering Lab', code: 'CS593', type: 'LAB', attended: 10, total: 12, target: 75, icon: 'icons/software_engg.jpg', todayStatus: null, time: '12:45 - 17:30 (Thu)' }
+    ];
+
+    let filter = 'ALL';
+
+    function setStripeFilter(f, el) {
+      filter = f;
+      el.parentElement.querySelectorAll('.tab-pill').forEach(b => b.classList.remove('active'));
+      el.classList.add('active');
+      renderStripe();
+    }
+
+    function calcAdvice(att, tot, goal) {
+      const g = goal / 100;
+      const pct = tot > 0 ? (att / tot) * 100 : 0;
+      if (pct >= goal) {
+        const canSkip = Math.floor((att - g * tot) / g);
+        return { isSafe: true, text: `Safe to miss ${canSkip} classes` };
+      } else {
+        const need = Math.ceil((g * tot - att) / (1 - g));
+        return { isSafe: false, text: `Attend +${need} classes` };
+      }
+    }
+
+    function renderStripe() {
+      let totAtt = 0, totClasses = 0;
+      let lecAtt = 0, lecTot = 0;
+      let labAtt = 0, labTot = 0;
+
+      subjects.forEach(s => {
+        totAtt += s.attended;
+        totClasses += s.total;
+        if (s.type === 'LECTURE') {
+          lecAtt += s.attended;
+          lecTot += s.total;
+        } else {
+          labAtt += s.attended;
+          labTot += s.total;
+        }
+      });
+
+      const ovPct = totClasses > 0 ? ((totAtt / totClasses) * 100).toFixed(1) : 0;
+      const lPct = lecTot > 0 ? ((lecAtt / lecTot) * 100).toFixed(1) : 0;
+      const lbPct = labTot > 0 ? ((labAtt / labTot) * 100).toFixed(1) : 0;
+
+      document.getElementById('str-overall-pct').innerText = ovPct + '%';
+      document.getElementById('str-overall-att').innerText = totAtt;
+      document.getElementById('str-overall-tot').innerText = totClasses;
+      document.getElementById('str-gauge-txt').innerText = Math.round(ovPct) + '%';
+      const offset = 238 - (238 * Math.min(ovPct, 100)) / 100;
+      document.getElementById('str-gauge-fg').style.strokeDashoffset = offset;
+      document.getElementById('str-adv-75').innerText = calcAdvice(totAtt, totClasses, 75).text;
+      document.getElementById('str-adv-85').innerText = calcAdvice(totAtt, totClasses, 85).text;
+
+      document.getElementById('str-lec-pct').innerText = lPct + '%';
+      document.getElementById('str-lec-att').innerText = lecAtt;
+      document.getElementById('str-lec-tot').innerText = lecTot;
+      document.getElementById('str-lec-fill').style.width = Math.min(lPct, 100) + '%';
+      document.getElementById('str-lec-adv-75').innerText = calcAdvice(lecAtt, lecTot, 75).text;
+
+      document.getElementById('str-lab-pct').innerText = lbPct + '%';
+      document.getElementById('str-lab-att').innerText = labAtt;
+      document.getElementById('str-lab-tot').innerText = labTot;
+      document.getElementById('str-lab-fill').style.width = Math.min(lbPct, 100) + '%';
+      document.getElementById('str-lab-adv-75').innerText = calcAdvice(labAtt, labTot, 75).text;
+
+      // Checklist
+      const checkGrid = document.getElementById('str-today-grid');
+      checkGrid.innerHTML = '';
+      subjects.slice(0, 5).forEach((s, idx) => {
+        const item = document.createElement('div');
+        item.className = 'check-box';
+        item.innerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 0.6rem;">
+              <img src="${s.icon}" alt="${s.name}" class="thumb-mini">
+              <div>
+                <div style="font-weight: 800; font-size: 0.88rem;">${s.name}</div>
+                <div style="font-size: 0.75rem; color: var(--text-muted);">${s.time}</div>
+              </div>
+            </div>
+            <span class="type-chip ${s.type === 'LECTURE' ? 'type-lec' : 'type-lab'}">${s.type}</span>
+          </div>
+          <div class="actions-row" style="padding-top: 0.4rem; border-top: none;">
+            <button class="act-btn act-p ${s.todayStatus === 'PRESENT' ? 'active' : ''}" onclick="toggleToday(${idx}, 'PRESENT')">Present</button>
+            <button class="act-btn act-a ${s.todayStatus === 'ABSENT' ? 'active' : ''}" onclick="toggleToday(${idx}, 'ABSENT')">Absent</button>
+            <button class="act-btn act-h ${s.todayStatus === 'HOLIDAY' ? 'active' : ''}" onclick="toggleToday(${idx}, 'HOLIDAY')">Holiday</button>
+          </div>
+        `;
+        checkGrid.appendChild(item);
+      });
+
+      // Grid
+      const grid = document.getElementById('str-subj-grid');
+      grid.innerHTML = '';
+      const filtered = subjects.filter(s => filter === 'ALL' || s.type === filter);
+
+      filtered.forEach(s => {
+        const origIdx = subjects.findIndex(item => item.id === s.id);
+        const pct = s.total > 0 ? ((s.attended / s.total) * 100).toFixed(1) : 0;
+        const isSafe = pct >= s.target;
+        const adv = calcAdvice(s.attended, s.total, s.target);
+
+        const card = document.createElement('div');
+        card.className = 'subj-card';
+        card.innerHTML = `
+          <div>
+            <div style="display: flex; gap: 1rem; align-items: center;">
+              <img src="${s.icon}" alt="${s.name}" class="thumb-3d">
+              <div style="flex: 1; min-width: 0;">
+                <div style="display: flex; gap: 0.4rem; align-items: center; margin-bottom: 0.25rem;">
+                  <span class="type-chip ${s.type === 'LECTURE' ? 'type-lec' : 'type-lab'}">${s.type}</span>
+                  <span style="font-size: 0.72rem; font-weight: 800; color: var(--text-muted); font-family: 'JetBrains Mono', monospace;">${s.code}</span>
+                </div>
+                <div style="font-weight: 800; font-size: 1.15rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${s.name}">${s.name}</div>
+                <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.15rem;">Goal: ${s.target}%</div>
+              </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.1rem;">
+              <div>
+                <div style="font-size: 1.65rem; font-weight: 900; font-family: 'JetBrains Mono', monospace; color: ${isSafe ? 'var(--stripe-emerald)' : 'var(--stripe-coral)'}">${pct}%</div>
+                <div style="font-size: 0.8rem; color: var(--text-sub);">${s.attended} / ${s.total} classes</div>
+              </div>
+              <div style="font-size: 0.78rem; font-weight: 800; padding: 0.35rem 0.75rem; border-radius: 10px; background: ${isSafe ? 'rgba(5, 150, 105, 0.1)' : 'rgba(223, 27, 65, 0.1)'}; color: ${isSafe ? 'var(--stripe-emerald)' : 'var(--stripe-coral)'}">
+                ${adv.text}
+              </div>
+            </div>
+
+            <div class="progress-line" style="margin-top: 0.85rem;">
+              <div class="progress-bar-fill" style="width: ${Math.min(pct, 100)}%; background: ${isSafe ? 'var(--stripe-emerald)' : 'var(--stripe-coral)'};"></div>
+            </div>
+
+            <div style="margin-top: 0.5rem; font-size: 0.76rem; color: var(--text-muted); display: flex; justify-content: space-between;">
+              <span>75% Goal: ${calcAdvice(s.attended, s.total, 75).text}</span>
+              <span>85% Goal: ${calcAdvice(s.attended, s.total, 85).text}</span>
+            </div>
+          </div>
+
+          <div>
+            <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.35rem;">Log Attendance Today:</div>
+            <div class="actions-row">
+              <button class="act-btn act-p ${s.todayStatus === 'PRESENT' ? 'active' : ''}" onclick="toggleToday(${origIdx}, 'PRESENT')">Present</button>
+              <button class="act-btn act-a ${s.todayStatus === 'ABSENT' ? 'active' : ''}" onclick="toggleToday(${origIdx}, 'ABSENT')">Absent</button>
+              <button class="act-btn act-h ${s.todayStatus === 'HOLIDAY' ? 'active' : ''}" onclick="toggleToday(${origIdx}, 'HOLIDAY')">Holiday</button>
+            </div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function toggleToday(idx, status) {
+      const s = subjects[idx];
+      if (s.todayStatus === status) {
+        if (s.todayStatus === 'PRESENT') { s.attended -= 1; s.total -= 1; }
+        else if (s.todayStatus === 'ABSENT') { s.total -= 1; }
+        s.todayStatus = null;
+      } else {
+        if (s.todayStatus === 'PRESENT') { s.attended -= 1; s.total -= 1; }
+        else if (s.todayStatus === 'ABSENT') { s.total -= 1; }
+        s.todayStatus = status;
+        if (status === 'PRESENT') { s.attended += 1; s.total += 1; }
+        else if (status === 'ABSENT') { s.total += 1; }
+      }
+      renderStripe();
+    }
+
+    function bulkCheckIn(status) {
+      for (let i = 0; i < 5; i++) {
+        const s = subjects[i];
+        if (s.todayStatus === 'PRESENT') { s.attended -= 1; s.total -= 1; }
+        else if (s.todayStatus === 'ABSENT') { s.total -= 1; }
+        s.todayStatus = status;
+        if (status === 'PRESENT') { s.attended += 1; s.total += 1; }
+        else if (status === 'ABSENT') { s.total += 1; }
+      }
+      renderStripe();
+    }
+
+    renderStripe();
+  </script>
+</body>
+</html>

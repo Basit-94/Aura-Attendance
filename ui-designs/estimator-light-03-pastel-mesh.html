@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AuraAttend — Light Estimator 03 (Pastel Mesh & Glass)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800;900&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #faf7f5;
+      --card-bg: rgba(255, 255, 255, 0.78);
+      --card-border: rgba(255, 255, 255, 0.9);
+      --card-shadow: 0 16px 36px -8px rgba(135, 115, 150, 0.12), 0 2px 6px rgba(0, 0, 0, 0.04);
+      --text: #1e1b2e;
+      --text-muted: #6b627a;
+      --accent: #7c3aed;
+      --accent-soft: rgba(124, 58, 237, 0.08);
+      --green: #059669;
+      --green-soft: rgba(5, 150, 105, 0.1);
+      --red: #e11d48;
+      --red-soft: rgba(225, 29, 72, 0.1);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+    canvas#mesh-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 0;
+      pointer-events: none;
+      filter: blur(50px);
+      opacity: 0.85;
+    }
+    .app-wrap {
+      position: relative;
+      z-index: 1;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1.5rem 1.5rem 5rem 1.5rem;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 1.5rem;
+      background: rgba(255, 255, 255, 0.65);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      margin-bottom: 2rem;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.03);
+    }
+    .logo-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .logo-orb {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #a855f7, #ec4899, #f97316);
+      box-shadow: 0 4px 14px rgba(168, 85, 247, 0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 800;
+      font-size: 1.1rem;
+    }
+    .nav-stats {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+    .hero-banner {
+      background: var(--card-bg);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border: 1px solid var(--card-border);
+      border-radius: 28px;
+      padding: 2.25rem;
+      box-shadow: var(--card-shadow);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .hero-title h1 {
+      font-size: 2rem;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      background: linear-gradient(135deg, #1e1b2e 30%, #6d28d9 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero-title p {
+      color: var(--text-muted);
+      margin-top: 0.35rem;
+      font-size: 0.95rem;
+      font-weight: 500;
+    }
+    .hero-metrics {
+      display: flex;
+      gap: 1.5rem;
+    }
+    .metric-pill {
+      background: rgba(255, 255, 255, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.95);
+      padding: 0.85rem 1.35rem;
+      border-radius: 18px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+      text-align: right;
+    }
+    .metric-pill .lbl {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      font-weight: 700;
+    }
+    .metric-pill .val {
+      font-size: 1.5rem;
+      font-weight: 900;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--accent);
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 1.5rem;
+    }
+    .card {
+      background: var(--card-bg);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 1.65rem;
+      box-shadow: var(--card-shadow);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 1.35rem;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 45px -10px rgba(124, 58, 237, 0.15), 0 4px 12px rgba(0, 0, 0, 0.04);
+      border-color: rgba(255, 255, 255, 1);
+    }
+    .card-top {
+      display: flex;
+      gap: 1.25rem;
+      align-items: center;
+    }
+    .thumb-3d {
+      width: 72px;
+      height: 72px;
+      border-radius: 18px;
+      object-fit: cover;
+      box-shadow: 0 8px 20px -4px rgba(0, 0, 0, 0.12);
+      border: 2px solid #ffffff;
+      flex-shrink: 0;
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .card:hover .thumb-3d {
+      transform: scale(1.06) rotate(-2deg);
+    }
+    .info {
+      flex: 1;
+      min-width: 0;
+    }
+    .code-tag {
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      color: var(--accent);
+      background: var(--accent-soft);
+      padding: 0.2rem 0.55rem;
+      border-radius: 8px;
+      display: inline-block;
+      margin-bottom: 0.3rem;
+    }
+    .title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: var(--text);
+    }
+    .ratio-bar-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+    .ratio-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+    .pct-display {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.25rem;
+      font-weight: 800;
+    }
+    .progress-track {
+      height: 9px;
+      background: rgba(0, 0, 0, 0.05);
+      border-radius: 12px;
+      overflow: hidden;
+      position: relative;
+    }
+    .progress-fill {
+      height: 100%;
+      border-radius: 12px;
+      background: linear-gradient(90deg, #a855f7, #6366f1);
+      transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.4rem 0.85rem;
+      border-radius: 12px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      margin-top: 0.25rem;
+    }
+    .status-safe {
+      background: var(--green-soft);
+      color: var(--green);
+    }
+    .status-warning {
+      background: var(--red-soft);
+      color: var(--red);
+    }
+    .btn-group {
+      display: flex;
+      gap: 0.65rem;
+      padding-top: 0.65rem;
+      border-top: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    .btn-act {
+      flex: 1;
+      padding: 0.65rem 0.85rem;
+      border-radius: 14px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      transition: all 0.2s;
+    }
+    .btn-attended {
+      background: #ffffff;
+      color: var(--green);
+      border: 1px solid rgba(5, 150, 105, 0.3);
+      box-shadow: 0 2px 8px rgba(5, 150, 105, 0.08);
+    }
+    .btn-attended:hover {
+      background: #059669;
+      color: #ffffff;
+      transform: translateY(-1px);
+    }
+    .btn-missed {
+      background: #ffffff;
+      color: var(--red);
+      border: 1px solid rgba(225, 29, 72, 0.3);
+      box-shadow: 0 2px 8px rgba(225, 29, 72, 0.08);
+    }
+    .btn-missed:hover {
+      background: #e11d48;
+      color: #ffffff;
+      transform: translateY(-1px);
+    }
+  </style>
+</head>
+<body>
+  <!-- Animated pastel mesh canvas -->
+  <canvas id="mesh-canvas"></canvas>
+
+  <div class="app-wrap">
+    <header>
+      <div class="logo-badge">
+        <div class="logo-orb">✦</div>
+        <div>
+          <h2 style="font-size: 1.15rem; font-weight: 800; letter-spacing: -0.02em;">AuraAttend</h2>
+          <p style="font-size: 0.72rem; color: var(--text-muted); font-weight: 600;">Pastel Mesh • CSE 3 Routine</p>
+        </div>
+      </div>
+      <div class="nav-stats">
+        <span>Target: <strong style="color: var(--accent);">75%</strong></span>
+        <span>Semester: <strong>Odd 2026</strong></span>
+      </div>
+    </header>
+
+    <div class="hero-banner">
+      <div class="hero-title">
+        <h1>Attendance Estimator</h1>
+        <p>Real-time projection with 3D subject assets & reactive attendance calculations</p>
+      </div>
+      <div class="hero-metrics">
+        <div class="metric-pill">
+          <div class="lbl">Total Classes</div>
+          <div class="val" id="global-total">118</div>
+        </div>
+        <div class="metric-pill">
+          <div class="lbl">Attended</div>
+          <div class="val" id="global-attended" style="color: var(--green);">97</div>
+        </div>
+        <div class="metric-pill">
+          <div class="lbl">Aggregate</div>
+          <div class="val" id="global-pct">82.2%</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid" id="subject-cards-container">
+      <!-- Injected via JavaScript -->
+    </div>
+  </div>
+
+  <script>
+    // Moving pastel mesh canvas animation
+    const canvas = document.getElementById('mesh-canvas');
+    const ctx = canvas.getContext('2d');
+    let width = canvas.width = window.innerWidth;
+    let height = canvas.height = window.innerHeight;
+
+    window.addEventListener('resize', () => {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    });
+
+    const blobs = [
+      { x: width * 0.2, y: height * 0.3, vx: 0.4, vy: 0.3, radius: 260, color: 'rgba(244, 114, 182, 0.45)' }, // pink
+      { x: width * 0.7, y: height * 0.2, vx: -0.3, vy: 0.4, radius: 280, color: 'rgba(167, 139, 250, 0.45)' }, // purple
+      { x: width * 0.4, y: height * 0.7, vx: 0.35, vy: -0.25, radius: 300, color: 'rgba(56, 189, 248, 0.4)' }, // sky
+      { x: width * 0.8, y: height * 0.8, vx: -0.25, vy: -0.3, radius: 250, color: 'rgba(251, 146, 60, 0.35)' }, // warm peach
+      { x: width * 0.15, y: height * 0.85, vx: 0.3, vy: 0.2, radius: 270, color: 'rgba(52, 211, 153, 0.35)' } // mint
+    ];
+
+    function animateMesh() {
+      ctx.clearRect(0, 0, width, height);
+      blobs.forEach(b => {
+        b.x += b.vx;
+        b.y += b.vy;
+        if (b.x < -100 || b.x > width + 100) b.vx *= -1;
+        if (b.y < -100 || b.y > height + 100) b.vy *= -1;
+
+        const grad = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.radius);
+        grad.addColorStop(0, b.color);
+        grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      requestAnimationFrame(animateMesh);
+    }
+    animateMesh();
+
+    // Subject data with 3D icons
+    const subjects = [
+      {
+        id: 'os',
+        code: 'CS501',
+        name: 'Operating Systems',
+        attended: 22,
+        total: 26,
+        icon: 'icons/computer_os.jpg'
+      },
+      {
+        id: 'compiler',
+        code: 'CS502',
+        name: 'Compiler Design',
+        attended: 18,
+        total: 24,
+        icon: 'icons/compiler.jpg'
+      },
+      {
+        id: 'software',
+        code: 'CS503',
+        name: 'Software Engineering',
+        attended: 21,
+        total: 24,
+        icon: 'icons/software_engg.jpg'
+      },
+      {
+        id: 'mgmt',
+        code: 'HU501',
+        name: 'Industrial Management',
+        attended: 19,
+        total: 22,
+        icon: 'icons/industrial_mgmt.jpg'
+      },
+      {
+        id: 'const',
+        code: 'MC501',
+        name: 'Constitution of India',
+        attended: 17,
+        total: 22,
+        icon: 'icons/constitution.jpg'
+      }
+    ];
+
+    function renderCards() {
+      const container = document.getElementById('subject-cards-container');
+      container.innerHTML = '';
+      
+      let totAttended = 0;
+      let totTotal = 0;
+
+      subjects.forEach((subj, idx) => {
+        totAttended += subj.attended;
+        totTotal += subj.total;
+        const pct = subj.total > 0 ? ((subj.attended / subj.total) * 100).toFixed(1) : 0;
+        const isSafe = pct >= 75;
+
+        // Skip/need calculation
+        let adviceHtml = '';
+        if (pct >= 75) {
+          const canSkip = Math.floor((subj.attended - 0.75 * subj.total) / 0.75);
+          adviceHtml = `<span class="status-badge status-safe">✓ Can skip next ${canSkip} classes safely</span>`;
+        } else {
+          const needAttend = Math.ceil((0.75 * subj.total - subj.attended) / (1 - 0.75));
+          adviceHtml = `<span class="status-badge status-warning">⚠ Attend next ${needAttend} classes for 75%</span>`;
+        }
+
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <div>
+            <div class="card-top">
+              <img src="${subj.icon}" alt="${subj.name}" class="thumb-3d">
+              <div class="info">
+                <span class="code-tag">${subj.code}</span>
+                <div class="title" title="${subj.name}">${subj.name}</div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem;">
+                  ${subj.attended} attended of ${subj.total} conducted
+                </div>
+              </div>
+            </div>
+
+            <div class="ratio-bar-wrap" style="margin-top: 1.25rem;">
+              <div class="ratio-labels">
+                <span>Current Standing</span>
+                <span class="pct-display" style="color: ${isSafe ? 'var(--green)' : 'var(--red)'}">${pct}%</span>
+              </div>
+              <div class="progress-track">
+                <div class="progress-fill" style="width: ${Math.min(pct, 100)}%; background: ${isSafe ? 'linear-gradient(90deg, #10b981, #059669)' : 'linear-gradient(90deg, #f43f5e, #e11d48)'}"></div>
+              </div>
+              ${adviceHtml}
+            </div>
+          </div>
+
+          <div class="btn-group">
+            <button class="btn-act btn-attended" onclick="handleCheckIn(${idx}, true)">
+              <span>✓</span> Attended (+1)
+            </button>
+            <button class="btn-act btn-missed" onclick="handleCheckIn(${idx}, false)">
+              <span>✕</span> Missed (+1)
+            </button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+
+      // Update global aggregate
+      const globalPct = totTotal > 0 ? ((totAttended / totTotal) * 100).toFixed(1) : 0;
+      document.getElementById('global-total').innerText = totTotal;
+      document.getElementById('global-attended').innerText = totAttended;
+      const globalPctEl = document.getElementById('global-pct');
+      globalPctEl.innerText = globalPct + '%';
+      globalPctEl.style.color = globalPct >= 75 ? 'var(--green)' : 'var(--red)';
+    }
+
+    function handleCheckIn(idx, attended) {
+      subjects[idx].total += 1;
+      if (attended) {
+        subjects[idx].attended += 1;
+      }
+      renderCards();
+    }
+
+    renderCards();
+  </script>
+</body>
+</html>

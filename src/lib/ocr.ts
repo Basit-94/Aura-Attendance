@@ -76,65 +76,93 @@ async function runRealOcr(
   branchSection?: string,
   labGroup?: string
 ): Promise<ParsedClass[]> {
+  const targetBranch = branchSection?.trim() || 'All';
+  const targetGroup = labGroup?.trim() || 'All';
+
   let prompt = `
-    Analyze this timetable image/PDF. You must extract all academic classes and labs listed in the timetable in a step-by-step verification process to ensure 100% accuracy.
+    You are an expert academic timetable OCR parser. Analyze this timetable image/PDF. You must extract all academic classes and labs listed in the timetable for the requested student configuration with 100% precision.
     
-    STEP-BY-STEP REASONING PROCESS:
-    In your response, you must write down your thinking process step-by-step before producing the final JSON array.
-    1. **Identify Target Rows**: Write down the row headers and locate the exact rows that correspond to the requested branch/section: "${branchSection?.trim() || 'All'}". Note the row indices.
-    2. **Map Days**: For each day of the week (Monday to Saturday), trace the left margin. Determine which rows align with that day's vertically merged label. Write this mapping down.
-    3. **Chronological Scan**: For each day, scan the target branch rows from left to right (from the first period to the last period). List out every academic course/subject you read in those cells, along with the start and end times.
-    4. **Filter Labs**: If a lab cell is split or lists groups (e.g. Group A/Group B), check if it matches the requested group: "${labGroup?.trim() || 'All'}". Write down which group was selected and why you are keeping or discarding each lab slot.
-    5. **Self-Review & Verification**: Cross-reference your listed classes against the timetable image again. Check: Are there any classes you missed? Did you accidentally map a Tuesday class to Monday? Are there any blank slots that actually contain subjects? Double-check and correct any errors.
-    6. **Output JSON**: Once verified, output the final result as a JSON array of objects starting with "[" and ending with "]" at the very end of your response.
+    TARGET CONFIGURATION:
+    - Target Branch / Class / Section: "${targetBranch}"
+    - Target Lab Group / Batch: "${targetGroup}"
+
+    TIMETABLE GRID STRUCTURE & COLUMN TIMING GUIDE:
+    The timetable header has 7 academic periods and 2 breaks:
+    - Period 1: 09:30 - 10:30
+    - Period 2: 10:30 - 11:30
+    - S. Break (recess): 11:30 - 11:45 (Do NOT extract)
+    - Period 3: 11:45 - 12:45
+    - Period 4: 12:45 - 13:45
+    - Break / Lunch: 13:45 - 14:30 (Do NOT extract)
+    - Period 5: 14:30 - 15:30 (printed as 2.30 - 3.30)
+    - Period 6: 15:30 - 16:30 (printed as 3.30 - 4.30)
+    - Period 7: 16:30 - 17:30 (printed as 4.30 - 5.30)
+
+    TWO-PAGE SHEET NAVIGATION:
+    - Sheet 1 (top): Monday, Tuesday, Wednesday (AIML, CSE I, CSE II, CSE III, IT, ECE).
+    - Sheet 2 (bottom): Wednesday (EE), Thursday (all streams), and Friday (all streams).
+    - You MUST scan the target branch across BOTH sheets to extract classes for all five days (Monday through Friday).
+
+    CELL SPANNING & BOUNDARY RULES:
+    - When a class or lab spans multiple columns, look at the vertical grid lines:
+      - If a lab cell covers Period 1 through Period 4 (e.g. OS Lab on Tuesday morning), it runs 09:30 to 13:45 (or 09:30-11:30 and 11:45-13:45).
+      - If a lab cell covers Period 5, 6, and 7 in the afternoon (e.g. OOP Lab on Monday afternoon, or S/W Engg Lab on Thursday afternoon), its endTime is 17:30!
+      - If individual 1-hour lectures fill the afternoon periods (e.g. Tuesday afternoon: Compiler at 14:30-15:30, CG/AI at 15:30-16:30, OOP at 16:30-17:30), extract each one as a distinct 1-hour lecture slot. Do not merge them!
     
-    CRITICAL RULES:
-    - Do NOT extract non-academic slots (lunch breaks, recesses, gap slots, self-study, etc.).
-    - Normalize abbreviations to full names consistently (e.g., "DAA Lab" -> "Design & Analysis of Algorithms Lab").
-    - If a class spans multiple consecutive time slots on the same day (even if separated by a short break of less than 30 minutes, such as a lunch break or recess), you MUST merge them into a single parsed class. The startTime must be the start of the first slot, and the endTime must be the end of the last slot.
-    
-    JSON Structure to output at the end:
+    BRANCH & LAB GROUP FILTERING:
+    - Match branch names flexibly ("CSE 3", "CSC 3", "CSE III", "cse 3" all map to the "CSE III" row).
+    - When a lab period is divided into Group A and Group B (e.g. "Gr. A / Gr. B"):
+      - If Target Lab Group is "Group A" (or "Gr A", "A"), extract ONLY the Group A slot.
+      - If Target Lab Group is "Group B" (or "Gr B", "B"), extract ONLY the Group B slot.
+      - If Target Lab Group is "All" or "None", keep both.
+
+    ACADEMIC SUBJECT NAME NORMALIZATION:
+    Always expand short abbreviations to standard clean names:
+    - "OS" -> "Operating Systems"
+    - "CG/AI" or "CG" -> "Computer Graphics & Artificial Intelligence"
+    - "Indus Mgmt." or "Indus. Mgmt" -> "Industrial Management"
+    - "S/W Engg." or "S/W Engg" -> "Software Engineering"
+    - "OOP" -> "Object Oriented Programming"
+    - "Prob & Stat" -> "Probability & Statistics"
+    - "Compiler" -> "Compiler Design"
+    - "Indian Const." -> "Constitution of India"
+    - "ML" -> "Machine Learning"
+    - "DAA" -> "Design & Analysis of Algorithms"
+    - "Comp Arch" or "Comp. Arch" -> "Computer Architecture"
+    - "Discrete Maths" -> "Discrete Mathematics"
+
+    NON-ACADEMIC SLOTS TO EXCLUDE:
+    - Do NOT extract: Lunch breaks, Recesses, Mentoring, Remedial Class, Library, Gap periods, Campus Drive, NSS.
+
+    RESPONSE FORMAT (CRITICAL FOR SPEED):
+    Return ONLY a valid JSON array enclosed in \`\`\`json ... \`\`\`.
+    Do NOT write any reasoning, preface, explanation, or notes.
+    JSON schema:
+    \`\`\`json
     [
       {
-        "subjectName": "Full Course Name",
+        "subjectName": "Full Subject Name",
         "type": "LECTURE" or "LAB",
-        "dayOfWeek": "MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY" | "SATURDAY",
+        "dayOfWeek": "MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY",
         "startTime": "HH:MM",
         "endTime": "HH:MM"
       }
     ]
+    \`\`\`
   `;
 
-  // 1. Try Gemini API key rotation with gemini-3.5-flash
+  // 1. Try Gemini API key rotation with gemini-3.5-flash -> gemini-2.0-flash -> gemini-1.5-flash
   const geminiKeys = getGeminiKeys();
+  const modelsToTry = ['gemini-3.6-flash', 'gemini-3.5-flash'];
 
   for (let i = 0; i < geminiKeys.length; i++) {
     const key = geminiKeys[i];
-    
-    // Tier 1: Try gemini-3.1-pro-preview first for maximum parsing quality
-    try {
-      console.log(`[OCR] Attempting timetable parse using Gemini Key #${i + 1} with gemini-3.1-pro-preview`);
-      const genAI = new GoogleGenerativeAI(key);
-      const model = genAI.getGenerativeModel({ model: 'gemini-3.1-pro-preview' });
+    const genAI = new GoogleGenerativeAI(key);
 
-      const imagePart = {
-        inlineData: {
-          data: buffer.toString('base64'),
-          mimeType,
-        },
-      };
-
-      const result = await model.generateContent([prompt, imagePart]);
-      const responseText = result.response.text();
-      return cleanAndParseJson(responseText);
-    } catch (err: any) {
-      console.warn(`[OCR] Gemini Key #${i + 1} (gemini-3.1-pro-preview) failed, trying gemini-3.5-flash:`, err.message || err);
-      
-      // Tier 2: Try gemini-3.5-flash next
+    for (const modelName of modelsToTry) {
       try {
-        console.log(`[OCR] Attempting timetable parse using Gemini Key #${i + 1} with gemini-3.5-flash`);
-        const genAI = new GoogleGenerativeAI(key);
-        const model = genAI.getGenerativeModel({ model: 'gemini-3.5-flash' });
+        console.log(`[OCR] Timetable parse attempt with Key #${i + 1}, model ${modelName} for branch "${targetBranch}"`);
+        const model = genAI.getGenerativeModel({ model: modelName });
 
         const imagePart = {
           inlineData: {
@@ -146,40 +174,20 @@ async function runRealOcr(
         const result = await model.generateContent([prompt, imagePart]);
         const responseText = result.response.text();
         return cleanAndParseJson(responseText);
-      } catch (flash35Err: any) {
-        console.warn(`[OCR] Gemini Key #${i + 1} (gemini-3.5-flash) failed, trying gemini-2.0-flash:`, flash35Err.message || flash35Err);
-
-        // Tier 3: Try gemini-2.0-flash as stable backup
-        try {
-          console.log(`[OCR] Attempting timetable parse using Gemini Key #${i + 1} with gemini-2.0-flash`);
-          const genAI = new GoogleGenerativeAI(key);
-          const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
-
-          const imagePart = {
-            inlineData: {
-              data: buffer.toString('base64'),
-              mimeType,
-            },
-          };
-
-          const result = await model.generateContent([prompt, imagePart]);
-          const responseText = result.response.text();
-          return cleanAndParseJson(responseText);
-        } catch (flash20Err: any) {
-          console.error(`[OCR] Gemini Key #${i + 1} (gemini-2.0-flash) also failed:`, flash20Err.message || flash20Err);
-        }
+      } catch (err: any) {
+        console.warn(`[OCR] Key #${i + 1} with ${modelName} failed:`, err.message || err);
       }
     }
   }
 
-  // 2. Fallback to Llama 3.2 Vision (Groq / Together / OpenRouter)
+  // 2. Fallback to Vision Provider (Groq / Together / OpenRouter)
   const fallbackProvider = process.env.FALLBACK_AI_PROVIDER;
   const fallbackKey = process.env.FALLBACK_AI_API_KEY;
   const fallbackModel = process.env.FALLBACK_AI_MODEL || 'google/gemini-2.5-flash';
 
   if (fallbackProvider && fallbackKey) {
     try {
-      console.log(`[OCR] Falling back to Llama via provider: ${fallbackProvider}`);
+      console.log(`[OCR] Falling back to provider: ${fallbackProvider}`);
       let url = '';
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
@@ -214,10 +222,9 @@ async function runRealOcr(
               ],
             },
           ],
-          max_tokens: 4000,
+          max_tokens: 3000,
         };
 
-        // Groq vision models do NOT support response_format: { type: 'json_object' }
         if (provider !== 'groq') {
           payload.response_format = { type: 'json_object' };
         }
@@ -233,11 +240,11 @@ async function runRealOcr(
           const responseText = data.choices[0].message.content;
           return cleanAndParseJson(responseText);
         } else {
-          console.error('[OCR] Llama fallback API error:', await response.text());
+          console.error('[OCR] Fallback API error:', await response.text());
         }
       }
     } catch (err) {
-      console.error('[OCR] Llama fallback failed:', err);
+      console.error('[OCR] Fallback failed:', err);
     }
   }
 
@@ -245,18 +252,35 @@ async function runRealOcr(
 }
 
 /**
- * Sanitizes model responses by stripping markdown formatting and parsing JSON
+ * Sanitizes model responses by extracting JSON from code blocks or arrays
  */
 function cleanAndParseJson(text: string): ParsedClass[] {
   let cleaned = text.trim();
   
-  // Remove markdown code blocks if present (e.g. ```json ... ```)
-  if (cleaned.startsWith('```')) {
-    cleaned = cleaned.replace(/^```(json)?\n/, '').replace(/\n```$/, '');
+  // 1. Try extracting from markdown code block ```json [...] ``` or ``` [...] ```
+  const codeBlockMatch = cleaned.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+  if (codeBlockMatch) {
+    cleaned = codeBlockMatch[1].trim();
+  } else {
+    // 2. Try extracting JSON array [ { ... } ]
+    const arrayMatch = cleaned.match(/\[\s*\{[\s\S]*\}\s*\]/);
+    if (arrayMatch) {
+      cleaned = arrayMatch[0].trim();
+    }
   }
-  
-  cleaned = cleaned.trim();
-  const parsed = JSON.parse(cleaned);
+
+  let parsed: any;
+  try {
+    parsed = JSON.parse(cleaned);
+  } catch (err) {
+    // 3. Last-ditch attempt: find any array inside the string
+    const fallbackArrayMatch = text.match(/\[\s*\{[\s\S]*\}\s*\]/);
+    if (fallbackArrayMatch) {
+      parsed = JSON.parse(fallbackArrayMatch[0]);
+    } else {
+      throw new Error(`Failed to parse AI OCR response as JSON: ${err}`);
+    }
+  }
 
   if (Array.isArray(parsed)) {
     return parsed as ParsedClass[];
@@ -300,42 +324,18 @@ export async function analyzeTimetableStructure(
         },
       };
 
-      // Tier 1: Try gemini-3.1-pro-preview for best structure scan
-      try {
-        console.log(`[OCR Analyze] Attempting pre-scan using Gemini Key #${i + 1} with gemini-3.1-pro-preview`);
-        const genAI = new GoogleGenerativeAI(key);
-        const model = genAI.getGenerativeModel({ model: 'gemini-3.1-pro-preview' });
+      const modelsToTry = ['gemini-3.6-flash', 'gemini-3.5-flash'];
+      const genAI = new GoogleGenerativeAI(key);
 
-        const result = await model.generateContent([prompt, imagePart]);
-        const responseText = result.response.text();
-        return cleanAndParseStructureJson(responseText);
-      } catch (err: any) {
-        console.warn(`[OCR Analyze] Gemini Key #${i + 1} (gemini-3.1-pro-preview) failed, trying gemini-3.5-flash:`, err.message || err);
-        
-        // Tier 2: Try gemini-3.5-flash next
+      for (const modelName of modelsToTry) {
         try {
-          console.log(`[OCR Analyze] Attempting pre-scan using Gemini Key #${i + 1} with gemini-3.5-flash`);
-          const genAI = new GoogleGenerativeAI(key);
-          const model = genAI.getGenerativeModel({ model: 'gemini-3.5-flash' });
-
+          console.log(`[OCR Analyze] Attempting pre-scan using Gemini Key #${i + 1} with ${modelName}`);
+          const model = genAI.getGenerativeModel({ model: modelName });
           const result = await model.generateContent([prompt, imagePart]);
           const responseText = result.response.text();
           return cleanAndParseStructureJson(responseText);
-        } catch (flash35Err: any) {
-          console.warn(`[OCR Analyze] Gemini Key #${i + 1} (gemini-3.5-flash) failed, trying gemini-2.0-flash:`, flash35Err.message || flash35Err);
-
-          // Tier 3: Try gemini-2.0-flash as stable backup
-          try {
-            console.log(`[OCR Analyze] Attempting pre-scan using Gemini Key #${i + 1} with gemini-2.0-flash`);
-            const genAI = new GoogleGenerativeAI(key);
-            const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
-
-            const result = await model.generateContent([prompt, imagePart]);
-            const responseText = result.response.text();
-            return cleanAndParseStructureJson(responseText);
-          } catch (flash20Err: any) {
-            console.error(`[OCR Analyze] Gemini Key #${i + 1} (gemini-2.0-flash) also failed:`, flash20Err.message || flash20Err);
-          }
+        } catch (err: any) {
+          console.warn(`[OCR Analyze] Key #${i + 1} with ${modelName} failed:`, err.message || err);
         }
       }
     }
@@ -350,11 +350,27 @@ export async function analyzeTimetableStructure(
 
 function cleanAndParseStructureJson(text: string): { streams: string[]; groups: string[] } {
   let cleaned = text.trim();
-  if (cleaned.startsWith('```')) {
-    cleaned = cleaned.replace(/^```(json)?\n/, '').replace(/\n```$/, '');
+  const codeBlockMatch = cleaned.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+  if (codeBlockMatch) {
+    cleaned = codeBlockMatch[1].trim();
+  } else {
+    const objMatch = cleaned.match(/\{[\s\S]*\}/);
+    if (objMatch) {
+      cleaned = objMatch[0].trim();
+    }
   }
-  cleaned = cleaned.trim();
-  const parsed = JSON.parse(cleaned);
+
+  let parsed: any;
+  try {
+    parsed = JSON.parse(cleaned);
+  } catch (err) {
+    const objMatch = text.match(/\{[\s\S]*\}/);
+    if (objMatch) {
+      parsed = JSON.parse(objMatch[0]);
+    } else {
+      throw new Error(`Failed to parse structure response: ${err}`);
+    }
+  }
   
   const rawStreams = Array.isArray(parsed.streams) ? parsed.streams.map((s: any) => String(s).trim()) : [];
   const rawGroups = Array.isArray(parsed.groups) ? parsed.groups.map((g: any) => String(g).trim()) : [];
@@ -480,15 +496,15 @@ export function normalizeSubjectName(name: string): string {
     if (lower.includes('lab')) return 'Database Management Systems Lab';
     return 'Database Management Systems';
   }
-  if (lower.includes('os') || lower.includes('operating system')) {
+  if (/\bos\b/i.test(clean) || lower.includes('operating system')) {
     if (lower.includes('lab')) return 'Operating Systems Lab';
     return 'Operating Systems';
   }
-  if (lower.includes('cn') || lower.includes('computer network')) {
+  if (/\bcn\b/i.test(clean) || lower.includes('computer network')) {
     if (lower.includes('lab')) return 'Computer Networks Lab';
     return 'Computer Networks';
   }
-  if (lower.includes('coa') || (lower.includes('computer') && lower.includes('org'))) {
+  if (/\bcoa\b/i.test(clean) || (lower.includes('computer') && lower.includes('org'))) {
     if (lower.includes('lab')) return 'Computer Organization Lab';
     return 'Computer Organization & Architecture';
   }

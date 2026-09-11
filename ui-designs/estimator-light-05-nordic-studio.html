@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AuraAttend — Light Estimator 05 (Nordic Studio Minimal)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #ffffff;
+      --surface: #fafafa;
+      --card-bg: #ffffff;
+      --border: #e5e7eb;
+      --border-dark: #111827;
+      --text-main: #09090b;
+      --text-muted: #71717a;
+      --nordic-emerald: #059669;
+      --nordic-crimson: #e11d48;
+      --nordic-indigo: #4338ca;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text-main);
+      font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      min-height: 100vh;
+      padding-bottom: 5rem;
+      background-image: 
+        radial-gradient(#e5e7eb 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+    header {
+      border-bottom: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand-mark {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+    .brand-cube {
+      width: 32px;
+      height: 32px;
+      background: var(--border-dark);
+      color: #ffffff;
+      font-weight: 800;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+    }
+    .brand-name {
+      font-size: 1.1rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+    .brand-sub {
+      font-size: 0.72rem;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-muted);
+      letter-spacing: -0.01em;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 2.5rem auto;
+      padding: 0 1.5rem;
+    }
+    .studio-summary {
+      border: 1px solid var(--border);
+      background: var(--surface);
+      border-radius: 16px;
+      padding: 2.25rem;
+      display: grid;
+      grid-template-columns: 1.8fr 1fr 1fr 1fr;
+      gap: 1.5rem;
+      align-items: center;
+      margin-bottom: 2.5rem;
+      box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.03);
+    }
+    @media (max-width: 850px) {
+      .studio-summary {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+    .studio-heading h1 {
+      font-size: 1.85rem;
+      font-weight: 800;
+      letter-spacing: -0.035em;
+    }
+    .studio-heading p {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+    .kpi-cell {
+      border-left: 1px solid var(--border);
+      padding-left: 1.5rem;
+    }
+    .kpi-cell .kpi-label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+    .kpi-cell .kpi-number {
+      font-size: 1.8rem;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+      margin-top: 0.2rem;
+    }
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 1.5rem;
+    }
+    .card-nordic {
+      border: 1px solid var(--border);
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 1.6rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 1.4rem;
+      transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+    }
+    .card-nordic:hover {
+      border-color: #a1a1aa;
+      transform: translateY(-2px);
+      box-shadow: 0 12px 28px -6px rgba(0, 0, 0, 0.06);
+    }
+    .card-meta {
+      display: flex;
+      gap: 1.15rem;
+      align-items: center;
+    }
+    .icon-frame {
+      width: 68px;
+      height: 68px;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
+      flex-shrink: 0;
+    }
+    .icon-frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.25s;
+    }
+    .card-nordic:hover .icon-frame img {
+      transform: scale(1.06);
+    }
+    .card-title-group {
+      flex: 1;
+      min-width: 0;
+    }
+    .mono-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      font-weight: 700;
+      background: #f4f4f5;
+      color: #3f3f46;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      display: inline-block;
+      margin-bottom: 0.35rem;
+    }
+    .subj-header {
+      font-size: 1.15rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .nordic-bar-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+      margin-top: 1.25rem;
+      padding: 0.85rem;
+      background: var(--surface);
+      border-radius: 10px;
+      border: 1px solid #f4f4f5;
+    }
+    .nordic-bar-labels {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+    .pct-bold {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.3rem;
+      font-weight: 800;
+    }
+    .nordic-track {
+      height: 6px;
+      background: #e4e4e7;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .nordic-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.35s ease;
+    }
+    .advice-note {
+      font-size: 0.8rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .actions-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.65rem;
+      border-top: 1px solid var(--border);
+      padding-top: 1rem;
+    }
+    .btn-nordic {
+      padding: 0.65rem 0.85rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      transition: all 0.15s;
+    }
+    .btn-inc {
+      background: var(--border-dark);
+      color: #ffffff;
+      border: 1px solid var(--border-dark);
+    }
+    .btn-inc:hover {
+      background: #27272a;
+    }
+    .btn-dec {
+      background: #ffffff;
+      color: var(--nordic-crimson);
+      border: 1px solid #fecdd3;
+    }
+    .btn-dec:hover {
+      background: #fff1f2;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <div class="brand-mark">
+        <div class="brand-cube">N</div>
+        <div>
+          <div class="brand-name">AuraAttend</div>
+          <div class="brand-sub">Nordic Studio Minimal • Estimator 05</div>
+        </div>
+      </div>
+      <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; font-weight: 600;">
+        Benchmark: <span style="color: var(--nordic-emerald);">75.00%</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="studio-summary">
+      <div class="studio-heading">
+        <h1>Attendance Forecast</h1>
+        <p>Architectural minimalism with 3D physical subject markers & live check-in calculus</p>
+      </div>
+      <div class="kpi-cell">
+        <div class="kpi-label">Conducted</div>
+        <div class="kpi-number" id="kpi-total">118</div>
+      </div>
+      <div class="kpi-cell">
+        <div class="kpi-label">Attended</div>
+        <div class="kpi-number" id="kpi-attended" style="color: var(--nordic-emerald);">97</div>
+      </div>
+      <div class="kpi-cell">
+        <div class="kpi-label">Standing</div>
+        <div class="kpi-number" id="kpi-pct" style="color: var(--nordic-emerald);">82.2%</div>
+      </div>
+    </div>
+
+    <div class="cards-grid" id="studio-grid">
+      <!-- Dynamic cards injected via JS -->
+    </div>
+  </div>
+
+  <script>
+    const subjects = [
+      { id: 'os', code: 'CS501', name: 'Operating Systems', attended: 22, total: 26, icon: 'icons/computer_os.jpg' },
+      { id: 'compiler', code: 'CS502', name: 'Compiler Design', attended: 18, total: 24, icon: 'icons/compiler.jpg' },
+      { id: 'software', code: 'CS503', name: 'Software Engineering', attended: 21, total: 24, icon: 'icons/software_engg.jpg' },
+      { id: 'mgmt', code: 'HU501', name: 'Industrial Management', attended: 19, total: 22, icon: 'icons/industrial_mgmt.jpg' },
+      { id: 'const', code: 'MC501', name: 'Constitution of India', attended: 17, total: 22, icon: 'icons/constitution.jpg' }
+    ];
+
+    function renderStudio() {
+      const grid = document.getElementById('studio-grid');
+      grid.innerHTML = '';
+
+      let totalAtt = 0;
+      let totalTot = 0;
+
+      subjects.forEach((subj, idx) => {
+        totalAtt += subj.attended;
+        totalTot += subj.total;
+        const pct = subj.total > 0 ? ((subj.attended / subj.total) * 100).toFixed(1) : 0;
+        const isSafe = pct >= 75;
+
+        let adviceText = '';
+        if (isSafe) {
+          const canSkip = Math.floor((subj.attended - 0.75 * subj.total) / 0.75);
+          adviceText = `<span style="color: var(--nordic-emerald);">✓ Safe to miss next ${canSkip} sessions</span>`;
+        } else {
+          const needAttend = Math.ceil((0.75 * subj.total - subj.attended) / (1 - 0.75));
+          adviceText = `<span style="color: var(--nordic-crimson);">▲ Must attend next ${needAttend} sessions</span>`;
+        }
+
+        const card = document.createElement('div');
+        card.className = 'card-nordic';
+        card.innerHTML = `
+          <div>
+            <div class="card-meta">
+              <div class="icon-frame">
+                <img src="${subj.icon}" alt="${subj.name}">
+              </div>
+              <div class="card-title-group">
+                <span class="mono-badge">${subj.code}</span>
+                <div class="subj-header" title="${subj.name}">${subj.name}</div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem;">
+                  ${subj.attended} / ${subj.total} sessions complete
+                </div>
+              </div>
+            </div>
+
+            <div class="nordic-bar-wrap">
+              <div class="nordic-bar-labels">
+                <span style="font-size: 0.8rem; color: var(--text-muted);">Attendance Ratio</span>
+                <span class="pct-bold" style="color: ${isSafe ? 'var(--nordic-emerald)' : 'var(--nordic-crimson)'}">${pct}%</span>
+              </div>
+              <div class="nordic-track">
+                <div class="nordic-fill" style="width: ${Math.min(pct, 100)}%; background: ${isSafe ? 'var(--nordic-emerald)' : 'var(--nordic-crimson)'}"></div>
+              </div>
+              <div class="advice-note">
+                ${adviceText}
+              </div>
+            </div>
+          </div>
+
+          <div class="actions-grid">
+            <button class="btn-nordic btn-inc" onclick="updateRecord(${idx}, true)">
+              <span>＋</span> Present
+            </button>
+            <button class="btn-nordic btn-dec" onclick="updateRecord(${idx}, false)">
+              <span>－</span> Missed
+            </button>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+
+      const avgPct = totalTot > 0 ? ((totalAtt / totalTot) * 100).toFixed(1) : 0;
+      document.getElementById('kpi-total').innerText = totalTot;
+      document.getElementById('kpi-attended').innerText = totalAtt;
+      const kpiPct = document.getElementById('kpi-pct');
+      kpiPct.innerText = avgPct + '%';
+      kpiPct.style.color = avgPct >= 75 ? 'var(--nordic-emerald)' : 'var(--nordic-crimson)';
+    }
+
+    function updateRecord(idx, attended) {
+      subjects[idx].total += 1;
+      if (attended) {
+        subjects[idx].attended += 1;
+      }
+      renderStudio();
+    }
+
+    renderStudio();
+  </script>
+</body>
+</html>

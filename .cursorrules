@@ -18,3 +18,6 @@ node scripts/db_analytics.js
 4. Proceed with the actual task requested by the user only after displaying this data.
 
 These instructions apply to all AI sessions, models, and agents loading this workspace.
+
+## CRITICAL: Playwright Test Execution Rule
+Whenever executing Playwright tests in this workspace, ALWAYS run them in **headed mode** (`--headed` / `headless: false`). Never run tests in headless mode because the user wants to see the browser window and all interactions in real-time.

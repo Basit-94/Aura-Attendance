@@ -78,7 +78,7 @@ export async function POST(req: Request) {
 
     const response = NextResponse.json({
       message: 'Account created successfully',
-      student: { email: student.email, uniqueCode: student.uniqueCode },
+      student: { email: student.email, uniqueCode: student.uniqueCode, createdAt: student.createdAt },
     });
 
     // Secure Session Cookie (HttpOnly, Lax SameSite, secure in prod)

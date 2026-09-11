@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AuraAttend — Neo-Brutalist Figma</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #fffbf0;
+      --yellow: #ffe600;
+      --mint: #52ffa8;
+      --pink: #ff85c0;
+      --cyan: #70d6ff;
+      --orange: #ff9770;
+      --dark: #121212;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--dark);
+      font-family: 'Space Grotesk', -apple-system, sans-serif;
+      min-height: 100vh;
+      padding-bottom: 5rem;
+    }
+    header {
+      background: #fff;
+      border-bottom: 3px solid var(--dark);
+      padding: 1.25rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 1.4rem;
+      font-weight: 700;
+    }
+    .brand-box {
+      background: var(--yellow);
+      border: 2.5px solid var(--dark);
+      box-shadow: 3px 3px 0 var(--dark);
+      padding: 0.35rem 0.65rem;
+      border-radius: 6px;
+      font-size: 1.1rem;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 2.5rem auto;
+      padding: 0 1.5rem;
+    }
+    .nb-card {
+      background: #fff;
+      border: 3px solid var(--dark);
+      box-shadow: 6px 6px 0 var(--dark);
+      border-radius: 12px;
+      padding: 1.75rem;
+      margin-bottom: 2rem;
+    }
+    .banner {
+      background: var(--yellow);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .banner h1 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .nb-btn {
+      background: #fff;
+      border: 2.5px solid var(--dark);
+      box-shadow: 4px 4px 0 var(--dark);
+      padding: 0.6rem 1.2rem;
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 0.9rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.1s;
+    }
+    .nb-btn:hover {
+      transform: translate(-2px, -2px);
+      box-shadow: 6px 6px 0 var(--dark);
+    }
+    .nb-btn:active {
+      transform: translate(2px, 2px);
+      box-shadow: 2px 2px 0 var(--dark);
+    }
+    .nb-btn-mint { background: var(--mint); }
+    .nb-btn-pink { background: var(--pink); }
+
+    .grid-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 2rem;
+    }
+    .stat-nb {
+      padding: 1.25rem;
+      border-radius: 10px;
+      border: 2.5px solid var(--dark);
+      box-shadow: 4px 4px 0 var(--dark);
+    }
+    .stat-val {
+      font-size: 2.4rem;
+      font-weight: 700;
+      margin-top: 0.3rem;
+    }
+
+    /* Subject cards */
+    .subject-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.5rem;
+    }
+    .subject-nb {
+      background: #fff;
+      border: 3px solid var(--dark);
+      box-shadow: 5px 5px 0 var(--dark);
+      border-radius: 10px;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+    .nb-badge {
+      display: inline-block;
+      border: 2px solid var(--dark);
+      box-shadow: 2px 2px 0 var(--dark);
+      border-radius: 4px;
+      padding: 0.15rem 0.5rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="brand-box">⚡</div>
+    <span>AuraAttend</span>
+    <span class="nb-badge" style="background:var(--cyan)">CSE 3 VERIFIED</span>
+  </div>
+  <button class="nb-btn nb-btn-mint">+ Add Custom Course</button>
+</header>
+
+<main class="container">
+  <div class="nb-card banner">
+    <div>
+      <span class="nb-badge" style="background:#fff; margin-bottom:0.5rem;">SEMESTER 1 ROSTER</span>
+      <h1>84.6% Overall Attendance</h1>
+      <p style="font-weight:600; margin-top:0.3rem;">Bunk Advisor: You can safely chill & skip next <strong>4 classes</strong>!</p>
+    </div>
+    <div style="display:flex; gap:0.75rem;">
+      <button class="nb-btn">Scan Routine</button>
+      <button class="nb-btn nb-btn-pink">Export Report</button>
+    </div>
+  </div>
+
+  <div class="grid-stats">
+    <div class="stat-nb" style="background:var(--mint);">
+      <div style="font-weight:700; font-size:0.85rem;">ATTENDANCE STATUS</div>
+      <div class="stat-val">SAFE</div>
+      <div style="font-size:0.8rem; font-weight:600; margin-top:0.3rem;">Target: 75.0%</div>
+    </div>
+
+    <div class="stat-nb" style="background:var(--cyan);">
+      <div style="font-weight:700; font-size:0.85rem;">CLASSES LOGGED</div>
+      <div class="stat-val">52 / 61</div>
+      <div style="font-size:0.8rem; font-weight:600; margin-top:0.3rem;">9 absences recorded</div>
+    </div>
+
+    <div class="stat-nb" style="background:var(--pink);">
+      <div style="font-weight:700; font-size:0.85rem;">CLASS ROUTINE</div>
+      <div class="stat-val" style="font-size:2rem;">CSE 3</div>
+      <div style="font-size:0.8rem; font-weight:600; margin-top:0.3rem;">25 weekly periods</div>
+    </div>
+
+    <div class="stat-nb" style="background:var(--orange);">
+      <div style="font-weight:700; font-size:0.85rem;">CURRENT STREAK</div>
+      <div class="stat-val">12 DAYS</div>
+      <div style="font-size:0.8rem; font-weight:600; margin-top:0.3rem;">Zero late slips</div>
+    </div>
+  </div>
+
+  <h2 style="font-size:1.6rem; font-weight:700; margin-bottom:1.25rem;">Active Subject Check-Ins</h2>
+
+  <div class="subject-grid">
+    <div class="subject-nb">
+      <div>
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+          <div>
+            <h3 style="font-size:1.15rem; font-weight:700;">Operating Systems</h3>
+            <span class="nb-badge" style="background:var(--yellow); margin-top:0.3rem;">THEORY</span>
+          </div>
+          <div style="font-size:1.6rem; font-weight:700;">87.5%</div>
+        </div>
+        <div style="font-size:0.85rem; font-weight:600; margin-top:0.75rem; color:#15803d;">
+          ✓ Safe! Can bunk 2 classes
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;">
+        <button class="nb-btn nb-btn-mint">✓ Present</button>
+        <button class="nb-btn nb-btn-pink">✕ Absent</button>
+      </div>
+    </div>
+
+    <div class="subject-nb">
+      <div>
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+          <div>
+            <h3 style="font-size:1.15rem; font-weight:700;">OS Lab</h3>
+            <span class="nb-badge" style="background:var(--cyan); margin-top:0.3rem;">PRACTICAL</span>
+          </div>
+          <div style="font-size:1.6rem; font-weight:700;">100%</div>
+        </div>
+        <div style="font-size:0.85rem; font-weight:600; margin-top:0.75rem; color:#15803d;">
+          ✓ Safe! Can bunk 2 classes
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;">
+        <button class="nb-btn nb-btn-mint">✓ Present</button>
+        <button class="nb-btn nb-btn-pink">✕ Absent</button>
+      </div>
+    </div>
+
+    <div class="subject-nb" style="border-color:#b91c1c;">
+      <div>
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+          <div>
+            <h3 style="font-size:1.15rem; font-weight:700;">Compiler Design</h3>
+            <span class="nb-badge" style="background:var(--yellow); margin-top:0.3rem;">THEORY</span>
+          </div>
+          <div style="font-size:1.6rem; font-weight:700; color:#b91c1c;">71.4%</div>
+        </div>
+        <div style="font-size:0.85rem; font-weight:600; margin-top:0.75rem; color:#b91c1c;">
+          ⚠ WARNING: Attend next 2 classes!
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;">
+        <button class="nb-btn nb-btn-mint">✓ Present</button>
+        <button class="nb-btn nb-btn-pink">✕ Absent</button>
+      </div>
+    </div>
+
+    <div class="subject-nb">
+      <div>
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+          <div>
+            <h3 style="font-size:1.15rem; font-weight:700;">OOP Lab</h3>
+            <span class="nb-badge" style="background:var(--cyan); margin-top:0.3rem;">PRACTICAL</span>
+          </div>
+          <div style="font-size:1.6rem; font-weight:700;">80.0%</div>
+        </div>
+        <div style="font-size:0.85rem; font-weight:600; margin-top:0.75rem; color:#15803d;">
+          ✓ Safe! Can bunk 1 class
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;">
+        <button class="nb-btn nb-btn-mint">✓ Present</button>
+        <button class="nb-btn nb-btn-pink">✕ Absent</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+</body>
+</html>

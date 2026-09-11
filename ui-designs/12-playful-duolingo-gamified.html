@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AuraAttend — Duolingo Playful Gamified</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #ffffff;
+      --card-border: #e5e5e5;
+      --green: #58cc02;
+      --green-dark: #46a302;
+      --blue: #1cb0f6;
+      --blue-dark: #1899d6;
+      --orange: #ff9600;
+      --orange-dark: #cc7900;
+      --red: #ff4b4b;
+      --red-dark: #d32f2f;
+      --text: #3c3c3c;
+      --text-muted: #777777;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #fafafa;
+      color: var(--text);
+      font-family: 'Nunito', sans-serif;
+      min-height: 100vh;
+      padding-bottom: 5rem;
+    }
+    header {
+      background: #fff;
+      border-bottom: 2px solid var(--card-border);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1.4rem;
+      font-weight: 900;
+      color: var(--green);
+    }
+    .gamified-btn {
+      background: var(--green);
+      color: #fff;
+      border: none;
+      border-bottom: 4px solid var(--green-dark);
+      padding: 0.6rem 1.4rem;
+      border-radius: 16px;
+      font-family: inherit;
+      font-weight: 800;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.1s;
+    }
+    .gamified-btn:active {
+      transform: translateY(2px);
+      border-bottom-width: 2px;
+    }
+    .btn-blue { background: var(--blue); border-bottom-color: var(--blue-dark); }
+    .btn-red { background: var(--red); border-bottom-color: var(--red-dark); }
+    .container {
+      max-width: 1000px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+    }
+    .hero-banner {
+      background: #fff;
+      border: 2px solid var(--card-border);
+      border-bottom: 4px solid var(--card-border);
+      border-radius: 20px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .stat-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.35rem 0.85rem;
+      border-radius: 12px;
+      font-weight: 800;
+      font-size: 0.9rem;
+    }
+    .badge-orange { background: #fff4e5; color: var(--orange); }
+    .badge-green { background: #eefce8; color: var(--green); }
+
+    /* Course Cards */
+    .course-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.25rem;
+    }
+    .duo-card {
+      background: #fff;
+      border: 2px solid var(--card-border);
+      border-bottom: 4px solid var(--card-border);
+      border-radius: 20px;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 1.25rem;
+    }
+    .duo-bar {
+      height: 14px;
+      background: #e5e5e5;
+      border-radius: 20px;
+      overflow: hidden;
+      margin: 0.5rem 0;
+    }
+    .duo-bar-fill {
+      height: 100%;
+      border-radius: 20px;
+      background: var(--green);
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <span style="font-size:1.8rem;">🦉</span>
+    <span>AuraAttend</span>
+  </div>
+  <div style="display:flex; gap:1.25rem; align-items:center;">
+    <div class="stat-badge badge-orange">🔥 12 DAY STREAK</div>
+    <div class="stat-badge badge-green">🛡️ 4 BUNK SHIELDS</div>
+  </div>
+</header>
+
+<main class="container">
+  <div class="hero-banner">
+    <div>
+      <span style="color:var(--blue); font-weight:800; font-size:0.85rem; text-transform:uppercase;">CSE 3 OFFICIAL ROSTER</span>
+      <h1 style="font-size:2.4rem; font-weight:900; margin:0.3rem 0;">You're Crushing It! 🎉</h1>
+      <p style="color:var(--text-muted); font-size:1rem; font-weight:700;">84.6% presence puts you in the top 5% of your class.</p>
+    </div>
+    <button class="gamified-btn btn-blue">Quick Mark Today</button>
+  </div>
+
+  <h2 style="font-size:1.5rem; font-weight:900; margin-bottom:1.25rem;">Active Classes</h2>
+
+  <div class="course-grid">
+    <div class="duo-card">
+      <div>
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+          <div>
+            <h3 style="font-size:1.2rem; font-weight:900;">Operating Systems</h3>
+            <span style="font-size:0.85rem; color:var(--text-muted); font-weight:700;">Theory • Mon, Wed, Fri</span>
+          </div>
+          <span style="font-size:1.4rem; font-weight:900; color:var(--green);">87.5%</span>
+        </div>
+        <div class="duo-bar">
+          <div class="duo-bar-fill" style="width: 87.5%;"></div>
+        </div>
+        <div style="font-size:0.85rem; font-weight:800; color:var(--green);">✓ 2 Bunk Shields Ready</div>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.6rem;">
+        <button class="gamified-btn">✓ Attended</button>
+        <button class="gamified-btn btn-red">✕ Missed</button>
+      </div>
+    </div>
+
+    <div class="duo-card">
+      <div>
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+          <div>
+            <h3 style="font-size:1.2rem; font-weight:900;">OS Lab</h3>
+            <span style="font-size:0.85rem; color:var(--text-muted); font-weight:700;">Practical • Tue 09:30-13:45</span>
+          </div>
+          <span style="font-size:1.4rem; font-weight:900; color:var(--green);">100%</span>
+        </div>
+        <div class="duo-bar">
+          <div class="duo-bar-fill" style="width: 100%;"></div>
+        </div>
+        <div style="font-size:0.85rem; font-weight:800; color:var(--green);">✓ Perfect Score!</div>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.6rem;">
+        <button class="gamified-btn">✓ Attended</button>
+        <button class="gamified-btn btn-red">✕ Missed</button>
+      </div>
+    </div>
+
+    <div class="duo-card" style="border-color:#ff4b4b;">
+      <div>
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+          <div>
+            <h3 style="font-size:1.2rem; font-weight:900;">Compiler Design</h3>
+            <span style="font-size:0.85rem; color:var(--text-muted); font-weight:700;">Theory • Tue, Wed, Fri</span>
+          </div>
+          <span style="font-size:1.4rem; font-weight:900; color:var(--red);">71.4%</span>
+        </div>
+        <div class="duo-bar">
+          <div class="duo-bar-fill" style="width: 71.4%; background:var(--red);"></div>
+        </div>
+        <div style="font-size:0.85rem; font-weight:800; color:var(--red);">⚠ Need 2 classes to restore shield!</div>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.6rem;">
+        <button class="gamified-btn">✓ Attended</button>
+        <button class="gamified-btn btn-red">✕ Missed</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+</body>
+</html>

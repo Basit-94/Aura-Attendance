@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AuraAttend — System 7 Retro Mac</title>
+  <style>
+    :root {
+      --mac-bg: #c3c7cb;
+      --mac-window: #ffffff;
+      --mac-border-light: #ffffff;
+      --mac-border-dark: #000000;
+      --mac-border-gray: #868a8e;
+      --mac-highlight: #000080;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #55aaaa;
+      background-image: radial-gradient(#449999 20%, transparent 20%);
+      background-size: 4px 4px;
+      font-family: 'Chicago', 'Courier New', monospace, sans-serif;
+      min-height: 100vh;
+      padding: 1rem;
+    }
+    .menubar {
+      background: #fff;
+      border: 1px solid #000;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+      padding: 0.3rem 1rem;
+      display: flex;
+      gap: 1.5rem;
+      font-size: 0.85rem;
+      font-weight: bold;
+      margin-bottom: 1.5rem;
+    }
+    .window {
+      background: var(--mac-bg);
+      border: 2px solid #000;
+      box-shadow: 3px 3px 0px rgba(0,0,0,0.5);
+      max-width: 900px;
+      margin: 0 auto 1.5rem;
+    }
+    .titlebar {
+      background: repeating-linear-gradient(0deg, #000 0px, #000 1px, #c3c7cb 1px, #c3c7cb 3px);
+      padding: 0.4rem 0.6rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 2px solid #000;
+    }
+    .titlebar-box {
+      width: 14px;
+      height: 14px;
+      background: #fff;
+      border: 1px solid #000;
+      box-shadow: inset 1px 1px 0 #888;
+      cursor: pointer;
+    }
+    .titlebar-text {
+      background: var(--mac-bg);
+      padding: 0 0.6rem;
+      font-weight: bold;
+      font-size: 0.85rem;
+    }
+    .window-content {
+      padding: 1.25rem;
+    }
+    .retro-btn {
+      background: var(--mac-bg);
+      border-top: 2px solid #fff;
+      border-left: 2px solid #fff;
+      border-right: 2px solid #000;
+      border-bottom: 2px solid #000;
+      padding: 0.35rem 0.8rem;
+      font-family: inherit;
+      font-size: 0.8rem;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .retro-btn:active {
+      border-top: 2px solid #000;
+      border-left: 2px solid #000;
+      border-right: 2px solid #fff;
+      border-bottom: 2px solid #fff;
+    }
+    .retro-inset {
+      background: #fff;
+      border-top: 2px solid #000;
+      border-left: 2px solid #000;
+      border-right: 2px solid #fff;
+      border-bottom: 2px solid #fff;
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    .retro-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+    }
+    .retro-table th {
+      border-bottom: 2px solid #000;
+      text-align: left;
+      padding: 0.4rem;
+    }
+    .retro-table td {
+      border-bottom: 1px dotted #888;
+      padding: 0.5rem 0.4rem;
+    }
+  </style>
+</head>
+<body>
+
+<div class="menubar">
+  <span></span>
+  <span>File</span>
+  <span>Edit</span>
+  <span>Routine (CSE 3)</span>
+  <span>Bunk Advisor</span>
+  <span>Help</span>
+</div>
+
+<div class="window">
+  <div class="titlebar">
+    <div class="titlebar-box"></div>
+    <span class="titlebar-text">AuraAttend System v3.0 [CSE 3]</span>
+    <div class="titlebar-box"></div>
+  </div>
+  <div class="window-content">
+    <div class="retro-inset" style="display:flex; justify-content:space-between; align-items:center;">
+      <div>
+        <div style="font-size:1.8rem; font-weight:bold;">84.6% ATTENDANCE</div>
+        <div style="font-size:0.8rem; margin-top:0.2rem;">STATUS: SAFE • CAN SKIP NEXT 4 CLASSES</div>
+      </div>
+      <div style="text-align:right;">
+        <button class="retro-btn">Apply CSE 3 Routine</button>
+      </div>
+    </div>
+
+    <div class="retro-inset">
+      <div style="font-weight:bold; margin-bottom:0.5rem;">ACTIVE SUBJECT LEDGER (SEMESTER 1)</div>
+      <table class="retro-table">
+        <thead>
+          <tr>
+            <th>SUBJECT NAME</th>
+            <th>TYPE</th>
+            <th>RATIO</th>
+            <th>PERCENT</th>
+            <th>BUNK STATUS</th>
+            <th>LOG ATTENDANCE</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Operating Systems</td>
+            <td>Theory</td>
+            <td>14/16</td>
+            <td>87.5%</td>
+            <td>[Safe +2]</td>
+            <td>
+              <button class="retro-btn">[+] Present</button>
+              <button class="retro-btn">[-] Absent</button>
+            </td>
+          </tr>
+          <tr>
+            <td>OS Lab</td>
+            <td>Practical</td>
+            <td>6/6</td>
+            <td>100%</td>
+            <td>[Safe +2]</td>
+            <td>
+              <button class="retro-btn">[+] Present</button>
+              <button class="retro-btn">[-] Absent</button>
+            </td>
+          </tr>
+          <tr>
+            <td>Compiler Design</td>
+            <td>Theory</td>
+            <td>10/14</td>
+            <td style="color:#aa0000; font-weight:bold;">71.4%</td>
+            <td style="color:#aa0000;">[Attend 2!]</td>
+            <td>
+              <button class="retro-btn">[+] Present</button>
+              <button class="retro-btn">[-] Absent</button>
+            </td>
+          </tr>
+          <tr>
+            <td>OOP Lab</td>
+            <td>Practical</td>
+            <td>8/10</td>
+            <td>80.0%</td>
+            <td>[Safe +1]</td>
+            <td>
+              <button class="retro-btn">[+] Present</button>
+              <button class="retro-btn">[-] Absent</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <span style="font-size:0.75rem;">Floppy Disk routine backup ready. 25 periods configured.</span>
+      <button class="retro-btn">Save Timetable</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

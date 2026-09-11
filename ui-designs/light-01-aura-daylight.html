@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AuraAttend — Light UI 01: Aura Daylight Glass</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-main: #f4f6fe;
+      --bg-card: rgba(255, 255, 255, 0.82);
+      --bg-card-hover: rgba(255, 255, 255, 0.95);
+      --border: rgba(99, 102, 241, 0.12);
+      --border-hover: rgba(99, 102, 241, 0.28);
+      --primary: #4f46e5;
+      --primary-glow: rgba(79, 70, 229, 0.1);
+      --secondary: #e11d48;
+      --success: #059669;
+      --success-bg: rgba(5, 150, 105, 0.1);
+      --danger: #dc2626;
+      --danger-bg: rgba(220, 38, 38, 0.1);
+      --warning: #d97706;
+      --warning-bg: rgba(217, 119, 6, 0.1);
+      --text-main: #0f172a;
+      --text-sub: #475569;
+      --text-muted: #64748b;
+      --shadow-sm: 0 4px 12px rgba(99, 102, 241, 0.04);
+      --shadow-md: 0 10px 25px -5px rgba(99, 102, 241, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+      --radius-lg: 20px;
+      --radius-md: 14px;
+      --radius-sm: 10px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: radial-gradient(circle at 50% 0%, #edf2fe 0%, var(--bg-main) 100%);
+      color: var(--text-main);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      min-height: 100vh;
+      padding-bottom: 5rem;
+      background-attachment: fixed;
+    }
+    .header {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      padding: 0.9rem 2rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #4f46e5, #ec4899);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.1rem;
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+    }
+    .brand-text {
+      font-size: 1.2rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+    .header-user {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      font-size: 0.85rem;
+    }
+    .user-pill {
+      background: rgba(79, 70, 229, 0.06);
+      border: 1px solid rgba(79, 70, 229, 0.15);
+      padding: 0.35rem 0.85rem;
+      border-radius: 20px;
+      font-weight: 600;
+      color: var(--primary);
+    }
+    .container {
+      max-width: 1240px;
+      margin: 1.8rem auto;
+      padding: 0 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    .glass-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      box-shadow: var(--shadow-md);
+      transition: all 0.25s ease;
+    }
+    .term-banner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      padding: 1rem 1.5rem;
+    }
+    .btn-pill {
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      background: #ffffff;
+      color: var(--text-main);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.2s;
+    }
+    .btn-pill:hover {
+      background: var(--primary-glow);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+    }
+    .btn-primary:hover {
+      background: #4338ca;
+      color: #fff;
+    }
+    .nav-tabs {
+      display: flex;
+      gap: 0.5rem;
+      padding: 0.4rem;
+      border-radius: var(--radius-md);
+      background: rgba(255, 255, 255, 0.6);
+      border: 1px solid var(--border);
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius-sm);
+      border: none;
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: var(--text-sub);
+      background: transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      transition: all 0.2s;
+    }
+    .tab-btn.active {
+      background: #ffffff;
+      color: var(--primary);
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.1);
+    }
+
+    /* Top Widgets Grid (Format matching current website) */
+    .widgets-grid {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr 1fr;
+      gap: 1.25rem;
+    }
+    @media (max-width: 950px) {
+      .widgets-grid { grid-template-columns: 1fr; }
+    }
+    .widget-total {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .circle-wrap {
+      position: relative;
+      width: 96px;
+      height: 96px;
+      flex-shrink: 0;
+    }
+    .circle-wrap svg {
+      transform: rotate(-90deg);
+      width: 96px;
+      height: 96px;
+    }
+    .circle-bg {
+      fill: none;
+      stroke: #e2e8f0;
+      stroke-width: 8;
+    }
+    .circle-fg {
+      fill: none;
+      stroke: var(--primary);
+      stroke-width: 8;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 0.5s ease;
+    }
+    .circle-val {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 1.25rem;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-main);
+    }
+    .widget-sub {
+      font-size: 0.85rem;
+      color: var(--text-sub);
+      margin-top: 0.25rem;
+    }
+    .advice-box {
+      margin-top: 1rem;
+      padding-top: 0.75rem;
+      border-top: 1px dashed var(--border);
+      display: flex;
+      gap: 1rem;
+      font-size: 0.8rem;
+    }
+    .advice-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+    }
+    .linear-track {
+      height: 8px;
+      background: #e2e8f0;
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 0.75rem 0 0.5rem;
+    }
+    .linear-fill {
+      height: 100%;
+      border-radius: 10px;
+      transition: width 0.4s ease;
+    }
+
+    /* Checklist Widget */
+    .checklist-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    .checklist-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 0.85rem;
+    }
+    .checklist-item {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 0.85rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      box-shadow: var(--shadow-sm);
+    }
+    .thumb-mini {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      object-fit: cover;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    /* Subjects Grid */
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .filter-pills {
+      display: flex;
+      gap: 0.25rem;
+      background: rgba(255, 255, 255, 0.7);
+      border: 1px solid var(--border);
+      padding: 0.25rem;
+      border-radius: var(--radius-sm);
+    }
+    .filter-btn {
+      padding: 0.35rem 0.85rem;
+      font-size: 0.8rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--text-sub);
+      cursor: pointer;
+    }
+    .filter-btn.active {
+      background: var(--primary);
+      color: #ffffff;
+    }
+    .subjects-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 1.25rem;
+    }
+    .subject-card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 1.25rem;
+      transition: all 0.2s;
+    }
+    .subject-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--border-hover);
+    }
+    .card-top {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+    .thumb-subject {
+      width: 64px;
+      height: 64px;
+      border-radius: 14px;
+      object-fit: cover;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      border: 1.5px solid #ffffff;
+      flex-shrink: 0;
+    }
+    .badge-type {
+      font-size: 0.7rem;
+      font-weight: 800;
+      padding: 0.15rem 0.5rem;
+      border-radius: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .badge-lecture {
+      background: rgba(79, 70, 229, 0.1);
+      color: var(--primary);
+    }
+    .badge-lab {
+      background: rgba(225, 29, 72, 0.1);
+      color: var(--secondary);
+    }
+    .card-stats-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 1rem;
+    }
+    .stat-big {
+      font-size: 1.6rem;
+      font-weight: 900;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .bunk-badge {
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 0.35rem 0.75rem;
+      border-radius: 12px;
+    }
+    .bunk-safe {
+      background: var(--success-bg);
+      color: var(--success);
+    }
+    .bunk-warn {
+      background: var(--danger-bg);
+      color: var(--danger);
+    }
+    .check-btn-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0.45rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid #f1f5f9;
+    }
+    .btn-check {
+      padding: 0.55rem 0.4rem;
+      border-radius: 10px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      border: 1px solid var(--border);
+      background: #ffffff;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-check:hover {
+      transform: scale(1.02);
+    }
+    .btn-pres:hover, .btn-pres.active {
+      background: var(--success);
+      color: #ffffff;
+      border-color: var(--success);
+    }
+    .btn-abs:hover, .btn-abs.active {
+      background: var(--danger);
+      color: #ffffff;
+      border-color: var(--danger);
+    }
+    .btn-hol:hover, .btn-hol.active {
+      background: var(--warning);
+      color: #ffffff;
+      border-color: var(--warning);
+    }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <div class="brand">
+      <div class="brand-icon">A</div>
+      <div>
+        <div class="brand-text">AuraAttend</div>
+        <div style="font-size: 0.72rem; color: var(--text-muted); font-weight: 600;">Light UI 01 • Daylight Glass</div>
+      </div>
+    </div>
+    <div class="header-user">
+      <span class="user-pill">CSE 3 Student</span>
+      <span>Target: <strong style="color: var(--primary);">75%</strong></span>
+    </div>
+  </header>
+
+  <div class="container">
+    
+    <!-- Active Term Banner -->
+    <div class="glass-card term-banner">
+      <div>
+        <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Active Semester</span>
+        <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--text-main);">CSE 3 (Odd 2026)</h3>
+      </div>
+      <div style="display: flex; gap: 0.6rem;">
+        <button class="btn-pill">📄 Export PDF Report</button>
+        <button class="btn-pill btn-primary">+ Add Subject</button>
+      </div>
+    </div>
+
+    <!-- Nav Tabs -->
+    <div class="nav-tabs">
+      <button class="tab-btn active">📊 Dashboard</button>
+      <button class="tab-btn">📅 Weekly Schedule</button>
+      <button class="tab-btn">📈 Analytics & Predictors</button>
+      <button class="tab-btn">🗓 Calendar Logger</button>
+    </div>
+
+    <!-- Top Widgets Grid (Matches real website structure: Overall, Lecture, Lab) -->
+    <div class="widgets-grid">
+      <!-- Widget 1: Overall Attendance -->
+      <div class="glass-card">
+        <div class="widget-total">
+          <div>
+            <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Overall Attendance</span>
+            <div style="font-size: 2rem; font-weight: 900; font-family: 'JetBrains Mono', monospace; margin: 0.2rem 0;" id="overall-pct-txt">82.3%</div>
+            <div class="widget-sub"><span id="overall-att-txt">107</span> of <span id="overall-tot-txt">130</span> classes attended</div>
+          </div>
+          <div class="circle-wrap">
+            <svg>
+              <circle cx="48" cy="48" r="40" class="circle-bg" />
+              <circle cx="48" cy="48" r="40" class="circle-fg" id="overall-circle-fg" style="stroke-dasharray: 251; stroke-dashoffset: 44;" />
+            </svg>
+            <div class="circle-val" id="circle-pct-center">82%</div>
+          </div>
+        </div>
+        <div class="advice-box">
+          <div class="advice-item">
+            <span style="font-weight: 700; color: var(--text-muted);">75% Goal:</span>
+            <span style="color: var(--success); font-weight: 700;" id="overall-advice-75">Safe to miss 9 classes</span>
+          </div>
+          <div class="advice-item">
+            <span style="font-weight: 700; color: var(--text-muted);">85% Goal:</span>
+            <span style="color: var(--danger); font-weight: 700;" id="overall-advice-85">Attend +18 classes</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Widget 2: Lecture Aggregate -->
+      <div class="glass-card">
+        <div>
+          <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Lecture Aggregate</span>
+          <div style="font-size: 1.6rem; font-weight: 900; font-family: 'JetBrains Mono', monospace; margin-top: 0.2rem;" id="lec-pct-txt">81.7%</div>
+          <div class="linear-track">
+            <div class="linear-fill" id="lec-fill" style="width: 81.7%; background: linear-gradient(90deg, #4f46e5, #059669);"></div>
+          </div>
+          <div class="widget-sub"><span id="lec-att-txt">85</span> of <span id="lec-tot-txt">104</span> lecture hours attended</div>
+        </div>
+        <div class="advice-box">
+          <div class="advice-item">
+            <span style="font-weight: 700; color: var(--text-muted);">75% Goal:</span>
+            <span style="color: var(--success); font-weight: 700;" id="lec-advice-75">Safe to miss 7 lectures</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Widget 3: Lab Aggregate -->
+      <div class="glass-card">
+        <div>
+          <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Lab Aggregate</span>
+          <div style="font-size: 1.6rem; font-weight: 900; font-family: 'JetBrains Mono', monospace; margin-top: 0.2rem;" id="lab-pct-txt">84.6%</div>
+          <div class="linear-track">
+            <div class="linear-fill" id="lab-fill" style="width: 84.6%; background: var(--secondary);"></div>
+          </div>
+          <div class="widget-sub"><span id="lab-att-txt">22</span> of <span id="lab-tot-txt">26</span> lab sessions attended</div>
+        </div>
+        <div class="advice-box">
+          <div class="advice-item">
+            <span style="font-weight: 700; color: var(--text-muted);">75% Goal:</span>
+            <span style="color: var(--success); font-weight: 700;" id="lab-advice-75">Safe to miss 3 sessions</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Today's Class Checklist Widget -->
+    <div class="glass-card">
+      <div class="checklist-head">
+        <div>
+          <h3 style="font-size: 1.15rem; font-weight: 800;">Today's Class Checklist (Friday)</h3>
+          <p style="font-size: 0.8rem; color: var(--text-sub);">Scheduled routine slots for today with instant check-ins</p>
+        </div>
+        <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+          <button class="btn-pill" style="font-size: 0.78rem; padding: 0.35rem 0.75rem; color: var(--success); border-color: rgba(5,150,105,0.3);" onclick="bulkCheckIn('PRESENT')">✓ All Present</button>
+          <button class="btn-pill" style="font-size: 0.78rem; padding: 0.35rem 0.75rem; color: var(--danger); border-color: rgba(220,38,38,0.3);" onclick="bulkCheckIn('ABSENT')">✗ All Absent</button>
+          <button class="btn-pill" style="font-size: 0.78rem; padding: 0.35rem 0.75rem; color: var(--warning); border-color: rgba(217,119,6,0.3);" onclick="bulkCheckIn('HOLIDAY')">📅 All Holiday</button>
+        </div>
+      </div>
+      <div class="checklist-grid" id="today-checklist-container">
+        <!-- Injected via JS -->
+      </div>
+    </div>
+
+    <!-- Subject Check-Ins Section -->
+    <div>
+      <div class="section-head" style="margin-bottom: 1.25rem;">
+        <h3 style="font-size: 1.4rem; font-weight: 800;">Subject Check-Ins</h3>
+        <div class="filter-pills">
+          <button class="filter-btn active" onclick="setFilter('ALL', this)">All</button>
+          <button class="filter-btn" onclick="setFilter('LECTURE', this)">Lectures</button>
+          <button class="filter-btn" onclick="setFilter('LAB', this)">Labs</button>
+        </div>
+      </div>
+
+      <div class="subjects-grid" id="subjects-card-grid">
+        <!-- Injected via JS -->
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const subjectsData = [
+      { id: 'os', name: 'Operating Systems', code: 'CS501', type: 'LECTURE', attended: 22, total: 26, target: 75, icon: 'icons/computer_os.jpg', todayStatus: null, time: '14:30 - 15:30' },
+      { id: 'compiler', name: 'Compiler Design', code: 'CS502', type: 'LECTURE', attended: 18, total: 24, target: 75, icon: 'icons/compiler.jpg', todayStatus: null, time: '12:45 - 13:45' },
+      { id: 'software', name: 'Software Engineering', code: 'CS503', type: 'LECTURE', attended: 21, total: 24, target: 75, icon: 'icons/software_engg.jpg', todayStatus: null, time: '15:30 - 16:30' },
+      { id: 'mgmt', name: 'Industrial Management', code: 'HU501', type: 'LECTURE', attended: 19, total: 22, target: 75, icon: 'icons/industrial_mgmt.jpg', todayStatus: null, time: '09:30 - 10:30' },
+      { id: 'const', name: 'Constitution of India', code: 'MC501', type: 'LECTURE', attended: 17, total: 22, target: 75, icon: 'icons/constitution.jpg', todayStatus: null, time: '11:45 - 12:45' },
+      { id: 'os_lab', name: 'Operating Systems Lab', code: 'CS591', type: 'LAB', attended: 12, total: 14, target: 75, icon: 'icons/computer_os.jpg', todayStatus: null, time: '09:30 - 13:45 (Tue)' },
+      { id: 'se_lab', name: 'Software Engineering Lab', code: 'CS593', type: 'LAB', attended: 10, total: 12, target: 75, icon: 'icons/software_engg.jpg', todayStatus: null, time: '12:45 - 17:30 (Thu)' }
+    ];
+
+    let currentFilter = 'ALL';
+
+    function setFilter(filter, el) {
+      currentFilter = filter;
+      document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+      el.classList.add('active');
+      render();
+    }
+
+    function calculateAdvice(att, tot, goal) {
+      const g = goal / 100;
+      const currentPct = tot > 0 ? (att / tot) * 100 : 0;
+      if (currentPct >= goal) {
+        const canSkip = Math.floor((att - g * tot) / g);
+        return { status: 'safe', text: `Safe to miss ${canSkip} classes` };
+      } else {
+        const need = Math.ceil((g * tot - att) / (1 - g));
+        return { status: 'warn', text: `Attend +${need} classes` };
+      }
+    }
+
+    function render() {
+      // 1. Recalculate aggregates
+      let totAtt = 0, totClasses = 0;
+      let lecAtt = 0, lecTot = 0;
+      let labAtt = 0, labTot = 0;
+
+      subjectsData.forEach(s => {
+        totAtt += s.attended;
+        totClasses += s.total;
+        if (s.type === 'LECTURE') {
+          lecAtt += s.attended;
+          lecTot += s.total;
+        } else {
+          labAtt += s.attended;
+          labTot += s.total;
+        }
+      });
+
+      const overallPct = totClasses > 0 ? ((totAtt / totClasses) * 100).toFixed(1) : 0;
+      const lecPct = lecTot > 0 ? ((lecAtt / lecTot) * 100).toFixed(1) : 0;
+      const labPct = labTot > 0 ? ((labAtt / labTot) * 100).toFixed(1) : 0;
+
+      // Update widgets
+      document.getElementById('overall-pct-txt').innerText = overallPct + '%';
+      document.getElementById('overall-att-txt').innerText = totAtt;
+      document.getElementById('overall-tot-txt').innerText = totClasses;
+      document.getElementById('circle-pct-center').innerText = Math.round(overallPct) + '%';
+      const offset = 251 - (251 * Math.min(overallPct, 100)) / 100;
+      document.getElementById('overall-circle-fg').style.strokeDashoffset = offset;
+      document.getElementById('overall-advice-75').innerText = calculateAdvice(totAtt, totClasses, 75).text;
+      document.getElementById('overall-advice-85').innerText = calculateAdvice(totAtt, totClasses, 85).text;
+
+      document.getElementById('lec-pct-txt').innerText = lecPct + '%';
+      document.getElementById('lec-att-txt').innerText = lecAtt;
+      document.getElementById('lec-tot-txt').innerText = lecTot;
+      document.getElementById('lec-fill').style.width = Math.min(lecPct, 100) + '%';
+      document.getElementById('lec-advice-75').innerText = calculateAdvice(lecAtt, lecTot, 75).text;
+
+      document.getElementById('lab-pct-txt').innerText = labPct + '%';
+      document.getElementById('lab-att-txt').innerText = labAtt;
+      document.getElementById('lab-tot-txt').innerText = labTot;
+      document.getElementById('lab-fill').style.width = Math.min(labPct, 100) + '%';
+      document.getElementById('lab-advice-75').innerText = calculateAdvice(labAtt, labTot, 75).text;
+
+      // 2. Render Today Checklist (5 classes today)
+      const todayList = subjectsData.slice(0, 5);
+      const checklistContainer = document.getElementById('today-checklist-container');
+      checklistContainer.innerHTML = '';
+      todayList.forEach((s, idx) => {
+        const item = document.createElement('div');
+        item.className = 'checklist-item';
+        item.innerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 0.6rem;">
+              <img src="${s.icon}" alt="${s.name}" class="thumb-mini">
+              <div>
+                <div style="font-weight: 700; font-size: 0.88rem;">${s.name}</div>
+                <div style="font-size: 0.75rem; color: var(--text-muted);">${s.time}</div>
+              </div>
+            </div>
+            <span class="badge-type ${s.type === 'LECTURE' ? 'badge-lecture' : 'badge-lab'}">${s.type}</span>
+          </div>
+          <div class="check-btn-group" style="padding-top: 0.4rem; border-top: none;">
+            <button class="btn-check btn-pres ${s.todayStatus === 'PRESENT' ? 'active' : ''}" onclick="toggleToday(${idx}, 'PRESENT')">Present</button>
+            <button class="btn-check btn-abs ${s.todayStatus === 'ABSENT' ? 'active' : ''}" onclick="toggleToday(${idx}, 'ABSENT')">Absent</button>
+            <button class="btn-check btn-hol ${s.todayStatus === 'HOLIDAY' ? 'active' : ''}" onclick="toggleToday(${idx}, 'HOLIDAY')">Holiday</button>
+          </div>
+        `;
+        checklistContainer.appendChild(item);
+      });
+
+      // 3. Render Subjects Grid
+      const grid = document.getElementById('subjects-card-grid');
+      grid.innerHTML = '';
+      const filtered = subjectsData.filter(s => currentFilter === 'ALL' || s.type === currentFilter);
+
+      filtered.forEach((s) => {
+        const origIdx = subjectsData.findIndex(item => item.id === s.id);
+        const pct = s.total > 0 ? ((s.attended / s.total) * 100).toFixed(1) : 0;
+        const isSafe = pct >= s.target;
+        const advice = calculateAdvice(s.attended, s.total, s.target);
+
+        const card = document.createElement('div');
+        card.className = 'subject-card';
+        card.innerHTML = `
+          <div>
+            <div class="card-top">
+              <img src="${s.icon}" alt="${s.name}" class="thumb-subject">
+              <div style="flex: 1; min-width: 0;">
+                <div style="display: flex; gap: 0.4rem; align-items: center; margin-bottom: 0.25rem;">
+                  <span class="badge-type ${s.type === 'LECTURE' ? 'badge-lecture' : 'badge-lab'}">${s.type}</span>
+                  <span style="font-size: 0.72rem; font-weight: 700; color: var(--text-muted); font-family: 'JetBrains Mono', monospace;">${s.code}</span>
+                </div>
+                <div style="font-weight: 800; font-size: 1.1rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${s.name}">${s.name}</div>
+                <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.15rem;">Target Goal: ${s.target}%</div>
+              </div>
+            </div>
+
+            <div class="card-stats-row">
+              <div>
+                <div class="stat-big" style="color: ${isSafe ? 'var(--success)' : 'var(--danger)'};">${pct}%</div>
+                <div style="font-size: 0.8rem; color: var(--text-sub);">${s.attended} / ${s.total} logged classes</div>
+              </div>
+              <div class="bunk-badge ${isSafe ? 'bunk-safe' : 'bunk-warn'}">
+                ${advice.text}
+              </div>
+            </div>
+
+            <div class="linear-track" style="margin-top: 0.75rem;">
+              <div class="linear-fill" style="width: ${Math.min(pct, 100)}%; background: ${isSafe ? 'var(--success)' : 'var(--danger)'};"></div>
+            </div>
+
+            <div style="margin-top: 0.5rem; font-size: 0.76rem; color: var(--text-muted); display: flex; justify-content: space-between;">
+              <span>75% Goal: ${calculateAdvice(s.attended, s.total, 75).text}</span>
+              <span>85% Goal: ${calculateAdvice(s.attended, s.total, 85).text}</span>
+            </div>
+          </div>
+
+          <div>
+            <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.35rem;">Log attendance today:</div>
+            <div class="check-btn-group">
+              <button class="btn-check btn-pres ${s.todayStatus === 'PRESENT' ? 'active' : ''}" onclick="toggleToday(${origIdx}, 'PRESENT')">Present</button>
+              <button class="btn-check btn-abs ${s.todayStatus === 'ABSENT' ? 'active' : ''}" onclick="toggleToday(${origIdx}, 'ABSENT')">Absent</button>
+              <button class="btn-check btn-hol ${s.todayStatus === 'HOLIDAY' ? 'active' : ''}" onclick="toggleToday(${origIdx}, 'HOLIDAY')">Holiday</button>
+            </div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function toggleToday(idx, status) {
+      const s = subjectsData[idx];
+      if (s.todayStatus === status) {
+        // Untoggle
+        if (s.todayStatus === 'PRESENT') { s.attended -= 1; s.total -= 1; }
+        else if (s.todayStatus === 'ABSENT') { s.total -= 1; }
+        s.todayStatus = null;
+      } else {
+        // Remove previous if any
+        if (s.todayStatus === 'PRESENT') { s.attended -= 1; s.total -= 1; }
+        else if (s.todayStatus === 'ABSENT') { s.total -= 1; }
+
+        s.todayStatus = status;
+        if (status === 'PRESENT') { s.attended += 1; s.total += 1; }
+        else if (status === 'ABSENT') { s.total += 1; }
+        // Holiday doesn't alter attendance/total count
+      }
+      render();
+    }
+
+    function bulkCheckIn(status) {
+      for (let i = 0; i < 5; i++) {
+        const s = subjectsData[i];
+        if (s.todayStatus === 'PRESENT') { s.attended -= 1; s.total -= 1; }
+        else if (s.todayStatus === 'ABSENT') { s.total -= 1; }
+
+        s.todayStatus = status;
+        if (status === 'PRESENT') { s.attended += 1; s.total += 1; }
+        else if (status === 'ABSENT') { s.total += 1; }
+      }
+      render();
+    }
+
+    render();
+  </script>
+</body>
+</html>

@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AuraAttend — Estimator 06: Prism Iridescent Glass</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800;900&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card-bg: rgba(255, 255, 255, 0.85);
+      --card-border: rgba(255, 255, 255, 0.95);
+      --prism-grad: linear-gradient(135deg, rgba(236, 72, 153, 0.35), rgba(139, 92, 246, 0.35), rgba(6, 182, 212, 0.35));
+      --primary: #7c3aed;
+      --primary-soft: rgba(124, 58, 237, 0.1);
+      --green: #059669;
+      --red: #e11d48;
+      --amber: #d97706;
+      --text-main: #1e1b4b;
+      --text-sub: #475569;
+      --text-muted: #64748b;
+      --shadow-prism: 0 16px 36px -8px rgba(124, 58, 237, 0.12), 0 2px 6px rgba(0, 0, 0, 0.02);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text-main);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      min-height: 100vh;
+      padding-bottom: 5rem;
+      background-image: 
+        radial-gradient(circle at 10% 20%, rgba(236, 72, 153, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 90% 10%, rgba(139, 92, 246, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 50% 90%, rgba(6, 182, 212, 0.08) 0%, transparent 40%);
+      background-attachment: fixed;
+    }
+    header {
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.9);
+      padding: 0.9rem 2.2rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .brand-orb {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #ec4899, #8b5cf6, #06b6d4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 900;
+      font-size: 1.15rem;
+      box-shadow: 0 4px 14px rgba(139, 92, 246, 0.35);
+    }
+    .container {
+      max-width: 1220px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    .prism-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border: 1.5px solid rgba(255, 255, 255, 0.9);
+      outline: 1px solid rgba(139, 92, 246, 0.15);
+      border-radius: 22px;
+      padding: 1.6rem;
+      box-shadow: var(--shadow-prism);
+      transition: all 0.25s ease;
+    }
+    .term-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      padding: 1.2rem 1.6rem;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.9));
+    }
+    .btn-prism {
+      padding: 0.55rem 1.1rem;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      border: 1px solid rgba(255, 255, 255, 0.9);
+      background: #ffffff;
+      color: var(--text-main);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.2s;
+    }
+    .btn-prism:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .btn-prism-primary {
+      background: linear-gradient(135deg, #8b5cf6, #ec4899);
+      color: #ffffff;
+      border: none;
+      box-shadow: 0 4px 14px rgba(139, 92, 246, 0.3);
+    }
+    .btn-prism-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(139, 92, 246, 0.4);
+    }
+    .tabs-bar {
+      display: flex;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.65);
+      backdrop-filter: blur(15px);
+      border: 1px solid var(--card-border);
+      padding: 4px;
+      border-radius: 14px;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 0.7rem 1rem;
+      border-radius: 10px;
+      border: none;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text-sub);
+      background: transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      transition: all 0.2s;
+    }
+    .tab-btn.active {
+      background: #ffffff;
+      color: var(--primary);
+      box-shadow: 0 4px 12px rgba(124, 58, 237, 0.12);
+    }
+
+    /* Top 3 Widgets Grid */
+    .widgets-grid {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr 1fr;
+      gap: 1.25rem;
+    }
+    @media (max-width: 950px) {
+      .widgets-grid { grid-template-columns: 1fr; }
+    }
+    .circle-wrap {
+      position: relative;
+      width: 92px;
+      height: 92px;
+      flex-shrink: 0;
+    }
+    .circle-wrap svg {
+      transform: rotate(-90deg);
+      width: 92px;
+      height: 92px;
+    }
+    .circle-bg {
+      fill: none;
+      stroke: rgba(139, 92, 246, 0.1);
+      stroke-width: 8;
+    }
+    .circle-fg {
+      fill: none;
+      stroke: url(#prismGrad);
+      stroke-width: 8;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 0.4s ease;
+    }
+    .circle-val {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+    .prism-line {
+      height: 8px;
+      background: rgba(0, 0, 0, 0.05);
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 0.75rem 0 0.4rem;
+    }
+    .prism-fill {
+      height: 100%;
+      border-radius: 10px;
+      transition: width 0.35s ease;
+    }
+
+    /* Checklist */
+    .thumb-prism {
+      width: 64px;
+      height: 64px;
+      border-radius: 16px;
+      object-fit: cover;
+      box-shadow: 0 6px 16px rgba(139, 92, 246, 0.15);
+      border: 2px solid #ffffff;
+      flex-shrink: 0;
+      background: #f1f5f9;
+      transition: transform 0.2s;
+    }
+    .thumb-prism:hover {
+      transform: scale(1.05);
+    }
+    .thumb-mini {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      object-fit: cover;
+      border: 1.5px solid #ffffff;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      background: #f1f5f9;
+    }
+    .check-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 0.85rem;
+      margin-top: 1rem;
+    }
+    .check-card {
+      background: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.95);
+      outline: 1px solid rgba(0, 0, 0, 0.05);
+      border-radius: 16px;
+      padding: 0.85rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+    }
+
+    /* Subject Grid */
+    .subj-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 1.25rem;
+    }
+    .subj-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border: 1.5px solid rgba(255, 255, 255, 0.9);
+      outline: 1px solid rgba(139, 92, 246, 0.12);
+      border-radius: 22px;
+      padding: 1.5rem;
+      box-shadow: var(--shadow-prism);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 1.25rem;
+      transition: all 0.25s ease;
+    }
+    .subj-card:hover {
+      transform: translateY(-3px);
+      outline-color: rgba(139, 92, 246, 0.35);
+      box-shadow: 0 20px 40px -10px rgba(124, 58, 237, 0.18);
+    }
+    .prism-badge {
+      font-size: 0.72rem;
+      font-weight: 800;
+      padding: 0.2rem 0.6rem;
+      border-radius: 8px;
+      letter-spacing: 0.03em;
+    }
+    .badge-lec {
+      background: rgba(139, 92, 246, 0.12);
+      color: #7c3aed;
+    }
+    .badge-lab {
+      background: rgba(236, 72, 153, 0.12);
+      color: #db2777;
+    }
+    .actions-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0.45rem;
+      padding-top: 0.85rem;
+      border-top: 1px solid rgba(0, 0, 0, 0.04);
+    }
+    .act-btn {
+      padding: 0.55rem 0.4rem;
+      border-radius: 10px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      background: #ffffff;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .act-btn:hover {
+      transform: scale(1.02);
+    }
+    .act-p.active {
+      background: var(--green);
+      color: #ffffff;
+      border-color: var(--green);
+    }
+    .act-a.active {
+      background: var(--red);
+      color: #ffffff;
+      border-color: var(--red);
+    }
+    .act-h.active {
+      background: var(--amber);
+      color: #ffffff;
+      border-color: var(--amber);
+    }
+
+    /* Modal */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.4);
+      backdrop-filter: blur(10px);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-box {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(25px);
+      border: 2px solid rgba(255, 255, 255, 1);
+      border-radius: 24px;
+      padding: 2rem;
+      max-width: 480px;
+      width: 90%;
+      box-shadow: 0 25px 50px -12px rgba(124, 58, 237, 0.25);
+    }
+    .input-field {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      margin-top: 0.4rem;
+      outline: none;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <div class="brand-orb">✦</div>
+      <div>
+        <div style="font-size: 1.15rem; font-weight: 800; letter-spacing: -0.02em;">AuraAttend</div>
+        <div style="font-size: 0.72rem; color: var(--text-muted); font-weight: 600;">Estimator 06 • Prism Iridescent Glass</div>
+      </div>
+    </div>
+    <div style="display: flex; gap: 1rem; align-items: center; font-size: 0.85rem;">
+      <span style="background: rgba(124, 58, 237, 0.08); color: var(--primary); padding: 0.35rem 0.85rem; border-radius: 20px; font-weight: 700;">CSE 3 Academic</span>
+      <span>Benchmark: <strong style="color: var(--primary);">75.0%</strong></span>
+    </div>
+  </header>
+
+  <div class="container">
+    
+    <!-- Active Term Bar -->
+    <div class="prism-card term-bar">
+      <div>
+        <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Current Active Mission</div>
+        <div style="font-size: 1.35rem; font-weight: 900; color: var(--text-main);">CSE 3 (Odd Semester 2026)</div>
+      </div>
+      <div style="display: flex; gap: 0.6rem;">
+        <button class="btn-prism" onclick="alert('Exporting PDF Ledger...')">📄 Export PDF</button>
+        <button class="btn-prism btn-prism-primary" onclick="openAddSubjectModal()">+ Add Any Subject (Real-Time AI Icon)</button>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="tabs-bar">
+      <button class="tab-btn active">📊 Dashboard</button>
+      <button class="tab-btn">📅 Weekly Schedule</button>
+      <button class="tab-btn">📈 Analytics & Predictors</button>
+      <button class="tab-btn">🗓 Calendar Logger</button>
+    </div>
+
+    <!-- Top 3 Widgets Grid -->
+    <div class="widgets-grid">
+      <!-- Widget 1: Overall -->
+      <div class="prism-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <div style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted);">Overall Attendance</div>
+            <div style="font-size: 2rem; font-weight: 900; font-family: 'JetBrains Mono', monospace; margin: 0.2rem 0;" id="pr-overall-pct">82.3%</div>
+            <div style="font-size: 0.82rem; color: var(--text-sub);"><span id="pr-overall-att">107</span> of <span id="pr-overall-tot">130</span> classes attended</div>
+          </div>
+          <div class="circle-wrap">
+            <svg>
+              <defs>
+                <linearGradient id="prismGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#ec4899" />
+                  <stop offset="50%" stop-color="#8b5cf6" />
+                  <stop offset="100%" stop-color="#06b6d4" />
+                </linearGradient>
+              </defs>
+              <circle cx="46" cy="46" r="38" class="circle-bg" />
+              <circle cx="46" cy="46" r="38" class="circle-fg" id="pr-circle-fg" style="stroke-dasharray: 238; stroke-dashoffset: 42;" />
+            </svg>
+            <div class="circle-val" id="pr-circle-txt">82%</div>
+          </div>
+        </div>
+        <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid rgba(0, 0, 0, 0.05); display: flex; gap: 1rem; font-size: 0.8rem;">
+          <div>
+            <span style="color: var(--text-muted); font-weight: 700;">75% Goal:</span>
+            <span style="color: var(--green); font-weight: 800; margin-left: 0.25rem;" id="pr-adv-75">Safe to miss 9 classes</span>
+          </div>
+          <div>
+            <span style="color: var(--text-muted); font-weight: 700;">85% Goal:</span>
+            <span style="color: var(--red); font-weight: 800; margin-left: 0.25rem;" id="pr-adv-85">Attend +18 classes</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Widget 2: Lecture Aggregate -->
+      <div class="prism-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+        <div>
+          <div style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted);">Lecture Aggregate</div>
+          <div style="font-size: 1.6rem; font-weight: 900; font-family: 'JetBrains Mono', monospace; margin-top: 0.2rem;" id="pr-lec-pct">81.7%</div>
+          <div class="prism-line">
+            <div class="prism-fill" id="pr-lec-fill" style="width: 81.7%; background: linear-gradient(90deg, #8b5cf6, #06b6d4);"></div>
+          </div>
+          <div style="font-size: 0.82rem; color: var(--text-sub);"><span id="pr-lec-att">85</span> of <span id="pr-lec-tot">104</span> lectures attended</div>
+        </div>
+        <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid rgba(0, 0, 0, 0.05); font-size: 0.8rem;">
+          <span style="color: var(--text-muted); font-weight: 700;">75% Goal:</span>
+          <span style="color: var(--green); font-weight: 800; margin-left: 0.25rem;" id="pr-lec-adv-75">Safe to miss 7 lectures</span>
+        </div>
+      </div>
+
+      <!-- Widget 3: Lab Aggregate -->
+      <div class="prism-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+        <div>
+          <div style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted);">Lab Aggregate</div>
+          <div style="font-size: 1.6rem; font-weight: 900; font-family: 'JetBrains Mono', monospace; margin-top: 0.2rem;" id="pr-lab-pct">84.6%</div>
+          <div class="prism-line">
+            <div class="prism-fill" id="pr-lab-fill" style="width: 84.6%; background: linear-gradient(90deg, #ec4899, #8b5cf6);"></div>
+          </div>
+          <div style="font-size: 0.82rem; color: var(--text-sub);"><span id="pr-lab-att">22</span> of <span id="pr-lab-tot">26</span> labs attended</div>
+        </div>
+        <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid rgba(0, 0, 0, 0.05); font-size: 0.8rem;">
+          <span style="color: var(--text-muted); font-weight: 700;">75% Goal:</span>
+          <span style="color: var(--green); font-weight: 800; margin-left: 0.25rem;" id="pr-lab-adv-75">Safe to miss 3 sessions</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Today's Class Checklist -->
+    <div class="prism-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+        <div>
+          <div style="font-size: 1.15rem; font-weight: 800;">Today's Class Checklist (Friday)</div>
+          <div style="font-size: 0.8rem; color: var(--text-sub);">Scheduled routine slots with real-time AI icons & check-in</div>
+        </div>
+        <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+          <button class="btn-prism" style="color: var(--green);" onclick="bulkCheckIn('PRESENT')">✓ All Present</button>
+          <button class="btn-prism" style="color: var(--red);" onclick="bulkCheckIn('ABSENT')">✗ All Absent</button>
+          <button class="btn-prism" style="color: var(--amber);" onclick="bulkCheckIn('HOLIDAY')">📅 All Holiday</button>
+        </div>
+      </div>
+      <div class="check-grid" id="pr-today-grid">
+        <!-- Injected via JS -->
+      </div>
+    </div>
+
+    <!-- Subject Check-Ins Section -->
+    <div>
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;">
+        <h3 style="font-size: 1.4rem; font-weight: 900;">Subject Check-Ins</h3>
+        <div class="tabs-bar" style="width: 250px; padding: 2px;">
+          <button class="tab-btn active" onclick="setPrismFilter('ALL', this)">All</button>
+          <button class="tab-btn" onclick="setPrismFilter('LECTURE', this)">Lectures</button>
+          <button class="tab-btn" onclick="setPrismFilter('LAB', this)">Labs</button>
+        </div>
+      </div>
+
+      <div class="subj-grid" id="pr-subj-grid">
+        <!-- Injected via JS -->
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Modal for Dynamic Subject Addition -->
+  <div class="modal-backdrop" id="add-modal">
+    <div class="modal-box">
+      <h3 style="font-size: 1.3rem; font-weight: 900; margin-bottom: 0.5rem;">Add Any Subject</h3>
+      <p style="font-size: 0.85rem; color: var(--text-sub); margin-bottom: 1.25rem;">
+        Type any subject name (e.g. <em>"History"</em>, <em>"Astrophysics"</em>). Our real-time AI engine will dynamically parse and generate the corresponding 3D physical icon!
+      </p>
+      
+      <div style="display: flex; flex-direction: column; gap: 0.85rem;">
+        <div>
+          <label style="font-size: 0.8rem; font-weight: 700;">Subject Name</label>
+          <input type="text" id="new-sub-name" class="input-field" placeholder="e.g. European World History" required>
+        </div>
+        <div>
+          <label style="font-size: 0.8rem; font-weight: 700;">Course Code</label>
+          <input type="text" id="new-sub-code" class="input-field" placeholder="e.g. HS501" value="HS501">
+        </div>
+        <div>
+          <label style="font-size: 0.8rem; font-weight: 700;">Type</label>
+          <select id="new-sub-type" class="input-field">
+            <option value="LECTURE">LECTURE</option>
+            <option value="LAB">LAB</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 0.6rem; justify-content: flex-end; margin-top: 1.5rem;">
+        <button class="btn-prism" onclick="closeAddSubjectModal()">Cancel</button>
+        <button class="btn-prism btn-prism-primary" onclick="handleCreateDynamicSubject()">⚡ Generate Real-Time AI Icon</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function getDynamicSubjectIcon(subjectName) {
+      const name = subjectName.trim().toLowerCase();
+      let keyword = subjectName;
+
+      if (name.includes('history')) keyword = 'ancient history colosseum roman pillar parchment scroll';
+      else if (name.includes('operat') || name.includes('os')) keyword = 'workstation computer glowing cpu microchip architecture';
+      else if (name.includes('compil')) keyword = 'compiler code binary parse tree terminal screen';
+      else if (name.includes('softw') || name.includes('se')) keyword = 'software engineering 3d code blocks robotic testing arm';
+      else if (name.includes('manage') || name.includes('mgmt')) keyword = 'industrial gears analytics growth graph blueprint';
+      else if (name.includes('constitut') || name.includes('law')) keyword = 'scales of justice leather law book emblem';
+      else if (name.includes('math') || name.includes('calc')) keyword = 'mathematics calculus geometry formula compass';
+      else if (name.includes('physic')) keyword = 'physics quantum atom magnetic particle accelerator';
+      else if (name.includes('chem')) keyword = 'chemistry molecule laboratory glass flask';
+      else if (name.includes('bio')) keyword = 'biology dna double helix microscope organism';
+
+      const prompt = `3d physical iridescent glassy icon of ${keyword}, isolated studio light, pearlescent render, app badge`;
+      return `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=256&height=256&nologo=true`;
+    }
+
+    const subjects = [
+      { id: 'os', name: 'Operating Systems', code: 'CS501', type: 'LECTURE', attended: 22, total: 26, target: 75, icon: getDynamicSubjectIcon('Operating Systems'), todayStatus: null, time: '14:30 - 15:30' },
+      { id: 'compiler', name: 'Compiler Design', code: 'CS502', type: 'LECTURE', attended: 18, total: 24, target: 75, icon: getDynamicSubjectIcon('Compiler Design'), todayStatus: null, time: '12:45 - 13:45' },
+      { id: 'software', name: 'Software Engineering', code: 'CS503', type: 'LECTURE', attended: 21, total: 24, target: 75, icon: getDynamicSubjectIcon('Software Engineering'), todayStatus: null, time: '15:30 - 16:30' },
+      { id: 'mgmt', name: 'Industrial Management', code: 'HU501', type: 'LECTURE', attended: 19, total: 22, target: 75, icon: getDynamicSubjectIcon('Industrial Management'), todayStatus: null, time: '09:30 - 10:30' },
+      { id: 'const', name: 'Constitution of India', code: 'MC501', type: 'LECTURE', attended: 17, total: 22, target: 75, icon: getDynamicSubjectIcon('Constitution of India'), todayStatus: null, time: '11:45 - 12:45' },
+      { id: 'os_lab', name: 'Operating Systems Lab', code: 'CS591', type: 'LAB', attended: 12, total: 14, target: 75, icon: getDynamicSubjectIcon('Operating Systems'), todayStatus: null, time: '09:30 - 13:45 (Tue)' },
+      { id: 'se_lab', name: 'Software Engineering Lab', code: 'CS593', type: 'LAB', attended: 10, total: 12, target: 75, icon: getDynamicSubjectIcon('Software Engineering'), todayStatus: null, time: '12:45 - 17:30 (Thu)' }
+    ];
+
+    let filter = 'ALL';
+
+    function setPrismFilter(f, el) {
+      filter = f;
+      el.parentElement.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      el.classList.add('active');
+      renderPrism();
+    }
+
+    function calcAdvice(att, tot, goal) {
+      const g = goal / 100;
+      const pct = tot > 0 ? (att / tot) * 100 : 0;
+      if (pct >= goal) {
+        const canSkip = Math.floor((att - g * tot) / g);
+        return { isSafe: true, text: `Safe to miss ${canSkip} classes` };
+      } else {
+        const need = Math.ceil((g * tot - att) / (1 - g));
+        return { isSafe: false, text: `Attend +${need} classes` };
+      }
+    }
+
+    function renderPrism() {
+      let totAtt = 0, totClasses = 0;
+      let lecAtt = 0, lecTot = 0;
+      let labAtt = 0, labTot = 0;
+
+      subjects.forEach(s => {
+        totAtt += s.attended;
+        totClasses += s.total;
+        if (s.type === 'LECTURE') {
+          lecAtt += s.attended;
+          lecTot += s.total;
+        } else {
+          labAtt += s.attended;
+          labTot += s.total;
+        }
+      });
+
+      const ovPct = totClasses > 0 ? ((totAtt / totClasses) * 100).toFixed(1) : 0;
+      const lPct = lecTot > 0 ? ((lecAtt / lecTot) * 100).toFixed(1) : 0;
+      const lbPct = labTot > 0 ? ((labAtt / labTot) * 100).toFixed(1) : 0;
+
+      document.getElementById('pr-overall-pct').innerText = ovPct + '%';
+      document.getElementById('pr-overall-att').innerText = totAtt;
+      document.getElementById('pr-overall-tot').innerText = totClasses;
+      document.getElementById('pr-circle-txt').innerText = Math.round(ovPct) + '%';
+      const offset = 238 - (238 * Math.min(ovPct, 100)) / 100;
+      document.getElementById('pr-circle-fg').style.strokeDashoffset = offset;
+      document.getElementById('pr-adv-75').innerText = calcAdvice(totAtt, totClasses, 75).text;
+      document.getElementById('pr-adv-85').innerText = calcAdvice(totAtt, totClasses, 85).text;
+
+      document.getElementById('pr-lec-pct').innerText = lPct + '%';
+      document.getElementById('pr-lec-att').innerText = lecAtt;
+      document.getElementById('pr-lec-tot').innerText = lecTot;
+      document.getElementById('pr-lec-fill').style.width = Math.min(lPct, 100) + '%';
+      document.getElementById('pr-lec-adv-75').innerText = calcAdvice(lecAtt, lecTot, 75).text;
+
+      document.getElementById('pr-lab-pct').innerText = lbPct + '%';
+      document.getElementById('pr-lab-att').innerText = labAtt;
+      document.getElementById('pr-lab-tot').innerText = labTot;
+      document.getElementById('pr-lab-fill').style.width = Math.min(lbPct, 100) + '%';
+      document.getElementById('pr-lab-adv-75').innerText = calcAdvice(labAtt, labTot, 75).text;
+
+      // Checklist
+      const checkGrid = document.getElementById('pr-today-grid');
+      checkGrid.innerHTML = '';
+      subjects.slice(0, 5).forEach((s, idx) => {
+        const item = document.createElement('div');
+        item.className = 'check-card';
+        item.innerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 0.6rem;">
+              <img src="${s.icon}" alt="${s.name}" class="thumb-mini" onerror="this.src='icons/computer_os.jpg'">
+              <div>
+                <div style="font-weight: 800; font-size: 0.88rem;">${s.name}</div>
+                <div style="font-size: 0.75rem; color: var(--text-muted);">${s.time}</div>
+              </div>
+            </div>
+            <span class="prism-badge ${s.type === 'LECTURE' ? 'badge-lec' : 'badge-lab'}">${s.type}</span>
+          </div>
+          <div class="actions-grid" style="padding-top: 0.4rem; border-top: none;">
+            <button class="act-btn act-p ${s.todayStatus === 'PRESENT' ? 'active' : ''}" onclick="toggleToday(${idx}, 'PRESENT')">Present</button>
+            <button class="act-btn act-a ${s.todayStatus === 'ABSENT' ? 'active' : ''}" onclick="toggleToday(${idx}, 'ABSENT')">Absent</button>
+            <button class="act-btn act-h ${s.todayStatus === 'HOLIDAY' ? 'active' : ''}" onclick="toggleToday(${idx}, 'HOLIDAY')">Holiday</button>
+          </div>
+        `;
+        checkGrid.appendChild(item);
+      });
+
+      // Grid
+      const grid = document.getElementById('pr-subj-grid');
+      grid.innerHTML = '';
+      const filtered = subjects.filter(s => filter === 'ALL' || s.type === filter);
+
+      filtered.forEach(s => {
+        const origIdx = subjects.findIndex(item => item.id === s.id);
+        const pct = s.total > 0 ? ((s.attended / s.total) * 100).toFixed(1) : 0;
+        const isSafe = pct >= s.target;
+        const adv = calcAdvice(s.attended, s.total, s.target);
+
+        const card = document.createElement('div');
+        card.className = 'subj-card';
+        card.innerHTML = `
+          <div>
+            <div style="display: flex; gap: 1rem; align-items: center;">
+              <img src="${s.icon}" alt="${s.name}" class="thumb-prism" onerror="this.src='icons/computer_os.jpg'">
+              <div style="flex: 1; min-width: 0;">
+                <div style="display: flex; gap: 0.4rem; align-items: center; margin-bottom: 0.25rem;">
+                  <span class="prism-badge ${s.type === 'LECTURE' ? 'badge-lec' : 'badge-lab'}">${s.type}</span>
+                  <span style="font-size: 0.72rem; font-weight: 800; color: var(--text-muted); font-family: 'JetBrains Mono', monospace;">${s.code}</span>
+                </div>
+                <div style="font-weight: 800; font-size: 1.15rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${s.name}">${s.name}</div>
+                <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.15rem;">Goal: ${s.target}%</div>
+              </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.1rem;">
+              <div>
+                <div style="font-size: 1.65rem; font-weight: 900; font-family: 'JetBrains Mono', monospace; color: ${isSafe ? 'var(--green)' : 'var(--red)'}">${pct}%</div>
+                <div style="font-size: 0.8rem; color: var(--text-sub);">${s.attended} / ${s.total} sessions complete</div>
+              </div>
+              <div style="font-size: 0.78rem; font-weight: 800; padding: 0.35rem 0.75rem; border-radius: 8px; background: ${isSafe ? 'rgba(5, 150, 105, 0.1)' : 'rgba(225, 29, 72, 0.1)'}; color: ${isSafe ? 'var(--green)' : 'var(--red)'}">
+                ${adv.text}
+              </div>
+            </div>
+
+            <div class="prism-line" style="margin-top: 0.85rem;">
+              <div class="prism-fill" style="width: ${Math.min(pct, 100)}%; background: ${isSafe ? 'linear-gradient(90deg, #10b981, #06b6d4)' : 'linear-gradient(90deg, #f43f5e, #e11d48)'};"></div>
+            </div>
+
+            <div style="margin-top: 0.5rem; font-size: 0.76rem; color: var(--text-muted); display: flex; justify-content: space-between;">
+              <span>75% Target: ${calcAdvice(s.attended, s.total, 75).text}</span>
+              <span>85% Target: ${calcAdvice(s.attended, s.total, 85).text}</span>
+            </div>
+          </div>
+
+          <div>
+            <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.35rem;">Log Attendance Today:</div>
+            <div class="actions-grid">
+              <button class="act-btn act-p ${s.todayStatus === 'PRESENT' ? 'active' : ''}" onclick="toggleToday(${origIdx}, 'PRESENT')">Present</button>
+              <button class="act-btn act-a ${s.todayStatus === 'ABSENT' ? 'active' : ''}" onclick="toggleToday(${origIdx}, 'ABSENT')">Absent</button>
+              <button class="act-btn act-h ${s.todayStatus === 'HOLIDAY' ? 'active' : ''}" onclick="toggleToday(${origIdx}, 'HOLIDAY')">Holiday</button>
+            </div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function toggleToday(idx, status) {
+      const s = subjects[idx];
+      if (s.todayStatus === status) {
+        if (s.todayStatus === 'PRESENT') { s.attended -= 1; s.total -= 1; }
+        else if (s.todayStatus === 'ABSENT') { s.total -= 1; }
+        s.todayStatus = null;
+      } else {
+        if (s.todayStatus === 'PRESENT') { s.attended -= 1; s.total -= 1; }
+        else if (s.todayStatus === 'ABSENT') { s.total -= 1; }
+        s.todayStatus = status;
+        if (status === 'PRESENT') { s.attended += 1; s.total += 1; }
+        else if (status === 'ABSENT') { s.total += 1; }
+      }
+      renderPrism();
+    }
+
+    function bulkCheckIn(status) {
+      for (let i = 0; i < 5; i++) {
+        const s = subjects[i];
+        if (s.todayStatus === status) {
+          if (s.todayStatus === 'PRESENT') { s.attended -= 1; s.total -= 1; }
+          else if (s.todayStatus === 'ABSENT') { s.total -= 1; }
+          s.todayStatus = status;
+          if (status === 'PRESENT') { s.attended += 1; s.total += 1; }
+          else if (status === 'ABSENT') { s.total += 1; }
+        } else {
+          s.todayStatus = status;
+          if (status === 'PRESENT') { s.attended += 1; s.total += 1; }
+          else if (status === 'ABSENT') { s.total += 1; }
+        }
+      }
+      renderPrism();
+    }
+
+    function openAddSubjectModal() {
+      document.getElementById('add-modal').style.display = 'flex';
+      document.getElementById('new-sub-name').focus();
+    }
+
+    function closeAddSubjectModal() {
+      document.getElementById('add-modal').style.display = 'none';
+    }
+
+    function handleCreateDynamicSubject() {
+      const name = document.getElementById('new-sub-name').value.trim();
+      const code = document.getElementById('new-sub-code').value.trim() || 'SUB01';
+      const type = document.getElementById('new-sub-type').value;
+
+      if (!name) {
+        alert('Please enter a subject name (e.g. "History")');
+        return;
+      }
+
+      const dynamicIcon = getDynamicSubjectIcon(name);
+
+      subjects.push({
+        id: 'sub_' + Date.now(),
+        name: name,
+        code: code,
+        type: type,
+        attended: 14,
+        total: 16,
+        target: 75,
+        icon: dynamicIcon,
+        todayStatus: null,
+        time: '10:00 - 11:00'
+      });
+
+      closeAddSubjectModal();
+      renderPrism();
+      alert(`Subject "${name}" added! Generating real-time 3D AI icon.`);
+    }
+
+    renderPrism();
+  </script>
+</body>
+</html>

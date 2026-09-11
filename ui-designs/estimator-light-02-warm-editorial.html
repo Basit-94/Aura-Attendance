@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AuraAttend — Light Estimator 02 (Warm Editorial & 3D Icons)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,500;0,6..72,700;1,6..72,400&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #fbf9f5;
+      --card: #ffffff;
+      --border: #ede8df;
+      --text: #1c1917;
+      --text-muted: #78716c;
+      --accent: #d97706;
+      --green: #15803d;
+      --red: #b91c1c;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      min-height: 100vh;
+      padding-bottom: 5rem;
+    }
+    header {
+      padding: 1.5rem 2.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+    .brand-title {
+      font-family: 'Newsreader', serif;
+      font-size: 1.8rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .container {
+      max-width: 1050px;
+      margin: 2.5rem auto;
+      padding: 0 1.5rem;
+    }
+    .editorial-hero {
+      border-bottom: 2px solid var(--text);
+      padding-bottom: 2rem;
+      margin-bottom: 2.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+    .editorial-hero h1 {
+      font-family: 'Newsreader', serif;
+      font-size: 3.4rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+    }
+    .course-row {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem 1.75rem;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+      transition: all 0.2s;
+    }
+    .course-row:hover {
+      box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+      transform: translateY(-2px);
+    }
+    .thumb-3d {
+      width: 64px;
+      height: 64px;
+      border-radius: 12px;
+      object-fit: cover;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    .btn-warm {
+      background: var(--text);
+      color: #fff;
+      border: none;
+      padding: 0.5rem 1.1rem;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+    .btn-warm-outline {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-warm-outline:hover { background: #f5f5f4; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="brand-title">AuraAttend Gazette.</div>
+  <div style="font-size:0.85rem; font-weight:600; color:var(--text-muted);">
+    Discipline: <strong>CSE 3 (CAC)</strong> • 25 Weekly Periods
+  </div>
+</header>
+
+<main class="container">
+  <div class="editorial-hero">
+    <div>
+      <span style="font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--text-muted);">SEMESTER 01 REPORT</span>
+      <h1>84.6% Overall Attendance</h1>
+      <p style="color:var(--text-muted); font-size:1.05rem; margin-top:0.4rem;">
+        Calculated across 61 academic sessions. Student is cleared to skip <strong>4 classes</strong>.
+      </p>
+    </div>
+    <div style="text-align:right;">
+      <div style="font-family:'Newsreader'; font-size:2.2rem; font-weight:700;">52 of 61</div>
+      <div style="color:var(--green); font-weight:700; font-size:0.85rem;">Status: Safe (Threshold >= 75%)</div>
+    </div>
+  </div>
+
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+    <h3 style="font-family:'Newsreader'; font-size:1.6rem; font-weight:700;">Course Catalogue & Daily Registry</h3>
+    <span style="font-size:0.85rem; color:var(--text-muted);">Verified 3D Visual Indicators</span>
+  </div>
+
+  <!-- Row 1 -->
+  <div class="course-row">
+    <div style="display:flex; align-items:center; gap:1.25rem;">
+      <img src="icons/computer_os.jpg" alt="Operating Systems" class="thumb-3d">
+      <div>
+        <h4 style="font-size:1.15rem; font-weight:700;">Operating Systems</h4>
+        <p style="font-size:0.8rem; color:var(--text-muted);">Mon, Wed, Fri • Theory • 14 of 16 attended</p>
+        <span style="color:var(--green); font-weight:700; font-size:0.8rem;">✓ 2 Class Buffer Available</span>
+      </div>
+    </div>
+    <div style="display:flex; align-items:center; gap:1.5rem;">
+      <div style="font-size:1.5rem; font-weight:800; color:var(--green);">87.5%</div>
+      <div style="display:flex; gap:0.4rem;">
+        <button class="btn-warm">✓ Present</button>
+        <button class="btn-warm btn-warm-outline">✕ Absent</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 2 -->
+  <div class="course-row">
+    <div style="display:flex; align-items:center; gap:1.25rem;">
+      <img src="icons/computer_os.jpg" alt="OS Lab" class="thumb-3d">
+      <div>
+        <h4 style="font-size:1.15rem; font-weight:700;">Operating Systems Lab</h4>
+        <p style="font-size:0.8rem; color:var(--text-muted);">Tue 09:30-13:45 • Practical • 6 of 6 attended</p>
+        <span style="color:var(--green); font-weight:700; font-size:0.8rem;">✓ Perfect Standing (+2 buffer)</span>
+      </div>
+    </div>
+    <div style="display:flex; align-items:center; gap:1.5rem;">
+      <div style="font-size:1.5rem; font-weight:800; color:var(--green);">100%</div>
+      <div style="display:flex; gap:0.4rem;">
+        <button class="btn-warm">✓ Present</button>
+        <button class="btn-warm btn-warm-outline">✕ Absent</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 3 -->
+  <div class="course-row" style="border-left:4px solid var(--red);">
+    <div style="display:flex; align-items:center; gap:1.25rem;">
+      <img src="icons/compiler.jpg" alt="Compiler Design" class="thumb-3d">
+      <div>
+        <h4 style="font-size:1.15rem; font-weight:700; color:var(--red);">Compiler Design</h4>
+        <p style="font-size:0.8rem; color:var(--text-muted);">Tue, Wed, Fri • Theory • 10 of 14 attended</p>
+        <span style="color:var(--red); font-weight:700; font-size:0.8rem;">⚠ Action Required: Attend Next 2 Sessions</span>
+      </div>
+    </div>
+    <div style="display:flex; align-items:center; gap:1.5rem;">
+      <div style="font-size:1.5rem; font-weight:800; color:var(--red);">71.4%</div>
+      <div style="display:flex; gap:0.4rem;">
+        <button class="btn-warm">✓ Present</button>
+        <button class="btn-warm btn-warm-outline">✕ Absent</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 4 -->
+  <div class="course-row">
+    <div style="display:flex; align-items:center; gap:1.25rem;">
+      <img src="icons/software_engg.jpg" alt="Software Engineering Lab" class="thumb-3d">
+      <div>
+        <h4 style="font-size:1.15rem; font-weight:700;">Software Engineering Lab</h4>
+        <p style="font-size:0.8rem; color:var(--text-muted);">Thu 12:45-17:30 • Practical • 7 of 8 attended</p>
+        <span style="color:var(--green); font-weight:700; font-size:0.8rem;">✓ 1 Class Buffer Available</span>
+      </div>
+    </div>
+    <div style="display:flex; align-items:center; gap:1.5rem;">
+      <div style="font-size:1.5rem; font-weight:800; color:var(--green);">87.5%</div>
+      <div style="display:flex; gap:0.4rem;">
+        <button class="btn-warm">✓ Present</button>
+        <button class="btn-warm btn-warm-outline">✕ Absent</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 5 -->
+  <div class="course-row">
+    <div style="display:flex; align-items:center; gap:1.25rem;">
+      <img src="icons/industrial_mgmt.jpg" alt="Industrial Management" class="thumb-3d">
+      <div>
+        <h4 style="font-size:1.15rem; font-weight:700;">Industrial Management</h4>
+        <p style="font-size:0.8rem; color:var(--text-muted);">Thu, Fri • Theory • 8 of 9 attended</p>
+        <span style="color:var(--green); font-weight:700; font-size:0.8rem;">✓ 1 Class Buffer Available</span>
+      </div>
+    </div>
+    <div style="display:flex; align-items:center; gap:1.5rem;">
+      <div style="font-size:1.5rem; font-weight:800; color:var(--green);">88.8%</div>
+      <div style="display:flex; gap:0.4rem;">
+        <button class="btn-warm">✓ Present</button>
+        <button class="btn-warm btn-warm-outline">✕ Absent</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 6 -->
+  <div class="course-row">
+    <div style="display:flex; align-items:center; gap:1.25rem;">
+      <img src="icons/constitution.jpg" alt="Constitution of India" class="thumb-3d">
+      <div>
+        <h4 style="font-size:1.15rem; font-weight:700;">Constitution of India</h4>
+        <p style="font-size:0.8rem; color:var(--text-muted);">Thu, Fri (11:45) • Theory • 7 of 8 attended</p>
+        <span style="color:var(--green); font-weight:700; font-size:0.8rem;">✓ 1 Class Buffer Available</span>
+      </div>
+    </div>
+    <div style="display:flex; align-items:center; gap:1.5rem;">
+      <div style="font-size:1.5rem; font-weight:800; color:var(--green);">87.5%</div>
+      <div style="display:flex; gap:0.4rem;">
+        <button class="btn-warm">✓ Present</button>
+        <button class="btn-warm btn-warm-outline">✕ Absent</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+</body>
+</html>

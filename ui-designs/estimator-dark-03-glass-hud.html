@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AuraAttend — Dark Estimator 03 (Glass Radial HUD & 3D Icons)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800;900&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #07090e;
+      --card: rgba(15, 20, 32, 0.7);
+      --border: rgba(99, 102, 241, 0.25);
+      --cyan: #06b6d4;
+      --green: #10b981;
+      --red: #f43f5e;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      min-height: 100vh;
+      padding-bottom: 5rem;
+      background-image: 
+        radial-gradient(circle at 20% 15%, rgba(6, 182, 212, 0.15) 0%, transparent 40%),
+        radial-gradient(circle at 80% 80%, rgba(99, 102, 241, 0.15) 0%, transparent 50%);
+      background-attachment: fixed;
+    }
+    header {
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      background: rgba(7, 9, 14, 0.85);
+      backdrop-filter: blur(16px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-weight: 800;
+      font-size: 1.25rem;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+    }
+    .hud-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 1.5rem;
+    }
+    .hud-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      backdrop-filter: blur(20px);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 1.25rem;
+      transition: all 0.2s;
+    }
+    .hud-card:hover {
+      border-color: rgba(6, 182, 212, 0.45);
+      transform: translateY(-4px);
+      box-shadow: 0 15px 35px rgba(0, 240, 255, 0.1);
+    }
+    .hud-card-top {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .hud-thumb {
+      width: 70px;
+      height: 70px;
+      border-radius: 12px;
+      object-fit: cover;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+    }
+    .radial-svg {
+      width: 60px;
+      height: 60px;
+      transform: rotate(-90deg);
+    }
+    .radial-bg {
+      stroke: rgba(255, 255, 255, 0.1);
+      fill: none;
+      stroke-width: 6;
+    }
+    .radial-fill {
+      fill: none;
+      stroke-width: 6;
+      stroke-linecap: round;
+      stroke-dasharray: 157;
+    }
+    .hud-btn-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+    }
+    .hud-btn {
+      background: rgba(6, 182, 212, 0.12);
+      border: 1px solid rgba(6, 182, 212, 0.3);
+      color: var(--cyan);
+      padding: 0.55rem;
+      border-radius: 8px;
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .hud-btn:hover { background: var(--cyan); color: #000; }
+    .hud-btn-danger {
+      background: rgba(244, 63, 94, 0.12);
+      border-color: rgba(244, 63, 94, 0.3);
+      color: var(--red);
+    }
+    .hud-btn-danger:hover { background: var(--red); color: #fff; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <span style="color:var(--cyan)">◈</span>
+    <span>AuraAttend</span>
+    <span style="font-family:'JetBrains Mono'; font-size:0.75rem; background:rgba(6,182,212,0.15); color:var(--cyan); padding:0.2rem 0.55rem; border-radius:4px; border:1px solid rgba(6,182,212,0.3);">
+      CSE 3
+    </span>
+  </div>
+  <div style="font-size:0.85rem; color:var(--text-muted);">
+    Aggregated: <strong style="color:var(--green); font-size:1.1rem;">84.6%</strong> (Safe +4)
+  </div>
+</header>
+
+<main class="container">
+  <div style="background:linear-gradient(135deg, rgba(6,182,212,0.1), rgba(99,102,241,0.1)); border:1px solid var(--border); border-radius:16px; padding:2rem; margin-bottom:2rem; display:flex; justify-content:space-between; align-items:center;">
+    <div>
+      <span style="font-size:0.8rem; color:var(--text-muted); font-weight:700; text-transform:uppercase;">SYSTEM MONITOR</span>
+      <h1 style="font-size:2.6rem; font-weight:900; margin:0.3rem 0; color:var(--green);">84.6% Safe Standing</h1>
+      <p style="color:var(--text-muted); font-size:0.9rem;">Target 75% • CSE 3 official routine synchronized with 25 weekly sessions.</p>
+    </div>
+    <div style="text-align:right;">
+      <div style="font-size:1.8rem; font-weight:800;">52 / 61</div>
+      <span style="font-size:0.8rem; color:var(--cyan); font-weight:700;">+4 Bunk Buffer Active</span>
+    </div>
+  </div>
+
+  <div class="hud-grid">
+    <!-- OS -->
+    <div class="hud-card">
+      <div class="hud-card-top">
+        <img src="icons/computer_os.jpg" alt="Operating Systems" class="hud-thumb">
+        <div style="flex:1;">
+          <h3 style="font-size:1.05rem; font-weight:700;">Operating Systems</h3>
+          <p style="font-size:0.75rem; color:var(--text-muted);">Theory • Mon, Wed, Fri</p>
+          <div style="font-size:0.8rem; color:var(--green); font-weight:700; margin-top:0.2rem;">Can Bunk 2</div>
+        </div>
+        <svg class="radial-svg" viewBox="0 0 60 60">
+          <circle class="radial-bg" cx="30" cy="30" r="25"/>
+          <circle class="radial-fill" cx="30" cy="30" r="25" stroke="var(--green)" stroke-dashoffset="19"/>
+        </svg>
+      </div>
+      <div class="hud-btn-row">
+        <button class="hud-btn">✓ Present (87.5%)</button>
+        <button class="hud-btn hud-btn-danger">✕ Absent</button>
+      </div>
+    </div>
+
+    <!-- OS Lab -->
+    <div class="hud-card">
+      <div class="hud-card-top">
+        <img src="icons/computer_os.jpg" alt="OS Lab" class="hud-thumb">
+        <div style="flex:1;">
+          <h3 style="font-size:1.05rem; font-weight:700;">OS Lab</h3>
+          <p style="font-size:0.75rem; color:var(--text-muted);">Practical • Tue 09:30-13:45</p>
+          <div style="font-size:0.8rem; color:var(--green); font-weight:700; margin-top:0.2rem;">Can Bunk 2</div>
+        </div>
+        <svg class="radial-svg" viewBox="0 0 60 60">
+          <circle class="radial-bg" cx="30" cy="30" r="25"/>
+          <circle class="radial-fill" cx="30" cy="30" r="25" stroke="var(--green)" stroke-dashoffset="0"/>
+        </svg>
+      </div>
+      <div class="hud-btn-row">
+        <button class="hud-btn">✓ Present (100%)</button>
+        <button class="hud-btn hud-btn-danger">✕ Absent</button>
+      </div>
+    </div>
+
+    <!-- Compiler -->
+    <div class="hud-card" style="border-color:rgba(244,63,94,0.35);">
+      <div class="hud-card-top">
+        <img src="icons/compiler.jpg" alt="Compiler Design" class="hud-thumb">
+        <div style="flex:1;">
+          <h3 style="font-size:1.05rem; font-weight:700; color:var(--red);">Compiler Design</h3>
+          <p style="font-size:0.75rem; color:var(--text-muted);">Theory • Tue, Wed, Fri</p>
+          <div style="font-size:0.8rem; color:var(--red); font-weight:700; margin-top:0.2rem;">Attend Next 2!</div>
+        </div>
+        <svg class="radial-svg" viewBox="0 0 60 60">
+          <circle class="radial-bg" cx="30" cy="30" r="25"/>
+          <circle class="radial-fill" cx="30" cy="30" r="25" stroke="var(--red)" stroke-dashoffset="44"/>
+        </svg>
+      </div>
+      <div class="hud-btn-row">
+        <button class="hud-btn">✓ Present (71.4%)</button>
+        <button class="hud-btn hud-btn-danger">✕ Absent</button>
+      </div>
+    </div>
+
+    <!-- Software Engg Lab -->
+    <div class="hud-card">
+      <div class="hud-card-top">
+        <img src="icons/software_engg.jpg" alt="Software Engineering Lab" class="hud-thumb">
+        <div style="flex:1;">
+          <h3 style="font-size:1.05rem; font-weight:700;">Software Engg Lab</h3>
+          <p style="font-size:0.75rem; color:var(--text-muted);">Practical • Thu 12:45-17:30</p>
+          <div style="font-size:0.8rem; color:var(--green); font-weight:700; margin-top:0.2rem;">Can Bunk 1</div>
+        </div>
+        <svg class="radial-svg" viewBox="0 0 60 60">
+          <circle class="radial-bg" cx="30" cy="30" r="25"/>
+          <circle class="radial-fill" cx="30" cy="30" r="25" stroke="var(--green)" stroke-dashoffset="19"/>
+        </svg>
+      </div>
+      <div class="hud-btn-row">
+        <button class="hud-btn">✓ Present (87.5%)</button>
+        <button class="hud-btn hud-btn-danger">✕ Absent</button>
+      </div>
+    </div>
+
+    <!-- Industrial Mgmt -->
+    <div class="hud-card">
+      <div class="hud-card-top">
+        <img src="icons/industrial_mgmt.jpg" alt="Industrial Management" class="hud-thumb">
+        <div style="flex:1;">
+          <h3 style="font-size:1.05rem; font-weight:700;">Industrial Management</h3>
+          <p style="font-size:0.75rem; color:var(--text-muted);">Theory • Thu, Fri</p>
+          <div style="font-size:0.8rem; color:var(--green); font-weight:700; margin-top:0.2rem;">Can Bunk 1</div>
+        </div>
+        <svg class="radial-svg" viewBox="0 0 60 60">
+          <circle class="radial-bg" cx="30" cy="30" r="25"/>
+          <circle class="radial-fill" cx="30" cy="30" r="25" stroke="var(--green)" stroke-dashoffset="17"/>
+        </svg>
+      </div>
+      <div class="hud-btn-row">
+        <button class="hud-btn">✓ Present (88.8%)</button>
+        <button class="hud-btn hud-btn-danger">✕ Absent</button>
+      </div>
+    </div>
+
+    <!-- Constitution -->
+    <div class="hud-card">
+      <div class="hud-card-top">
+        <img src="icons/constitution.jpg" alt="Constitution of India" class="hud-thumb">
+        <div style="flex:1;">
+          <h3 style="font-size:1.05rem; font-weight:700;">Constitution of India</h3>
+          <p style="font-size:0.75rem; color:var(--text-muted);">Theory • Thu, Fri (11:45)</p>
+          <div style="font-size:0.8rem; color:var(--green); font-weight:700; margin-top:0.2rem;">Can Bunk 1</div>
+        </div>
+        <svg class="radial-svg" viewBox="0 0 60 60">
+          <circle class="radial-bg" cx="30" cy="30" r="25"/>
+          <circle class="radial-fill" cx="30" cy="30" r="25" stroke="var(--green)" stroke-dashoffset="19"/>
+        </svg>
+      </div>
+      <div class="hud-btn-row">
+        <button class="hud-btn">✓ Present (87.5%)</button>
+        <button class="hud-btn hud-btn-danger">✕ Absent</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+</body>
+</html>

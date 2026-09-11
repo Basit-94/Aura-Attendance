@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AuraAttend — Light UI 02: Apple Cupertino Silver</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f2f2f7;
+      --card-bg: rgba(255, 255, 255, 0.88);
+      --card-border: rgba(0, 0, 0, 0.08);
+      --card-shadow: 0 10px 24px -6px rgba(0, 0, 0, 0.05), 0 2px 6px rgba(0, 0, 0, 0.02);
+      --apple-blue: #007aff;
+      --apple-green: #34c759;
+      --apple-red: #ff3b30;
+      --apple-orange: #ff9500;
+      --text-main: #1c1c1e;
+      --text-sub: #8e8e93;
+      --text-muted: #aeaeb2;
+      --radius-apple: 20px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, 'Plus Jakarta Sans', sans-serif;
+      min-height: 100vh;
+      padding-bottom: 5rem;
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(0, 122, 255, 0.06) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(52, 199, 89, 0.06) 0px, transparent 50%);
+      background-attachment: fixed;
+    }
+    .apple-header {
+      background: rgba(242, 242, 247, 0.85);
+      backdrop-filter: saturate(180%) blur(20px);
+      -webkit-backdrop-filter: saturate(180%) blur(20px);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+      padding: 0.85rem 2rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand-apple {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+    }
+    .brand-cube {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, #007aff, #5856d6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 1.1rem;
+      box-shadow: 0 4px 10px rgba(0, 122, 255, 0.25);
+    }
+    .container {
+      max-width: 1220px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    .apple-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-apple);
+      padding: 1.6rem;
+      box-shadow: var(--card-shadow);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .term-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      padding: 1.1rem 1.6rem;
+    }
+    .btn-apple {
+      padding: 0.5rem 1rem;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      background: #ffffff;
+      color: var(--text-main);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.15s ease;
+    }
+    .btn-apple:hover {
+      background: #f5f5f7;
+    }
+    .btn-apple-primary {
+      background: var(--apple-blue);
+      color: #ffffff;
+      border: none;
+      box-shadow: 0 4px 12px rgba(0, 122, 255, 0.25);
+    }
+    .btn-apple-primary:hover {
+      background: #006ee6;
+    }
+    /* Cupertino Segmented Control */
+    .segmented-control {
+      display: flex;
+      background: rgba(0, 0, 0, 0.06);
+      padding: 3px;
+      border-radius: 12px;
+      gap: 2px;
+    }
+    .seg-btn {
+      flex: 1;
+      padding: 0.65rem 1rem;
+      border-radius: 9px;
+      border: none;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text-sub);
+      background: transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      transition: all 0.2s ease;
+    }
+    .seg-btn.active {
+      background: #ffffff;
+      color: var(--text-main);
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    /* Top Widgets Grid */
+    .widgets-grid {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr 1fr;
+      gap: 1.25rem;
+    }
+    @media (max-width: 950px) {
+      .widgets-grid { grid-template-columns: 1fr; }
+    }
+    .circle-box {
+      position: relative;
+      width: 90px;
+      height: 90px;
+      flex-shrink: 0;
+    }
+    .circle-box svg {
+      transform: rotate(-90deg);
+      width: 90px;
+      height: 90px;
+    }
+    .circle-track {
+      fill: none;
+      stroke: #e5e5ea;
+      stroke-width: 8;
+    }
+    .circle-bar {
+      fill: none;
+      stroke: var(--apple-blue);
+      stroke-width: 8;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 0.4s ease;
+    }
+    .circle-label {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 800;
+      font-size: 1.25rem;
+    }
+    .meter-bar {
+      height: 8px;
+      background: #e5e5ea;
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 0.75rem 0 0.4rem;
+    }
+    .meter-progress {
+      height: 100%;
+      border-radius: 10px;
+      transition: width 0.35s ease;
+    }
+
+    /* Checklist Section */
+    .squircle-thumb {
+      width: 64px;
+      height: 64px;
+      border-radius: 18px;
+      object-fit: cover;
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.1);
+      border: 1.5px solid #ffffff;
+      flex-shrink: 0;
+    }
+    .squircle-mini {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      object-fit: cover;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      flex-shrink: 0;
+    }
+    .checklist-col {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 0.85rem;
+      margin-top: 1rem;
+    }
+    .check-tile {
+      background: #ffffff;
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      border-radius: 14px;
+      padding: 0.85rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+    }
+
+    /* Subject Cards Grid */
+    .subj-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 1.25rem;
+    }
+    .subj-card {
+      background: #ffffff;
+      border: 1px solid rgba(0, 0, 0, 0.07);
+      border-radius: var(--radius-apple);
+      padding: 1.5rem;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 1.25rem;
+      transition: all 0.2s ease;
+    }
+    .subj-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+    }
+    .badge-apple {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 0.2rem 0.6rem;
+      border-radius: 6px;
+      letter-spacing: 0.03em;
+    }
+    .badge-apple-blue {
+      background: rgba(0, 122, 255, 0.1);
+      color: var(--apple-blue);
+    }
+    .badge-apple-pink {
+      background: rgba(255, 45, 85, 0.1);
+      color: #ff2d55;
+    }
+    .apple-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0.45rem;
+      padding-top: 0.85rem;
+      border-top: 1px solid #f2f2f7;
+    }
+    .apple-act-btn {
+      padding: 0.6rem 0.5rem;
+      border-radius: 10px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      background: #f8f8fa;
+      color: var(--text-main);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .apple-act-btn:hover {
+      background: #ffffff;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    }
+    .act-pres.active {
+      background: var(--apple-green);
+      color: #ffffff;
+      border-color: var(--apple-green);
+    }
+    .act-abs.active {
+      background: var(--apple-red);
+      color: #ffffff;
+      border-color: var(--apple-red);
+    }
+    .act-hol.active {
+      background: var(--apple-orange);
+      color: #ffffff;
+      border-color: var(--apple-orange);
+    }
+  </style>
+</head>
+<body>
+
+  <header class="apple-header">
+    <div class="brand-apple">
+      <div class="brand-cube"></div>
+      <div>
+        <div style="font-size: 1.15rem; font-weight: 700; letter-spacing: -0.02em;">AuraAttend</div>
+        <div style="font-size: 0.72rem; color: var(--text-sub);">Light UI 02 • Apple Cupertino Silver</div>
+      </div>
+    </div>
+    <div style="display: flex; gap: 1rem; align-items: center; font-size: 0.85rem;">
+      <span style="background: rgba(0, 122, 255, 0.08); color: var(--apple-blue); padding: 0.35rem 0.85rem; border-radius: 20px; font-weight: 600;">CSE 3 Portal</span>
+      <span style="color: var(--text-sub);">Benchmark: <strong style="color: var(--apple-blue);">75.0%</strong></span>
+    </div>
+  </header>
+
+  <div class="container">
+    
+    <!-- Active Term Banner -->
+    <div class="apple-card term-bar">
+      <div>
+        <div style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: var(--text-sub);">Current Term</div>
+        <div style="font-size: 1.25rem; font-weight: 800; color: var(--text-main);">CSE 3 (Odd Semester 2026)</div>
+      </div>
+      <div style="display: flex; gap: 0.6rem;">
+        <button class="btn-apple">Export PDF Report</button>
+        <button class="btn-apple btn-apple-primary">+ Add Subject</button>
+      </div>
+    </div>
+
+    <!-- Cupertino Segmented Control Tabs -->
+    <div class="segmented-control">
+      <button class="seg-btn active">Dashboard</button>
+      <button class="seg-btn">Weekly Schedule</button>
+      <button class="seg-btn">Analytics & Predictors</button>
+      <button class="seg-btn">Calendar Logger</button>
+    </div>
+
+    <!-- Top 3 Widgets Grid -->
+    <div class="widgets-grid">
+      <!-- Widget 1: Overall Attendance -->
+      <div class="apple-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-sub);">Overall Attendance</div>
+            <div style="font-size: 2rem; font-weight: 800; font-family: 'JetBrains Mono', monospace; margin: 0.2rem 0;" id="cup-overall-pct">82.3%</div>
+            <div style="font-size: 0.82rem; color: var(--text-sub);"><span id="cup-overall-att">107</span> of <span id="cup-overall-tot">130</span> classes attended</div>
+          </div>
+          <div class="circle-box">
+            <svg>
+              <circle cx="45" cy="45" r="37" class="circle-track" />
+              <circle cx="45" cy="45" r="37" class="circle-bar" id="cup-circle-bar" style="stroke-dasharray: 232; stroke-dashoffset: 41;" />
+            </svg>
+            <div class="circle-label" id="cup-circle-txt">82%</div>
+          </div>
+        </div>
+        <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid rgba(0,0,0,0.06); display: flex; gap: 1rem; font-size: 0.8rem;">
+          <div>
+            <span style="color: var(--text-sub); font-weight: 600;">75% Goal:</span>
+            <span style="color: var(--apple-green); font-weight: 700; margin-left: 0.25rem;" id="cup-adv-75">Safe to miss 9 classes</span>
+          </div>
+          <div>
+            <span style="color: var(--text-sub); font-weight: 600;">85% Goal:</span>
+            <span style="color: var(--apple-red); font-weight: 700; margin-left: 0.25rem;" id="cup-adv-85">Attend +18 classes</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Widget 2: Lecture Aggregate -->
+      <div class="apple-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+        <div>
+          <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-sub);">Lecture Aggregate</div>
+          <div style="font-size: 1.6rem; font-weight: 800; font-family: 'JetBrains Mono', monospace; margin-top: 0.2rem;" id="cup-lec-pct">81.7%</div>
+          <div class="meter-bar">
+            <div class="meter-progress" id="cup-lec-fill" style="width: 81.7%; background: var(--apple-blue);"></div>
+          </div>
+          <div style="font-size: 0.82rem; color: var(--text-sub);"><span id="cup-lec-att">85</span> of <span id="cup-lec-tot">104</span> lectures attended</div>
+        </div>
+        <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid rgba(0,0,0,0.06); font-size: 0.8rem;">
+          <span style="color: var(--text-sub); font-weight: 600;">75% Goal:</span>
+          <span style="color: var(--apple-green); font-weight: 700; margin-left: 0.25rem;" id="cup-lec-adv-75">Safe to miss 7 lectures</span>
+        </div>
+      </div>
+
+      <!-- Widget 3: Lab Aggregate -->
+      <div class="apple-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+        <div>
+          <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-sub);">Lab Aggregate</div>
+          <div style="font-size: 1.6rem; font-weight: 800; font-family: 'JetBrains Mono', monospace; margin-top: 0.2rem;" id="cup-lab-pct">84.6%</div>
+          <div class="meter-bar">
+            <div class="meter-progress" id="cup-lab-fill" style="width: 84.6%; background: #ff2d55;"></div>
+          </div>
+          <div style="font-size: 0.82rem; color: var(--text-sub);"><span id="cup-lab-att">22</span> of <span id="cup-lab-tot">26</span> labs attended</div>
+        </div>
+        <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid rgba(0,0,0,0.06); font-size: 0.8rem;">
+          <span style="color: var(--text-sub); font-weight: 600;">75% Goal:</span>
+          <span style="color: var(--apple-green); font-weight: 700; margin-left: 0.25rem;" id="cup-lab-adv-75">Safe to miss 3 sessions</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Today's Class Checklist -->
+    <div class="apple-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+        <div>
+          <div style="font-size: 1.15rem; font-weight: 800;">Today's Class Checklist (Friday)</div>
+          <div style="font-size: 0.8rem; color: var(--text-sub);">Scheduled routine slots for today with instant check-in</div>
+        </div>
+        <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+          <button class="btn-apple" style="font-size: 0.78rem; padding: 0.35rem 0.75rem; color: var(--apple-green);" onclick="bulkCheckIn('PRESENT')">✓ All Present</button>
+          <button class="btn-apple" style="font-size: 0.78rem; padding: 0.35rem 0.75rem; color: var(--apple-red);" onclick="bulkCheckIn('ABSENT')">✗ All Absent</button>
+          <button class="btn-apple" style="font-size: 0.78rem; padding: 0.35rem 0.75rem; color: var(--apple-orange);" onclick="bulkCheckIn('HOLIDAY')">📅 All Holiday</button>
+        </div>
+      </div>
+      <div class="checklist-col" id="cup-today-list">
+        <!-- Dynamic Checklist Items -->
+      </div>
+    </div>
+
+    <!-- Subject Check-Ins Section -->
+    <div>
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;">
+        <h3 style="font-size: 1.4rem; font-weight: 800;">Subject Check-Ins</h3>
+        <div class="segmented-control" style="width: 260px;">
+          <button class="seg-btn active" onclick="setCupFilter('ALL', this)">All</button>
+          <button class="seg-btn" onclick="setCupFilter('LECTURE', this)">Lectures</button>
+          <button class="seg-btn" onclick="setCupFilter('LAB', this)">Labs</button>
+        </div>
+      </div>
+
+      <div class="subj-grid" id="cup-subj-grid">
+        <!-- Dynamic Subject Cards -->
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const subjects = [
+      { id: 'os', name: 'Operating Systems', code: 'CS501', type: 'LECTURE', attended: 22, total: 26, target: 75, icon: 'icons/computer_os.jpg', todayStatus: null, time: '14:30 - 15:30' },
+      { id: 'compiler', name: 'Compiler Design', code: 'CS502', type: 'LECTURE', attended: 18, total: 24, target: 75, icon: 'icons/compiler.jpg', todayStatus: null, time: '12:45 - 13:45' },
+      { id: 'software', name: 'Software Engineering', code: 'CS503', type: 'LECTURE', attended: 21, total: 24, target: 75, icon: 'icons/software_engg.jpg', todayStatus: null, time: '15:30 - 16:30' },
+      { id: 'mgmt', name: 'Industrial Management', code: 'HU501', type: 'LECTURE', attended: 19, total: 22, target: 75, icon: 'icons/industrial_mgmt.jpg', todayStatus: null, time: '09:30 - 10:30' },
+      { id: 'const', name: 'Constitution of India', code: 'MC501', type: 'LECTURE', attended: 17, total: 22, target: 75, icon: 'icons/constitution.jpg', todayStatus: null, time: '11:45 - 12:45' },
+      { id: 'os_lab', name: 'Operating Systems Lab', code: 'CS591', type: 'LAB', attended: 12, total: 14, target: 75, icon: 'icons/computer_os.jpg', todayStatus: null, time: '09:30 - 13:45 (Tue)' },
+      { id: 'se_lab', name: 'Software Engineering Lab', code: 'CS593', type: 'LAB', attended: 10, total: 12, target: 75, icon: 'icons/software_engg.jpg', todayStatus: null, time: '12:45 - 17:30 (Thu)' }
+    ];
+
+    let filter = 'ALL';
+
+    function setCupFilter(f, el) {
+      filter = f;
+      el.parentElement.querySelectorAll('.seg-btn').forEach(b => b.classList.remove('active'));
+      el.classList.add('active');
+      renderCup();
+    }
+
+    function calcAdvice(att, tot, goal) {
+      const g = goal / 100;
+      const pct = tot > 0 ? (att / tot) * 100 : 0;
+      if (pct >= goal) {
+        const canSkip = Math.floor((att - g * tot) / g);
+        return { isSafe: true, text: `Safe to miss ${canSkip} classes` };
+      } else {
+        const need = Math.ceil((g * tot - att) / (1 - g));
+        return { isSafe: false, text: `Attend +${need} classes` };
+      }
+    }
+
+    function renderCup() {
+      let totAtt = 0, totClasses = 0;
+      let lecAtt = 0, lecTot = 0;
+      let labAtt = 0, labTot = 0;
+
+      subjects.forEach(s => {
+        totAtt += s.attended;
+        totClasses += s.total;
+        if (s.type === 'LECTURE') {
+          lecAtt += s.attended;
+          lecTot += s.total;
+        } else {
+          labAtt += s.attended;
+          labTot += s.total;
+        }
+      });
+
+      const ovPct = totClasses > 0 ? ((totAtt / totClasses) * 100).toFixed(1) : 0;
+      const lPct = lecTot > 0 ? ((lecAtt / lecTot) * 100).toFixed(1) : 0;
+      const lbPct = labTot > 0 ? ((labAtt / labTot) * 100).toFixed(1) : 0;
+
+      document.getElementById('cup-overall-pct').innerText = ovPct + '%';
+      document.getElementById('cup-overall-att').innerText = totAtt;
+      document.getElementById('cup-overall-tot').innerText = totClasses;
+      document.getElementById('cup-circle-txt').innerText = Math.round(ovPct) + '%';
+      const offset = 232 - (232 * Math.min(ovPct, 100)) / 100;
+      document.getElementById('cup-circle-bar').style.strokeDashoffset = offset;
+      document.getElementById('cup-adv-75').innerText = calcAdvice(totAtt, totClasses, 75).text;
+      document.getElementById('cup-adv-85').innerText = calcAdvice(totAtt, totClasses, 85).text;
+
+      document.getElementById('cup-lec-pct').innerText = lPct + '%';
+      document.getElementById('cup-lec-att').innerText = lecAtt;
+      document.getElementById('cup-lec-tot').innerText = lecTot;
+      document.getElementById('cup-lec-fill').style.width = Math.min(lPct, 100) + '%';
+      document.getElementById('cup-lec-adv-75').innerText = calcAdvice(lecAtt, lecTot, 75).text;
+
+      document.getElementById('cup-lab-pct').innerText = lbPct + '%';
+      document.getElementById('cup-lab-att').innerText = labAtt;
+      document.getElementById('cup-lab-tot').innerText = labTot;
+      document.getElementById('cup-lab-fill').style.width = Math.min(lbPct, 100) + '%';
+      document.getElementById('cup-lab-adv-75').innerText = calcAdvice(labAtt, labTot, 75).text;
+
+      // Checklist
+      const checkList = document.getElementById('cup-today-list');
+      checkList.innerHTML = '';
+      subjects.slice(0, 5).forEach((s, idx) => {
+        const item = document.createElement('div');
+        item.className = 'check-tile';
+        item.innerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 0.6rem;">
+              <img src="${s.icon}" alt="${s.name}" class="squircle-mini">
+              <div>
+                <div style="font-weight: 700; font-size: 0.88rem;">${s.name}</div>
+                <div style="font-size: 0.75rem; color: var(--text-sub);">${s.time}</div>
+              </div>
+            </div>
+            <span class="badge-apple ${s.type === 'LECTURE' ? 'badge-apple-blue' : 'badge-apple-pink'}">${s.type}</span>
+          </div>
+          <div class="apple-actions" style="padding-top: 0.4rem; border-top: none;">
+            <button class="apple-act-btn act-pres ${s.todayStatus === 'PRESENT' ? 'active' : ''}" onclick="toggleToday(${idx}, 'PRESENT')">Present</button>
+            <button class="apple-act-btn act-abs ${s.todayStatus === 'ABSENT' ? 'active' : ''}" onclick="toggleToday(${idx}, 'ABSENT')">Absent</button>
+            <button class="apple-act-btn act-hol ${s.todayStatus === 'HOLIDAY' ? 'active' : ''}" onclick="toggleToday(${idx}, 'HOLIDAY')">Holiday</button>
+          </div>
+        `;
+        checkList.appendChild(item);
+      });
+
+      // Grid
+      const grid = document.getElementById('cup-subj-grid');
+      grid.innerHTML = '';
+      const filtered = subjects.filter(s => filter === 'ALL' || s.type === filter);
+
+      filtered.forEach(s => {
+        const origIdx = subjects.findIndex(item => item.id === s.id);
+        const pct = s.total > 0 ? ((s.attended / s.total) * 100).toFixed(1) : 0;
+        const isSafe = pct >= s.target;
+        const adv = calcAdvice(s.attended, s.total, s.target);
+
+        const card = document.createElement('div');
+        card.className = 'subj-card';
+        card.innerHTML = `
+          <div>
+            <div style="display: flex; gap: 1rem; align-items: center;">
+              <img src="${s.icon}" alt="${s.name}" class="squircle-thumb">
+              <div style="flex: 1; min-width: 0;">
+                <div style="display: flex; gap: 0.4rem; align-items: center; margin-bottom: 0.25rem;">
+                  <span class="badge-apple ${s.type === 'LECTURE' ? 'badge-apple-blue' : 'badge-apple-pink'}">${s.type}</span>
+                  <span style="font-size: 0.72rem; font-weight: 700; color: var(--text-sub); font-family: 'JetBrains Mono', monospace;">${s.code}</span>
+                </div>
+                <div style="font-weight: 800; font-size: 1.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${s.name}">${s.name}</div>
+                <div style="font-size: 0.78rem; color: var(--text-sub); margin-top: 0.15rem;">Goal: ${s.target}%</div>
+              </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.1rem;">
+              <div>
+                <div style="font-size: 1.6rem; font-weight: 800; font-family: 'JetBrains Mono', monospace; color: ${isSafe ? 'var(--apple-green)' : 'var(--apple-red)'}">${pct}%</div>
+                <div style="font-size: 0.8rem; color: var(--text-sub);">${s.attended} / ${s.total} classes</div>
+              </div>
+              <div style="font-size: 0.78rem; font-weight: 700; padding: 0.35rem 0.75rem; border-radius: 12px; background: ${isSafe ? 'rgba(52, 199, 89, 0.1)' : 'rgba(255, 59, 48, 0.1)'}; color: ${isSafe ? 'var(--apple-green)' : 'var(--apple-red)'}">
+                ${adv.text}
+              </div>
+            </div>
+
+            <div class="meter-bar" style="margin-top: 0.85rem;">
+              <div class="meter-progress" style="width: ${Math.min(pct, 100)}%; background: ${isSafe ? 'var(--apple-green)' : 'var(--apple-red)'};"></div>
+            </div>
+
+            <div style="margin-top: 0.5rem; font-size: 0.76rem; color: var(--text-sub); display: flex; justify-content: space-between;">
+              <span>75% Target: ${calcAdvice(s.attended, s.total, 75).text}</span>
+              <span>85% Target: ${calcAdvice(s.attended, s.total, 85).text}</span>
+            </div>
+          </div>
+
+          <div>
+            <div style="font-size: 0.75rem; font-weight: 600; color: var(--text-sub); margin-bottom: 0.35rem;">Log Attendance Today:</div>
+            <div class="apple-actions">
+              <button class="apple-act-btn act-pres ${s.todayStatus === 'PRESENT' ? 'active' : ''}" onclick="toggleToday(${origIdx}, 'PRESENT')">Present</button>
+              <button class="apple-act-btn act-abs ${s.todayStatus === 'ABSENT' ? 'active' : ''}" onclick="toggleToday(${origIdx}, 'ABSENT')">Absent</button>
+              <button class="apple-act-btn act-hol ${s.todayStatus === 'HOLIDAY' ? 'active' : ''}" onclick="toggleToday(${origIdx}, 'HOLIDAY')">Holiday</button>
+            </div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function toggleToday(idx, status) {
+      const s = subjects[idx];
+      if (s.todayStatus === status) {
+        if (s.todayStatus === 'PRESENT') { s.attended -= 1; s.total -= 1; }
+        else if (s.todayStatus === 'ABSENT') { s.total -= 1; }
+        s.todayStatus = null;
+      } else {
+        if (s.todayStatus === 'PRESENT') { s.attended -= 1; s.total -= 1; }
+        else if (s.todayStatus === 'ABSENT') { s.total -= 1; }
+        s.todayStatus = status;
+        if (status === 'PRESENT') { s.attended += 1; s.total += 1; }
+        else if (status === 'ABSENT') { s.total += 1; }
+      }
+      renderCup();
+    }
+
+    function bulkCheckIn(status) {
+      for (let i = 0; i < 5; i++) {
+        const s = subjects[i];
+        if (s.todayStatus === 'PRESENT') { s.attended -= 1; s.total -= 1; }
+        else if (s.todayStatus === 'ABSENT') { s.total -= 1; }
+        s.todayStatus = status;
+        if (status === 'PRESENT') { s.attended += 1; s.total += 1; }
+        else if (status === 'ABSENT') { s.total += 1; }
+      }
+      renderCup();
+    }
+
+    renderCup();
+  </script>
+</body>
+</html>

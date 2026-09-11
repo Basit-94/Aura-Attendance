@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AuraAttend — Google Material You 3</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --md-sys-color-primary: #d0bcff;
+      --md-sys-color-on-primary: #381e72;
+      --md-sys-color-primary-container: #4f378b;
+      --md-sys-color-on-primary-container: #eaddff;
+      --md-sys-color-surface: #141218;
+      --md-sys-color-surface-container: #211f26;
+      --md-sys-color-surface-container-high: #2b2930;
+      --md-sys-color-surface-variant: #49454f;
+      --md-sys-color-on-surface: #e6e0e9;
+      --md-sys-color-on-surface-variant: #cac4d0;
+      --md-sys-color-outline: #938f99;
+      --md-sys-color-secondary-container: #4a4458;
+      --md-sys-color-on-secondary-container: #e8def8;
+      --md-sys-color-tertiary-container: #633b48;
+      --md-sys-color-on-tertiary-container: #ffd8e4;
+      --md-green: #a6f4c5;
+      --md-on-green: #003822;
+      --md-green-container: #005234;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--md-sys-color-surface);
+      color: var(--md-sys-color-on-surface);
+      font-family: 'Google Sans', 'Roboto', sans-serif;
+      min-height: 100vh;
+      padding-bottom: 5rem;
+    }
+    .top-app-bar {
+      padding: 1.25rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--md-sys-color-surface-container);
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 1.3rem;
+      font-weight: 700;
+    }
+    .pill-chip {
+      background: var(--md-sys-color-secondary-container);
+      color: var(--md-sys-color-on-secondary-container);
+      padding: 0.4rem 1rem;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+    .container {
+      max-width: 1080px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+    }
+    .hero-card {
+      background: var(--md-sys-color-primary-container);
+      color: var(--md-sys-color-on-primary-container);
+      border-radius: 28px;
+      padding: 2.25rem;
+      margin-bottom: 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .hero-num {
+      font-size: 3.6rem;
+      font-weight: 700;
+      line-height: 1;
+      margin-bottom: 0.5rem;
+    }
+    .badge-tonal {
+      background: var(--md-green-container);
+      color: var(--md-green);
+      padding: 0.35rem 0.85rem;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: inline-block;
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.25rem;
+    }
+    .m3-card {
+      background: var(--md-sys-color-surface-container);
+      border-radius: 24px;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 1.25rem;
+      transition: background 0.2s;
+    }
+    .m3-card:hover {
+      background: var(--md-sys-color-surface-container-high);
+    }
+    .m3-btn {
+      border: none;
+      padding: 0.65rem 1.2rem;
+      border-radius: 20px;
+      font-family: inherit;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      transition: opacity 0.15s;
+    }
+    .m3-btn:hover { opacity: 0.9; }
+    .btn-filled {
+      background: var(--md-sys-color-primary);
+      color: var(--md-sys-color-on-primary);
+    }
+    .btn-tonal {
+      background: var(--md-sys-color-surface-variant);
+      color: var(--md-sys-color-on-surface);
+    }
+    .m3-slider {
+      height: 8px;
+      background: var(--md-sys-color-surface-variant);
+      border-radius: 20px;
+      overflow: hidden;
+      margin: 0.6rem 0;
+    }
+    .m3-slider-fill {
+      height: 100%;
+      border-radius: 20px;
+      background: var(--md-sys-color-primary);
+    }
+  </style>
+</head>
+<body>
+
+<header class="top-app-bar">
+  <div class="brand">
+    <div style="width:34px; height:34px; border-radius:12px; background:var(--md-sys-color-primary); display:grid; place-items:center; color:var(--md-sys-color-on-primary);">
+      ✦
+    </div>
+    <span>AuraAttend</span>
+  </div>
+  <div class="pill-chip">
+    CSE 3 (CAC) Active
+  </div>
+</header>
+
+<main class="container">
+  <div class="hero-card">
+    <div>
+      <div style="font-size:0.9rem; letter-spacing:0.05em; text-transform:uppercase; margin-bottom:0.5rem; opacity:0.8;">Semester 1 Overall</div>
+      <div class="hero-num">84.6%</div>
+      <div class="badge-tonal">Can skip 4 classes safely</div>
+    </div>
+    <div style="text-align:right;">
+      <div style="font-size:1.4rem; font-weight:700;">52 of 61</div>
+      <div style="font-size:0.85rem; opacity:0.8; margin-top:0.2rem;">Mandatory Target: 75%</div>
+    </div>
+  </div>
+
+  <h3 style="font-size:1.3rem; font-weight:600; margin-bottom:1.25rem;">Enrolled Courses</h3>
+
+  <div class="card-grid">
+    <div class="m3-card">
+      <div>
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+          <div>
+            <h4 style="font-size:1.15rem; font-weight:700;">Operating Systems</h4>
+            <div style="font-size:0.8rem; color:var(--md-sys-color-on-surface-variant); margin-top:0.2rem;">Theory • 3 Sessions / Week</div>
+          </div>
+          <div style="font-size:1.4rem; font-weight:700; color:var(--md-sys-color-primary);">87.5%</div>
+        </div>
+        <div class="m3-slider">
+          <div class="m3-slider-fill" style="width: 87.5%;"></div>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:var(--md-sys-color-on-surface-variant);">
+          <span>14 / 16 attended</span>
+          <span style="color:var(--md-green); font-weight:600;">+2 Can bunk</span>
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;">
+        <button class="m3-btn btn-filled">✓ Present</button>
+        <button class="m3-btn btn-tonal">✕ Absent</button>
+      </div>
+    </div>
+
+    <div class="m3-card">
+      <div>
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+          <div>
+            <h4 style="font-size:1.15rem; font-weight:700;">OS Lab</h4>
+            <div style="font-size:0.8rem; color:var(--md-sys-color-on-surface-variant); margin-top:0.2rem;">Lab • Tue 09:30-13:45</div>
+          </div>
+          <div style="font-size:1.4rem; font-weight:700; color:var(--md-sys-color-primary);">100%</div>
+        </div>
+        <div class="m3-slider">
+          <div class="m3-slider-fill" style="width: 100%;"></div>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:var(--md-sys-color-on-surface-variant);">
+          <span>6 / 6 attended</span>
+          <span style="color:var(--md-green); font-weight:600;">+2 Can bunk</span>
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;">
+        <button class="m3-btn btn-filled">✓ Present</button>
+        <button class="m3-btn btn-tonal">✕ Absent</button>
+      </div>
+    </div>
+
+    <div class="m3-card">
+      <div>
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+          <div>
+            <h4 style="font-size:1.15rem; font-weight:700;">Compiler Design</h4>
+            <div style="font-size:0.8rem; color:var(--md-sys-color-on-surface-variant); margin-top:0.2rem;">Theory • 3 Sessions / Week</div>
+          </div>
+          <div style="font-size:1.4rem; font-weight:700; color:#ffb4ab;">71.4%</div>
+        </div>
+        <div class="m3-slider">
+          <div class="m3-slider-fill" style="width: 71.4%; background:#ffb4ab;"></div>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:var(--md-sys-color-on-surface-variant);">
+          <span>10 / 14 attended</span>
+          <span style="color:#ffb4ab; font-weight:600;">Attend next 2</span>
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;">
+        <button class="m3-btn btn-filled">✓ Present</button>
+        <button class="m3-btn btn-tonal">✕ Absent</button>
+      </div>
+    </div>
+
+    <div class="m3-card">
+      <div>
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+          <div>
+            <h4 style="font-size:1.15rem; font-weight:700;">OOP Lab</h4>
+            <div style="font-size:0.8rem; color:var(--md-sys-color-on-surface-variant); margin-top:0.2rem;">Lab • Mon 12:45-17:30</div>
+          </div>
+          <div style="font-size:1.4rem; font-weight:700; color:var(--md-sys-color-primary);">80.0%</div>
+        </div>
+        <div class="m3-slider">
+          <div class="m3-slider-fill" style="width: 80%;"></div>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:var(--md-sys-color-on-surface-variant);">
+          <span>8 / 10 attended</span>
+          <span style="color:var(--md-green); font-weight:600;">+1 Can bunk</span>
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;">
+        <button class="m3-btn btn-filled">✓ Present</button>
+        <button class="m3-btn btn-tonal">✕ Absent</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+</body>
+</html>

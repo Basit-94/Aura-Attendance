@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AuraAttend — Dark Estimator 04 (Parallax Depth & 3D Icons)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090a10;
+      --card: rgba(18, 20, 30, 0.8);
+      --border: rgba(255, 255, 255, 0.1);
+      --green: #22c55e;
+      --primary: #6366f1;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      padding-bottom: 5rem;
+    }
+    /* Dynamic moving aurora effect */
+    .aurora-bg {
+      position: fixed;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: 
+        radial-gradient(circle at 30% 30%, rgba(99, 102, 241, 0.2) 0%, transparent 40%),
+        radial-gradient(circle at 70% 60%, rgba(168, 85, 247, 0.2) 0%, transparent 45%),
+        radial-gradient(circle at 50% 80%, rgba(34, 197, 94, 0.15) 0%, transparent 50%);
+      animation: rotateAurora 25s linear infinite;
+      z-index: -1;
+      pointer-events: none;
+    }
+    @keyframes rotateAurora {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    header {
+      padding: 1.25rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(9, 10, 16, 0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 2.5rem auto;
+      padding: 0 1.5rem;
+    }
+    .timeline-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.5rem;
+      backdrop-filter: blur(25px);
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .timeline-card:hover {
+      transform: translateX(6px);
+      border-color: rgba(99, 102, 241, 0.4);
+    }
+    .icon-box {
+      width: 76px;
+      height: 76px;
+      border-radius: 14px;
+      overflow: hidden;
+      flex-shrink: 0;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    }
+    .icon-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .btn-quick {
+      background: rgba(34, 197, 94, 0.15);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      color: var(--green);
+      font-weight: 700;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .btn-quick:hover { background: var(--green); color: #000; }
+  </style>
+</head>
+<body>
+
+<div class="aurora-bg"></div>
+
+<header>
+  <div style="display:flex; align-items:center; gap:0.75rem; font-weight:800; font-size:1.25rem;">
+    <span>⚡ AuraAttend</span>
+    <span style="font-size:0.75rem; background:rgba(99,102,241,0.2); color:#a5b4fc; padding:0.2rem 0.6rem; border-radius:6px; border:1px solid rgba(99,102,241,0.3);">
+      CSE 3 DEPTH
+    </span>
+  </div>
+  <div style="font-size:0.85rem; color:var(--green); font-weight:700;">
+    Aggregate: 84.6% (Safe to bunk 4)
+  </div>
+</header>
+
+<main class="container">
+  <div style="background:linear-gradient(135deg, rgba(99,102,241,0.15), rgba(168,85,247,0.1)); border:1px solid var(--border); border-radius:20px; padding:2rem; margin-bottom:2rem; backdrop-filter:blur(30px);">
+    <span style="font-size:0.8rem; font-weight:700; text-transform:uppercase; color:var(--text-muted);">LIVE ACADEMIC ROSTER</span>
+    <h1 style="font-size:3rem; font-weight:900; margin:0.4rem 0;">CSE 3 Active Stream</h1>
+    <p style="color:var(--text-muted); font-size:1rem; max-width:600px;">
+      All 25 weekly periods synced with 3D obvious subject iconography. Scroll through your courses below.
+    </p>
+  </div>
+
+  <div class="timeline-card">
+    <div style="display:flex; align-items:center; gap:1.25rem;">
+      <div class="icon-box">
+        <img src="icons/computer_os.jpg" alt="Operating Systems">
+      </div>
+      <div>
+        <h3 style="font-size:1.15rem; font-weight:800;">Operating Systems</h3>
+        <p style="font-size:0.8rem; color:var(--text-muted); margin-top:0.2rem;">Mon, Wed, Fri (09:30) • 14 of 16 attended</p>
+        <span style="color:var(--green); font-size:0.8rem; font-weight:700;">+2 Can Bunk Safely</span>
+      </div>
+    </div>
+    <div style="text-align:right;">
+      <div style="font-size:1.6rem; font-weight:900; color:var(--green);">87.5%</div>
+      <button class="btn-quick" style="margin-top:0.3rem;">✓ Present</button>
+    </div>
+  </div>
+
+  <div class="timeline-card">
+    <div style="display:flex; align-items:center; gap:1.25rem;">
+      <div class="icon-box">
+        <img src="icons/computer_os.jpg" alt="OS Lab">
+      </div>
+      <div>
+        <h3 style="font-size:1.15rem; font-weight:800;">OS Lab</h3>
+        <p style="font-size:0.8rem; color:var(--text-muted); margin-top:0.2rem;">Tue 09:30-13:45 • 6 of 6 attended</p>
+        <span style="color:var(--green); font-size:0.8rem; font-weight:700;">+2 Can Bunk Safely</span>
+      </div>
+    </div>
+    <div style="text-align:right;">
+      <div style="font-size:1.6rem; font-weight:900; color:var(--green);">100%</div>
+      <button class="btn-quick" style="margin-top:0.3rem;">✓ Present</button>
+    </div>
+  </div>
+
+  <div class="timeline-card" style="border-color:rgba(239,68,68,0.4);">
+    <div style="display:flex; align-items:center; gap:1.25rem;">
+      <div class="icon-box">
+        <img src="icons/compiler.jpg" alt="Compiler Design">
+      </div>
+      <div>
+        <h3 style="font-size:1.15rem; font-weight:800; color:#f87171;">Compiler Design</h3>
+        <p style="font-size:0.8rem; color:var(--text-muted); margin-top:0.2rem;">Tue, Wed, Fri • 10 of 14 attended</p>
+        <span style="color:#f87171; font-size:0.8rem; font-weight:700;">⚠ Deficit: Attend Next 2 Classes</span>
+      </div>
+    </div>
+    <div style="text-align:right;">
+      <div style="font-size:1.6rem; font-weight:900; color:#f87171;">71.4%</div>
+      <button class="btn-quick" style="margin-top:0.3rem;">✓ Present</button>
+    </div>
+  </div>
+
+  <div class="timeline-card">
+    <div style="display:flex; align-items:center; gap:1.25rem;">
+      <div class="icon-box">
+        <img src="icons/software_engg.jpg" alt="Software Engineering Lab">
+      </div>
+      <div>
+        <h3 style="font-size:1.15rem; font-weight:800;">Software Engineering Lab</h3>
+        <p style="font-size:0.8rem; color:var(--text-muted); margin-top:0.2rem;">Thu 12:45-17:30 • 7 of 8 attended</p>
+        <span style="color:var(--green); font-size:0.8rem; font-weight:700;">+1 Can Bunk Safely</span>
+      </div>
+    </div>
+    <div style="text-align:right;">
+      <div style="font-size:1.6rem; font-weight:900; color:var(--green);">87.5%</div>
+      <button class="btn-quick" style="margin-top:0.3rem;">✓ Present</button>
+    </div>
+  </div>
+
+  <div class="timeline-card">
+    <div style="display:flex; align-items:center; gap:1.25rem;">
+      <div class="icon-box">
+        <img src="icons/industrial_mgmt.jpg" alt="Industrial Management">
+      </div>
+      <div>
+        <h3 style="font-size:1.15rem; font-weight:800;">Industrial Management</h3>
+        <p style="font-size:0.8rem; color:var(--text-muted); margin-top:0.2rem;">Thu, Fri • 8 of 9 attended</p>
+        <span style="color:var(--green); font-size:0.8rem; font-weight:700;">+1 Can Bunk Safely</span>
+      </div>
+    </div>
+    <div style="text-align:right;">
+      <div style="font-size:1.6rem; font-weight:900; color:var(--green);">88.8%</div>
+      <button class="btn-quick" style="margin-top:0.3rem;">✓ Present</button>
+    </div>
+  </div>
+
+  <div class="timeline-card">
+    <div style="display:flex; align-items:center; gap:1.25rem;">
+      <div class="icon-box">
+        <img src="icons/constitution.jpg" alt="Constitution of India">
+      </div>
+      <div>
+        <h3 style="font-size:1.15rem; font-weight:800;">Constitution of India</h3>
+        <p style="font-size:0.8rem; color:var(--text-muted); margin-top:0.2rem;">Thu, Fri (11:45) • 7 of 8 attended</p>
+        <span style="color:var(--green); font-size:0.8rem; font-weight:700;">+1 Can Bunk Safely</span>
+      </div>
+    </div>
+    <div style="text-align:right;">
+      <div style="font-size:1.6rem; font-weight:900; color:var(--green);">87.5%</div>
+      <button class="btn-quick" style="margin-top:0.3rem;">✓ Present</button>
+    </div>
+  </div>
+</main>
+
+</body>
+</html>

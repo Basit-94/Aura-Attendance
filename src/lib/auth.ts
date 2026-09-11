@@ -47,7 +47,7 @@ export async function getCurrentUser() {
 
     const student = await db.student.findUnique({
       where: { id: payload.userId },
-      select: { id: true, email: true, uniqueCode: true },
+      select: { id: true, email: true, uniqueCode: true, createdAt: true },
     });
 
     return student;

@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AuraAttend — Light Estimator 04 (Cupertino Silver Acrylic)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800;900&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f2f2f7;
+      --card-bg: rgba(255, 255, 255, 0.88);
+      --card-border: rgba(255, 255, 255, 0.7);
+      --card-stroke: rgba(0, 0, 0, 0.06);
+      --apple-blue: #007aff;
+      --apple-green: #34c759;
+      --apple-red: #ff3b30;
+      --text-main: #1d1d1f;
+      --text-sub: #86868b;
+      --silver-gradient: linear-gradient(180deg, #ffffff 0%, #f5f5f7 100%);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, 'Plus Jakarta Sans', sans-serif;
+      min-height: 100vh;
+      padding-bottom: 5rem;
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(0, 122, 255, 0.07) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(52, 199, 89, 0.07) 0px, transparent 50%);
+      background-attachment: fixed;
+    }
+    .nav-bar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(242, 242, 247, 0.8);
+      backdrop-filter: saturate(180%) blur(20px);
+      -webkit-backdrop-filter: saturate(180%) blur(20px);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+      padding: 0.9rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .brand-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, #007aff, #5856d6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1rem;
+      box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+    }
+    .brand-title {
+      font-weight: 700;
+      font-size: 1.05rem;
+      letter-spacing: -0.02em;
+    }
+    .container {
+      max-width: 1160px;
+      margin: 2.2rem auto;
+      padding: 0 1.5rem;
+    }
+    .hero-widget {
+      background: var(--silver-gradient);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      border-radius: 24px;
+      padding: 2.25rem;
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.02);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--apple-blue);
+      background: rgba(0, 122, 255, 0.08);
+      padding: 0.3rem 0.75rem;
+      border-radius: 20px;
+      margin-bottom: 0.5rem;
+    }
+    .hero-widget h1 {
+      font-size: 2.1rem;
+      font-weight: 800;
+      letter-spacing: -0.035em;
+      color: var(--text-main);
+    }
+    .hero-stats-row {
+      display: flex;
+      gap: 1.25rem;
+    }
+    .stat-chip {
+      background: rgba(255, 255, 255, 0.95);
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      border-radius: 18px;
+      padding: 1rem 1.4rem;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03);
+      min-width: 120px;
+    }
+    .stat-chip .lbl {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--text-sub);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .stat-chip .val {
+      font-size: 1.6rem;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-main);
+      margin-top: 0.2rem;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 1.5rem;
+    }
+    .subject-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border: 1px solid var(--card-border);
+      outline: 1px solid var(--card-stroke);
+      border-radius: 22px;
+      padding: 1.65rem;
+      box-shadow: 0 10px 28px -6px rgba(0, 0, 0, 0.04), 0 2px 6px rgba(0, 0, 0, 0.02);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 1.35rem;
+      transition: all 0.25s ease;
+    }
+    .subject-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 18px 36px -8px rgba(0, 0, 0, 0.09);
+    }
+    .card-header-row {
+      display: flex;
+      gap: 1.15rem;
+      align-items: center;
+    }
+    .squircle-icon {
+      width: 68px;
+      height: 68px;
+      border-radius: 18px;
+      object-fit: cover;
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+      border: 1.5px solid rgba(255, 255, 255, 0.9);
+      flex-shrink: 0;
+      transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .subject-card:hover .squircle-icon {
+      transform: scale(1.05);
+    }
+    .subj-details {
+      flex: 1;
+      min-width: 0;
+    }
+    .subj-pill {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--apple-blue);
+      background: rgba(0, 122, 255, 0.08);
+      padding: 0.2rem 0.55rem;
+      border-radius: 6px;
+      display: inline-block;
+      margin-bottom: 0.25rem;
+    }
+    .subj-name {
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .meter-section {
+      background: rgba(242, 242, 247, 0.6);
+      border-radius: 16px;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+    .meter-labels {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-sub);
+    }
+    .meter-pct {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+    .apple-progress {
+      height: 8px;
+      background: #e5e5ea;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .apple-progress-bar {
+      height: 100%;
+      border-radius: 10px;
+      transition: width 0.35s ease;
+    }
+    .apple-status-chip {
+      font-size: 0.8rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .btn-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+    }
+    .btn-apple {
+      padding: 0.75rem 1rem;
+      border-radius: 14px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      transition: all 0.15s ease;
+    }
+    .btn-attend {
+      background: #34c759;
+      color: #ffffff;
+      box-shadow: 0 4px 12px rgba(52, 199, 89, 0.25);
+    }
+    .btn-attend:hover {
+      background: #30b753;
+      transform: scale(0.99);
+    }
+    .btn-absent {
+      background: #f2f2f7;
+      color: #ff3b30;
+      border: 1px solid rgba(255, 59, 48, 0.2);
+    }
+    .btn-absent:hover {
+      background: #ffebe9;
+      transform: scale(0.99);
+    }
+  </style>
+</head>
+<body>
+  <div class="nav-bar">
+    <div class="brand-group">
+      <div class="brand-icon"></div>
+      <div>
+        <div class="brand-title">AuraAttend</div>
+        <div style="font-size: 0.72rem; color: var(--text-sub);">Cupertino Silver • Estimator 04</div>
+      </div>
+    </div>
+    <div style="font-size: 0.88rem; font-weight: 600; color: var(--text-sub);">
+      Minimum: <strong style="color: var(--apple-blue);">75.0%</strong>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="hero-widget">
+      <div>
+        <span class="hero-badge">✦ Interactive Simulation</span>
+        <h1>Academic Tracker</h1>
+        <p style="color: var(--text-sub); margin-top: 0.3rem; font-size: 0.95rem;">
+          Apple HIG inspired aesthetic with genuine 3D subject assets and instant attendance forecasting
+        </p>
+      </div>
+      <div class="hero-stats-row">
+        <div class="stat-chip">
+          <div class="lbl">Conducted</div>
+          <div class="val" id="total-classes-val">118</div>
+        </div>
+        <div class="stat-chip">
+          <div class="lbl">Attended</div>
+          <div class="val" id="attended-classes-val" style="color: var(--apple-green);">97</div>
+        </div>
+        <div class="stat-chip">
+          <div class="lbl">Average</div>
+          <div class="val" id="average-pct-val" style="color: var(--apple-blue);">82.2%</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid" id="subjects-container">
+      <!-- Generated dynamically -->
+    </div>
+  </div>
+
+  <script>
+    const subjects = [
+      { id: 'os', code: 'CS501', name: 'Operating Systems', attended: 22, total: 26, icon: 'icons/computer_os.jpg' },
+      { id: 'compiler', code: 'CS502', name: 'Compiler Design', attended: 18, total: 24, icon: 'icons/compiler.jpg' },
+      { id: 'software', code: 'CS503', name: 'Software Engineering', attended: 21, total: 24, icon: 'icons/software_engg.jpg' },
+      { id: 'mgmt', code: 'HU501', name: 'Industrial Management', attended: 19, total: 22, icon: 'icons/industrial_mgmt.jpg' },
+      { id: 'const', code: 'MC501', name: 'Constitution of India', attended: 17, total: 22, icon: 'icons/constitution.jpg' }
+    ];
+
+    function renderCards() {
+      const container = document.getElementById('subjects-container');
+      container.innerHTML = '';
+
+      let totalAtt = 0;
+      let totalTot = 0;
+
+      subjects.forEach((subj, idx) => {
+        totalAtt += subj.attended;
+        totalTot += subj.total;
+        const pct = subj.total > 0 ? ((subj.attended / subj.total) * 100).toFixed(1) : 0;
+        const isSafe = pct >= 75;
+
+        let adviceText = '';
+        if (isSafe) {
+          const canSkip = Math.floor((subj.attended - 0.75 * subj.total) / 0.75);
+          adviceText = `<span style="color: var(--apple-green);">● Safe to skip ${canSkip} classes</span>`;
+        } else {
+          const needAttend = Math.ceil((0.75 * subj.total - subj.attended) / (1 - 0.75));
+          adviceText = `<span style="color: var(--apple-red);">● Need ${needAttend} classes for 75%</span>`;
+        }
+
+        const card = document.createElement('div');
+        card.className = 'subject-card';
+        card.innerHTML = `
+          <div>
+            <div class="card-header-row">
+              <img src="${subj.icon}" alt="${subj.name}" class="squircle-icon">
+              <div class="subj-details">
+                <span class="subj-pill">${subj.code}</span>
+                <div class="subj-name" title="${subj.name}">${subj.name}</div>
+                <div style="font-size: 0.8rem; color: var(--text-sub); margin-top: 0.15rem;">
+                  ${subj.attended} of ${subj.total} attended
+                </div>
+              </div>
+            </div>
+
+            <div class="meter-section" style="margin-top: 1.25rem;">
+              <div class="meter-labels">
+                <span>Progress</span>
+                <span class="meter-pct" style="color: ${isSafe ? 'var(--apple-green)' : 'var(--apple-red)'}">${pct}%</span>
+              </div>
+              <div class="apple-progress">
+                <div class="apple-progress-bar" style="width: ${Math.min(pct, 100)}%; background: ${isSafe ? 'var(--apple-green)' : 'var(--apple-red)'}"></div>
+              </div>
+              <div class="apple-status-chip">
+                ${adviceText}
+              </div>
+            </div>
+          </div>
+
+          <div class="btn-row">
+            <button class="btn-apple btn-attend" onclick="checkIn(${idx}, true)">
+              <span>＋</span> Present
+            </button>
+            <button class="btn-apple btn-absent" onclick="checkIn(${idx}, false)">
+              <span>－</span> Absent
+            </button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+
+      const avgPct = totalTot > 0 ? ((totalAtt / totalTot) * 100).toFixed(1) : 0;
+      document.getElementById('total-classes-val').innerText = totalTot;
+      document.getElementById('attended-classes-val').innerText = totalAtt;
+      const avgEl = document.getElementById('average-pct-val');
+      avgEl.innerText = avgPct + '%';
+      avgEl.style.color = avgPct >= 75 ? 'var(--apple-green)' : 'var(--apple-red)';
+    }
+
+    function checkIn(idx, attended) {
+      subjects[idx].total += 1;
+      if (attended) {
+        subjects[idx].attended += 1;
+      }
+      renderCards();
+    }
+
+    renderCards();
+  </script>
+</body>
+</html>

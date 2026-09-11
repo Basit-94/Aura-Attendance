@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AuraAttend — Estimator 02: Neo-Brutalist Pop</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #fffdf5;
+      --card-bg: #ffffff;
+      --border-black: #000000;
+      --yellow: #fde047;
+      --pink: #f472b6;
+      --cyan: #38bdf8;
+      --green: #4ade80;
+      --orange: #fb923c;
+      --red: #f87171;
+      --text: #000000;
+      --shadow-hard: 4px 4px 0px #000000;
+      --shadow-hard-hover: 6px 6px 0px #000000;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Space Grotesk', sans-serif;
+      min-height: 100vh;
+      padding-bottom: 5rem;
+      background-image: radial-gradient(#000000 1.2px, transparent 1.2px);
+      background-size: 20px 20px;
+    }
+    header {
+      background: #ffffff;
+      border-bottom: 3px solid var(--border-black);
+      padding: 1rem 2.2rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .brand-cube {
+      width: 40px;
+      height: 40px;
+      border: 2.5px solid var(--border-black);
+      background: var(--yellow);
+      box-shadow: 3px 3px 0 #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 1.2rem;
+      border-radius: 8px;
+    }
+    .container {
+      max-width: 1220px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    .brutal-card {
+      background: #ffffff;
+      border: 2.5px solid var(--border-black);
+      border-radius: 12px;
+      padding: 1.6rem;
+      box-shadow: var(--shadow-hard);
+      transition: all 0.15s ease;
+    }
+    .term-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      padding: 1.2rem 1.6rem;
+      background: var(--yellow);
+    }
+    .btn-brutal {
+      padding: 0.6rem 1.1rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      font-family: inherit;
+      border: 2px solid var(--border-black);
+      background: #ffffff;
+      color: #000000;
+      box-shadow: 3px 3px 0 #000;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      transition: all 0.1s ease;
+    }
+    .btn-brutal:hover {
+      transform: translate(-1px, -1px);
+      box-shadow: 4px 4px 0 #000;
+    }
+    .btn-brutal:active {
+      transform: translate(2px, 2px);
+      box-shadow: 1px 1px 0 #000;
+    }
+    .btn-brutal-primary {
+      background: var(--cyan);
+    }
+    .tabs-bar {
+      display: flex;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      flex: 1;
+      min-width: 140px;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      border: 2px solid var(--border-black);
+      font-size: 0.9rem;
+      font-weight: 800;
+      background: #ffffff;
+      box-shadow: 3px 3px 0 #000;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      transition: all 0.1s;
+    }
+    .tab-btn.active {
+      background: var(--pink);
+      transform: translate(2px, 2px);
+      box-shadow: 1px 1px 0 #000;
+    }
+
+    /* Top 3 Widgets */
+    .widgets-grid {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr 1fr;
+      gap: 1.25rem;
+    }
+    @media (max-width: 950px) {
+      .widgets-grid { grid-template-columns: 1fr; }
+    }
+    .circle-wrap {
+      position: relative;
+      width: 92px;
+      height: 92px;
+      flex-shrink: 0;
+    }
+    .circle-wrap svg {
+      transform: rotate(-90deg);
+      width: 92px;
+      height: 92px;
+    }
+    .circle-bg {
+      fill: none;
+      stroke: #f3f4f6;
+      stroke-width: 10;
+    }
+    .circle-fg {
+      fill: none;
+      stroke: #000000;
+      stroke-width: 10;
+      stroke-linecap: square;
+      transition: stroke-dashoffset 0.4s ease;
+    }
+    .circle-val {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.3rem;
+      font-weight: 800;
+    }
+    .brutal-track {
+      height: 12px;
+      background: #f1f5f9;
+      border: 2px solid #000;
+      border-radius: 6px;
+      overflow: hidden;
+      margin: 0.75rem 0 0.4rem;
+    }
+    .brutal-fill {
+      height: 100%;
+      transition: width 0.35s ease;
+    }
+
+    /* Checklist */
+    .thumb-brutal {
+      width: 64px;
+      height: 64px;
+      border-radius: 8px;
+      object-fit: cover;
+      border: 2px solid #000;
+      box-shadow: 3px 3px 0 #000;
+      flex-shrink: 0;
+      background: #e2e8f0;
+    }
+    .thumb-mini {
+      width: 36px;
+      height: 36px;
+      border-radius: 6px;
+      object-fit: cover;
+      border: 2px solid #000;
+      flex-shrink: 0;
+    }
+    .check-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 0.85rem;
+      margin-top: 1rem;
+    }
+    .check-card {
+      background: #ffffff;
+      border: 2px solid #000;
+      border-radius: 8px;
+      padding: 0.85rem 1rem;
+      box-shadow: 3px 3px 0 #000;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    /* Subject Grid */
+    .subj-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 1.25rem;
+    }
+    .subj-card {
+      background: #ffffff;
+      border: 2.5px solid #000;
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: var(--shadow-hard);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 1.25rem;
+      transition: all 0.15s ease;
+    }
+    .subj-card:hover {
+      transform: translate(-2px, -2px);
+      box-shadow: var(--shadow-hard-hover);
+    }
+    .brutal-badge {
+      font-size: 0.72rem;
+      font-weight: 800;
+      border: 1.5px solid #000;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      display: inline-block;
+    }
+    .brutal-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0.45rem;
+      padding-top: 0.85rem;
+      border-top: 2px dashed #000;
+    }
+    .act-btn {
+      padding: 0.55rem 0.4rem;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 800;
+      border: 2px solid #000;
+      background: #ffffff;
+      box-shadow: 2px 2px 0 #000;
+      cursor: pointer;
+      transition: all 0.1s;
+    }
+    .act-btn:hover {
+      transform: translate(-1px, -1px);
+      box-shadow: 3px 3px 0 #000;
+    }
+    .act-btn:active {
+      transform: translate(1px, 1px);
+      box-shadow: 1px 1px 0 #000;
+    }
+    .act-p.active {
+      background: var(--green);
+      color: #000;
+    }
+    .act-a.active {
+      background: var(--red);
+      color: #000;
+    }
+    .act-h.active {
+      background: var(--orange);
+      color: #000;
+    }
+
+    /* Modal */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-box {
+      background: #ffffff;
+      border: 3px solid #000;
+      box-shadow: 6px 6px 0 #000;
+      border-radius: 12px;
+      padding: 2rem;
+      max-width: 480px;
+      width: 90%;
+    }
+    .input-field {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 2px solid #000;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      font-weight: 600;
+      margin-top: 0.4rem;
+      outline: none;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <div class="brand-cube">NB</div>
+      <div>
+        <div style="font-size: 1.25rem; font-weight: 900; letter-spacing: -0.02em;">AuraAttend</div>
+        <div style="font-size: 0.75rem; font-weight: 700;">Estimator 02 • Neo-Brutalist Pop</div>
+      </div>
+    </div>
+    <div style="display: flex; gap: 1rem; align-items: center;">
+      <span style="background: var(--yellow); border: 2px solid #000; padding: 0.35rem 0.85rem; border-radius: 6px; font-weight: 800; box-shadow: 2px 2px 0 #000;">CSE 3 Academic</span>
+      <span style="font-weight: 800;">Target: <strong>75%</strong></span>
+    </div>
+  </header>
+
+  <div class="container">
+    
+    <!-- Active Term Bar -->
+    <div class="brutal-card term-bar">
+      <div>
+        <div style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase;">Active Academic Routine</div>
+        <div style="font-size: 1.45rem; font-weight: 900;">CSE 3 (Odd Term 2026)</div>
+      </div>
+      <div style="display: flex; gap: 0.6rem;">
+        <button class="btn-brutal" onclick="alert('Exporting PDF Ledger...')">📄 Export PDF</button>
+        <button class="btn-brutal btn-brutal-primary" onclick="openAddSubjectModal()">+ Add Any Subject (Real-Time AI Icon)</button>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="tabs-bar">
+      <button class="tab-btn active">📊 Dashboard</button>
+      <button class="tab-btn">📅 Weekly Schedule</button>
+      <button class="tab-btn">📈 Analytics & Predictors</button>
+      <button class="tab-btn">🗓 Calendar Logger</button>
+    </div>
+
+    <!-- Top 3 Widgets Grid -->
+    <div class="widgets-grid">
+      <!-- Widget 1: Overall -->
+      <div class="brutal-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <div style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase;">Overall Attendance</div>
+            <div style="font-size: 2.2rem; font-weight: 900; font-family: 'JetBrains Mono', monospace; margin: 0.2rem 0;" id="nb-overall-pct">82.3%</div>
+            <div style="font-size: 0.82rem; font-weight: 700;"><span id="nb-overall-att">107</span> / <span id="nb-overall-tot">130</span> attended</div>
+          </div>
+          <div class="circle-wrap">
+            <svg>
+              <circle cx="46" cy="46" r="38" class="circle-bg" />
+              <circle cx="46" cy="46" r="38" class="circle-fg" id="nb-circle-fg" style="stroke-dasharray: 238; stroke-dashoffset: 42;" />
+            </svg>
+            <div class="circle-val" id="nb-circle-txt">82%</div>
+          </div>
+        </div>
+        <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 2px dashed #000; display: flex; gap: 1rem; font-size: 0.8rem; font-weight: 800;">
+          <div>75%: <span id="nb-adv-75" style="background: var(--green); padding: 2px 6px; border: 1.5px solid #000; border-radius: 4px;">Safe 9</span></div>
+          <div>85%: <span id="nb-adv-85" style="background: var(--red); padding: 2px 6px; border: 1.5px solid #000; border-radius: 4px;">Need +18</span></div>
+        </div>
+      </div>
+
+      <!-- Widget 2: Lecture Aggregate -->
+      <div class="brutal-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+        <div>
+          <div style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase;">Lecture Aggregate</div>
+          <div style="font-size: 1.8rem; font-weight: 900; font-family: 'JetBrains Mono', monospace; margin-top: 0.2rem;" id="nb-lec-pct">81.7%</div>
+          <div class="brutal-track">
+            <div class="brutal-fill" id="nb-lec-fill" style="width: 81.7%; background: var(--cyan);"></div>
+          </div>
+          <div style="font-size: 0.82rem; font-weight: 700;"><span id="nb-lec-att">85</span> / <span id="nb-lec-tot">104</span> lectures</div>
+        </div>
+        <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 2px dashed #000; font-size: 0.8rem; font-weight: 800;">
+          75% Target: <span id="nb-lec-adv-75">Safe to miss 7 lectures</span>
+        </div>
+      </div>
+
+      <!-- Widget 3: Lab Aggregate -->
+      <div class="brutal-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+        <div>
+          <div style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase;">Lab Aggregate</div>
+          <div style="font-size: 1.8rem; font-weight: 900; font-family: 'JetBrains Mono', monospace; margin-top: 0.2rem;" id="nb-lab-pct">84.6%</div>
+          <div class="brutal-track">
+            <div class="brutal-fill" id="nb-lab-fill" style="width: 84.6%; background: var(--pink);"></div>
+          </div>
+          <div style="font-size: 0.82rem; font-weight: 700;"><span id="nb-lab-att">22</span> / <span id="nb-lab-tot">26</span> labs</div>
+        </div>
+        <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 2px dashed #000; font-size: 0.8rem; font-weight: 800;">
+          75% Target: <span id="nb-lab-adv-75">Safe to miss 3 sessions</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Today's Class Checklist -->
+    <div class="brutal-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+        <div>
+          <div style="font-size: 1.25rem; font-weight: 900;">Today's Class Checklist (Friday)</div>
+          <div style="font-size: 0.85rem; font-weight: 600;">Routine slots with real-time AI icons & 3D button press</div>
+        </div>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+          <button class="btn-brutal" style="background: var(--green);" onclick="bulkCheckIn('PRESENT')">✓ All Present</button>
+          <button class="btn-brutal" style="background: var(--red);" onclick="bulkCheckIn('ABSENT')">✗ All Absent</button>
+          <button class="btn-brutal" style="background: var(--orange);" onclick="bulkCheckIn('HOLIDAY')">📅 All Holiday</button>
+        </div>
+      </div>
+      <div class="check-grid" id="nb-today-grid">
+        <!-- Dynamic Checklist Items -->
+      </div>
+    </div>
+
+    <!-- Subject Check-Ins Section -->
+    <div>
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;">
+        <h3 style="font-size: 1.5rem; font-weight: 900;">Subject Check-Ins</h3>
+        <div style="display: flex; gap: 0.4rem;">
+          <button class="btn-brutal" id="btn-flt-all" style="background: var(--yellow);" onclick="setNBFilter('ALL', this)">All</button>
+          <button class="btn-brutal" id="btn-flt-lec" onclick="setNBFilter('LECTURE', this)">Lectures</button>
+          <button class="btn-brutal" id="btn-flt-lab" onclick="setNBFilter('LAB', this)">Labs</button>
+        </div>
+      </div>
+
+      <div class="subj-grid" id="nb-subj-grid">
+        <!-- Dynamic Subject Cards -->
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Modal for Dynamic Subject Addition -->
+  <div class="modal-backdrop" id="add-modal">
+    <div class="modal-box">
+      <h3 style="font-size: 1.4rem; font-weight: 900; margin-bottom: 0.5rem;">Add Any Subject</h3>
+      <p style="font-size: 0.9rem; font-weight: 600; margin-bottom: 1.25rem;">
+        Type any subject name (e.g. <em>"History"</em>, <em>"Mathematics"</em>, <em>"Quantum Physics"</em>). Our real-time AI engine will parse and generate a dedicated 3D icon!
+      </p>
+      
+      <div style="display: flex; flex-direction: column; gap: 0.85rem;">
+        <div>
+          <label style="font-size: 0.85rem; font-weight: 800;">Subject Name</label>
+          <input type="text" id="new-sub-name" class="input-field" placeholder="e.g. Ancient & World History" required>
+        </div>
+        <div>
+          <label style="font-size: 0.85rem; font-weight: 800;">Course Code</label>
+          <input type="text" id="new-sub-code" class="input-field" placeholder="e.g. HS501" value="HS501">
+        </div>
+        <div>
+          <label style="font-size: 0.85rem; font-weight: 800;">Type</label>
+          <select id="new-sub-type" class="input-field">
+            <option value="LECTURE">LECTURE</option>
+            <option value="LAB">LAB</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 0.6rem; justify-content: flex-end; margin-top: 1.5rem;">
+        <button class="btn-brutal" onclick="closeAddSubjectModal()">Cancel</button>
+        <button class="btn-brutal btn-brutal-primary" onclick="handleCreateDynamicSubject()">⚡ Generate Real-Time AI Icon</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function getDynamicSubjectIcon(subjectName) {
+      const name = subjectName.trim().toLowerCase();
+      let keyword = subjectName;
+
+      if (name.includes('history')) keyword = 'ancient history roman colosseum quill parchment scroll';
+      else if (name.includes('operat') || name.includes('os')) keyword = 'computer processor cpu workstation microchip';
+      else if (name.includes('compil')) keyword = 'compiler code binary syntax tree terminal screen';
+      else if (name.includes('softw') || name.includes('se')) keyword = 'software engineering code blocks robotic testing arm';
+      else if (name.includes('manage') || name.includes('mgmt')) keyword = 'industrial gears factory analytics graph blueprint';
+      else if (name.includes('constitut') || name.includes('law')) keyword = 'scales of justice leather law book emblem';
+      else if (name.includes('math') || name.includes('calc')) keyword = 'mathematics calculus geometry formula compass';
+      else if (name.includes('physic')) keyword = 'physics quantum atom magnetic particle';
+      else if (name.includes('chem')) keyword = 'chemistry molecule laboratory flask';
+      else if (name.includes('bio')) keyword = 'biology dna double helix microscope';
+      else if (name.includes('ai') || name.includes('intell') || name.includes('graph')) keyword = 'artificial intelligence cybernetic brain 3d neural mesh';
+
+      const prompt = `3d realistic glossy icon of ${keyword}, isolated studio light, high contrast neo pop render, app badge`;
+      return `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=256&height=256&nologo=true`;
+    }
+
+    const subjects = [
+      { id: 'os', name: 'Operating Systems', code: 'CS501', type: 'LECTURE', attended: 22, total: 26, target: 75, icon: getDynamicSubjectIcon('Operating Systems'), todayStatus: null, time: '14:30 - 15:30' },
+      { id: 'compiler', name: 'Compiler Design', code: 'CS502', type: 'LECTURE', attended: 18, total: 24, target: 75, icon: getDynamicSubjectIcon('Compiler Design'), todayStatus: null, time: '12:45 - 13:45' },
+      { id: 'software', name: 'Software Engineering', code: 'CS503', type: 'LECTURE', attended: 21, total: 24, target: 75, icon: getDynamicSubjectIcon('Software Engineering'), todayStatus: null, time: '15:30 - 16:30' },
+      { id: 'mgmt', name: 'Industrial Management', code: 'HU501', type: 'LECTURE', attended: 19, total: 22, target: 75, icon: getDynamicSubjectIcon('Industrial Management'), todayStatus: null, time: '09:30 - 10:30' },
+      { id: 'const', name: 'Constitution of India', code: 'MC501', type: 'LECTURE', attended: 17, total: 22, target: 75, icon: getDynamicSubjectIcon('Constitution of India'), todayStatus: null, time: '11:45 - 12:45' },
+      { id: 'os_lab', name: 'Operating Systems Lab', code: 'CS591', type: 'LAB', attended: 12, total: 14, target: 75, icon: getDynamicSubjectIcon('Operating Systems'), todayStatus: null, time: '09:30 - 13:45 (Tue)' },
+      { id: 'se_lab', name: 'Software Engineering Lab', code: 'CS593', type: 'LAB', attended: 10, total: 12, target: 75, icon: getDynamicSubjectIcon('Software Engineering'), todayStatus: null, time: '12:45 - 17:30 (Thu)' }
+    ];
+
+    let filter = 'ALL';
+
+    function setNBFilter(f, el) {
+      filter = f;
+      document.querySelectorAll('#btn-flt-all, #btn-flt-lec, #btn-flt-lab').forEach(b => b.style.background = '#ffffff');
+      el.style.background = 'var(--yellow)';
+      renderNB();
+    }
+
+    function calcAdvice(att, tot, goal) {
+      const g = goal / 100;
+      const pct = tot > 0 ? (att / tot) * 100 : 0;
+      if (pct >= goal) {
+        const canSkip = Math.floor((att - g * tot) / g);
+        return { isSafe: true, text: `Safe to miss ${canSkip} classes` };
+      } else {
+        const need = Math.ceil((g * tot - att) / (1 - g));
+        return { isSafe: false, text: `Attend +${need} classes` };
+      }
+    }
+
+    function renderNB() {
+      let totAtt = 0, totClasses = 0;
+      let lecAtt = 0, lecTot = 0;
+      let labAtt = 0, labTot = 0;
+
+      subjects.forEach(s => {
+        totAtt += s.attended;
+        totClasses += s.total;
+        if (s.type === 'LECTURE') {
+          lecAtt += s.attended;
+          lecTot += s.total;
+        } else {
+          labAtt += s.attended;
+          labTot += s.total;
+        }
+      });
+
+      const ovPct = totClasses > 0 ? ((totAtt / totClasses) * 100).toFixed(1) : 0;
+      const lPct = lecTot > 0 ? ((lecAtt / lecTot) * 100).toFixed(1) : 0;
+      const lbPct = labTot > 0 ? ((labAtt / labTot) * 100).toFixed(1) : 0;
+
+      document.getElementById('nb-overall-pct').innerText = ovPct + '%';
+      document.getElementById('nb-overall-att').innerText = totAtt;
+      document.getElementById('nb-overall-tot').innerText = totClasses;
+      document.getElementById('nb-circle-txt').innerText = Math.round(ovPct) + '%';
+      const offset = 238 - (238 * Math.min(ovPct, 100)) / 100;
+      document.getElementById('nb-circle-fg').style.strokeDashoffset = offset;
+      document.getElementById('nb-adv-75').innerText = calcAdvice(totAtt, totClasses, 75).text;
+      document.getElementById('nb-adv-85').innerText = calcAdvice(totAtt, totClasses, 85).text;
+
+      document.getElementById('nb-lec-pct').innerText = lPct + '%';
+      document.getElementById('nb-lec-att').innerText = lecAtt;
+      document.getElementById('nb-lec-tot').innerText = lecTot;
+      document.getElementById('nb-lec-fill').style.width = Math.min(lPct, 100) + '%';
+      document.getElementById('nb-lec-adv-75').innerText = calcAdvice(lecAtt, lecTot, 75).text;
+
+      document.getElementById('nb-lab-pct').innerText = lbPct + '%';
+      document.getElementById('nb-lab-att').innerText = labAtt;
+      document.getElementById('nb-lab-tot').innerText = labTot;
+      document.getElementById('nb-lab-fill').style.width = Math.min(lbPct, 100) + '%';
+      document.getElementById('nb-lab-adv-75').innerText = calcAdvice(labAtt, labTot, 75).text;
+
+      // Checklist
+      const checkGrid = document.getElementById('nb-today-grid');
+      checkGrid.innerHTML = '';
+      subjects.slice(0, 5).forEach((s, idx) => {
+        const item = document.createElement('div');
+        item.className = 'check-card';
+        item.innerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 0.6rem;">
+              <img src="${s.icon}" alt="${s.name}" class="thumb-mini" onerror="this.src='icons/computer_os.jpg'">
+              <div>
+                <div style="font-weight: 800; font-size: 0.9rem;">${s.name}</div>
+                <div style="font-size: 0.75rem; font-weight: 700;">${s.time}</div>
+              </div>
+            </div>
+            <span class="brutal-badge" style="background: ${s.type === 'LECTURE' ? 'var(--cyan)' : 'var(--pink)'};">${s.type}</span>
+          </div>
+          <div class="brutal-actions" style="padding-top: 0.4rem; border-top: none;">
+            <button class="act-btn act-p ${s.todayStatus === 'PRESENT' ? 'active' : ''}" onclick="toggleToday(${idx}, 'PRESENT')">Present</button>
+            <button class="act-btn act-a ${s.todayStatus === 'ABSENT' ? 'active' : ''}" onclick="toggleToday(${idx}, 'ABSENT')">Absent</button>
+            <button class="act-btn act-h ${s.todayStatus === 'HOLIDAY' ? 'active' : ''}" onclick="toggleToday(${idx}, 'HOLIDAY')">Holiday</button>
+          </div>
+        `;
+        checkGrid.appendChild(item);
+      });
+
+      // Grid
+      const grid = document.getElementById('nb-subj-grid');
+      grid.innerHTML = '';
+      const filtered = subjects.filter(s => filter === 'ALL' || s.type === filter);
+
+      filtered.forEach(s => {
+        const origIdx = subjects.findIndex(item => item.id === s.id);
+        const pct = s.total > 0 ? ((s.attended / s.total) * 100).toFixed(1) : 0;
+        const isSafe = pct >= s.target;
+        const adv = calcAdvice(s.attended, s.total, s.target);
+
+        const card = document.createElement('div');
+        card.className = 'subj-card';
+        card.innerHTML = `
+          <div>
+            <div style="display: flex; gap: 1rem; align-items: center;">
+              <img src="${s.icon}" alt="${s.name}" class="thumb-brutal" onerror="this.src='icons/computer_os.jpg'">
+              <div style="flex: 1; min-width: 0;">
+                <div style="display: flex; gap: 0.4rem; align-items: center; margin-bottom: 0.25rem;">
+                  <span class="brutal-badge" style="background: ${s.type === 'LECTURE' ? 'var(--cyan)' : 'var(--pink)'};">${s.type}</span>
+                  <span style="font-size: 0.75rem; font-weight: 800; font-family: 'JetBrains Mono', monospace;">${s.code}</span>
+                </div>
+                <div style="font-weight: 900; font-size: 1.2rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${s.name}">${s.name}</div>
+                <div style="font-size: 0.8rem; font-weight: 700; margin-top: 0.15rem;">Goal: ${s.target}%</div>
+              </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.1rem;">
+              <div>
+                <div style="font-size: 1.8rem; font-weight: 900; font-family: 'JetBrains Mono', monospace; color: ${isSafe ? 'var(--green)' : 'var(--red)'}; text-shadow: 1px 1px 0 #000;">${pct}%</div>
+                <div style="font-size: 0.82rem; font-weight: 700;">${s.attended} / ${s.total} logged</div>
+              </div>
+              <div style="font-size: 0.8rem; font-weight: 800; padding: 0.35rem 0.75rem; border: 2px solid #000; border-radius: 6px; background: ${isSafe ? 'var(--green)' : 'var(--red)'}; box-shadow: 2px 2px 0 #000;">
+                ${adv.text}
+              </div>
+            </div>
+
+            <div class="brutal-track" style="margin-top: 0.85rem;">
+              <div class="brutal-fill" style="width: ${Math.min(pct, 100)}%; background: ${isSafe ? 'var(--green)' : 'var(--red)'};"></div>
+            </div>
+
+            <div style="margin-top: 0.5rem; font-size: 0.78rem; font-weight: 800; display: flex; justify-content: space-between;">
+              <span>75%: ${calcAdvice(s.attended, s.total, 75).text}</span>
+              <span>85%: ${calcAdvice(s.attended, s.total, 85).text}</span>
+            </div>
+          </div>
+
+          <div>
+            <div style="font-size: 0.75rem; font-weight: 800; margin-bottom: 0.35rem;">LOG TODAY:</div>
+            <div class="brutal-actions">
+              <button class="act-btn act-p ${s.todayStatus === 'PRESENT' ? 'active' : ''}" onclick="toggleToday(${origIdx}, 'PRESENT')">Present</button>
+              <button class="act-btn act-a ${s.todayStatus === 'ABSENT' ? 'active' : ''}" onclick="toggleToday(${origIdx}, 'ABSENT')">Absent</button>
+              <button class="act-btn act-h ${s.todayStatus === 'HOLIDAY' ? 'active' : ''}" onclick="toggleToday(${origIdx}, 'HOLIDAY')">Holiday</button>
+            </div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function toggleToday(idx, status) {
+      const s = subjects[idx];
+      if (s.todayStatus === status) {
+        if (s.todayStatus === 'PRESENT') { s.attended -= 1; s.total -= 1; }
+        else if (s.todayStatus === 'ABSENT') { s.total -= 1; }
+        s.todayStatus = null;
+      } else {
+        if (s.todayStatus === 'PRESENT') { s.attended -= 1; s.total -= 1; }
+        else if (s.todayStatus === 'ABSENT') { s.total -= 1; }
+        s.todayStatus = status;
+        if (status === 'PRESENT') { s.attended += 1; s.total += 1; }
+        else if (status === 'ABSENT') { s.total += 1; }
+      }
+      renderNB();
+    }
+
+    function bulkCheckIn(status) {
+      for (let i = 0; i < 5; i++) {
+        const s = subjects[i];
+        if (s.todayStatus === status) {
+          if (s.todayStatus === 'PRESENT') { s.attended -= 1; s.total -= 1; }
+          else if (s.todayStatus === 'ABSENT') { s.total -= 1; }
+          s.todayStatus = status;
+          if (status === 'PRESENT') { s.attended += 1; s.total += 1; }
+          else if (status === 'ABSENT') { s.total += 1; }
+        } else {
+          s.todayStatus = status;
+          if (status === 'PRESENT') { s.attended += 1; s.total += 1; }
+          else if (status === 'ABSENT') { s.total += 1; }
+        }
+      }
+      renderNB();
+    }
+
+    function openAddSubjectModal() {
+      document.getElementById('add-modal').style.display = 'flex';
+      document.getElementById('new-sub-name').focus();
+    }
+
+    function closeAddSubjectModal() {
+      document.getElementById('add-modal').style.display = 'none';
+    }
+
+    function handleCreateDynamicSubject() {
+      const name = document.getElementById('new-sub-name').value.trim();
+      const code = document.getElementById('new-sub-code').value.trim() || 'SUB01';
+      const type = document.getElementById('new-sub-type').value;
+
+      if (!name) {
+        alert('Please enter a subject name (e.g. "History")');
+        return;
+      }
+
+      const dynamicIcon = getDynamicSubjectIcon(name);
+
+      subjects.push({
+        id: 'sub_' + Date.now(),
+        name: name,
+        code: code,
+        type: type,
+        attended: 14,
+        total: 16,
+        target: 75,
+        icon: dynamicIcon,
+        todayStatus: null,
+        time: '10:00 - 11:00'
+      });
+
+      closeAddSubjectModal();
+      renderNB();
+      alert(`Subject "${name}" added! Generating and loading real-time 3D AI icon.`);
+    }
+
+    renderNB();
+  </script>
+</body>
+</html>

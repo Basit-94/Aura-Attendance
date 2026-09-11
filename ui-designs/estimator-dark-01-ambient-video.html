@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AuraAttend — Dark Estimator 01 (Ambient Motion Canvas)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0d14;
+      --card-bg: rgba(18, 22, 34, 0.72);
+      --card-border: rgba(99, 102, 241, 0.2);
+      --card-hover: rgba(99, 102, 241, 0.35);
+      --primary: #6366f1;
+      --secondary: #a855f7;
+      --green: #22c55e;
+      --red: #ef4444;
+      --amber: #f59e0b;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+    /* Animated Video-like Background Canvas */
+    #bg-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      opacity: 0.65;
+      pointer-events: none;
+    }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(11, 13, 20, 0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--card-border);
+      padding: 0.85rem 2rem;
+    }
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-weight: 800;
+      font-size: 1.25rem;
+      letter-spacing: -0.02em;
+    }
+    .brand-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      display: grid;
+      place-items: center;
+      box-shadow: 0 0 15px rgba(99, 102, 241, 0.5);
+    }
+    .badge-branch {
+      background: rgba(99, 102, 241, 0.15);
+      border: 1px solid rgba(99, 102, 241, 0.4);
+      color: #c7d2fe;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 6px;
+      font-weight: 700;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 2rem auto 5rem;
+      padding: 0 1.5rem;
+    }
+    .glass-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(25px);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+    }
+    /* Hero overall stat */
+    .hero-stat {
+      padding: 2rem;
+      margin-bottom: 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(168, 85, 247, 0.08));
+    }
+    .stat-main-num {
+      font-size: 3.5rem;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      line-height: 1;
+      color: var(--green);
+    }
+    .pill-bunk {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(34, 197, 94, 0.15);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      color: #4ade80;
+      padding: 0.35rem 0.85rem;
+      border-radius: 20px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      margin-top: 0.5rem;
+    }
+
+    /* Grid of Subject Cards with REAL 3D ICONS */
+    .subject-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 1.25rem;
+    }
+    .subject-card {
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 1.25rem;
+      transition: transform 0.2s, border-color 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .subject-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--card-hover);
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.6), 0 0 25px rgba(99, 102, 241, 0.2);
+    }
+    .card-top {
+      display: flex;
+      gap: 1.1rem;
+      align-items: center;
+    }
+    /* REAL 3D GENERATED SUBJECT ICON */
+    .subject-icon-img {
+      width: 68px;
+      height: 68px;
+      border-radius: 14px;
+      object-fit: cover;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      flex-shrink: 0;
+      transition: transform 0.2s;
+    }
+    .subject-card:hover .subject-icon-img {
+      transform: scale(1.05);
+    }
+    .subject-details h3 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+    }
+    .subject-details p {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+    .bar-container {
+      height: 7px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 0.6rem 0 0.3rem;
+    }
+    .bar-fill {
+      height: 100%;
+      border-radius: 10px;
+      background: linear-gradient(90deg, #6366f1, #22c55e);
+    }
+    .action-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.6rem;
+    }
+    .btn-act {
+      border: none;
+      padding: 0.6rem;
+      border-radius: 8px;
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+    }
+    .btn-p {
+      background: rgba(34, 197, 94, 0.18);
+      color: #4ade80;
+      border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+    .btn-p:hover { background: #22c55e; color: #000; }
+    .btn-a {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+    .btn-a:hover { background: #ef4444; color: #fff; }
+  </style>
+</head>
+<body>
+
+<!-- Animated Fluid Background Canvas simulating video motion -->
+<canvas id="bg-canvas"></canvas>
+
+<header>
+  <div class="header-content">
+    <div class="brand">
+      <div class="brand-icon">⚡</div>
+      <span>AuraAttend</span>
+      <span class="badge-branch">CSE 3 OFFICIAL</span>
+    </div>
+    <div style="display:flex; gap:1rem; align-items:center;">
+      <span style="font-size:0.8rem; color:var(--text-muted);">Estimated 75% Target</span>
+      <button style="background:var(--primary); color:#fff; border:none; padding:0.45rem 1rem; border-radius:8px; font-weight:700; font-size:0.8rem; cursor:pointer;">
+        Save Routine
+      </button>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+  <!-- Hero Stat Card -->
+  <div class="glass-card hero-stat">
+    <div>
+      <span style="font-size:0.8rem; color:var(--text-muted); text-transform:uppercase; font-weight:700; letter-spacing:0.06em;">OVERALL PRESENCE RATE</span>
+      <div class="stat-main-num" id="total-pct">84.6%</div>
+      <div class="pill-bunk">
+        <span>🛡️</span>
+        <span id="bunk-text">Safe to bunk next 4 classes</span>
+      </div>
+    </div>
+    <div style="text-align:right;">
+      <div style="font-size:1.4rem; font-weight:800;" id="total-counts">52 / 61</div>
+      <div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.2rem;">Mandatory Minimum: 75.0%</div>
+      <div style="font-size:0.75rem; color:#818cf8; margin-top:0.4rem;">Official Routine: 25 Periods / Week</div>
+    </div>
+  </div>
+
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
+    <h2 style="font-size:1.35rem; font-weight:800; letter-spacing:-0.02em;">Subject Check-Ins with Obvious 3D Icons</h2>
+    <span style="font-size:0.82rem; color:var(--text-muted);">Real AI 3D Rendered Assets</span>
+  </div>
+
+  <!-- Subject Cards with real generated icons -->
+  <div class="subject-grid">
+    <!-- Subject 1: Operating Systems -->
+    <div class="glass-card subject-card" data-present="14" data-total="16">
+      <div>
+        <div class="card-top">
+          <img src="icons/computer_os.jpg" alt="Computer Workstation" class="subject-icon-img">
+          <div class="subject-details" style="flex:1;">
+            <h3>Operating Systems</h3>
+            <p>Theory • Mon, Wed, Fri (09:30)</p>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.4rem;">
+              <span style="font-size:0.82rem; color:var(--text-muted);"><span class="pres-cnt">14</span> / <span class="tot-cnt">16</span></span>
+              <strong style="font-size:1.1rem; color:var(--green); font-family:'JetBrains Mono';" class="sub-pct">87.5%</strong>
+            </div>
+          </div>
+        </div>
+        <div class="bar-container">
+          <div class="bar-fill" style="width: 87.5%;"></div>
+        </div>
+        <div style="font-size:0.75rem; color:var(--green); font-weight:700; margin-top:0.2rem;">✓ Safe! Can bunk 2 classes</div>
+      </div>
+      <div class="action-row">
+        <button class="btn-act btn-p" onclick="markSubject(this, true)">✓ Present (+1)</button>
+        <button class="btn-act btn-a" onclick="markSubject(this, false)">✕ Absent (-1)</button>
+      </div>
+    </div>
+
+    <!-- Subject 2: OS Lab -->
+    <div class="glass-card subject-card" data-present="6" data-total="6">
+      <div>
+        <div class="card-top">
+          <img src="icons/computer_os.jpg" alt="Operating Systems Lab" class="subject-icon-img">
+          <div class="subject-details" style="flex:1;">
+            <h3>Operating Systems Lab</h3>
+            <p>Practical • Tue 09:30-13:45</p>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.4rem;">
+              <span style="font-size:0.82rem; color:var(--text-muted);"><span class="pres-cnt">6</span> / <span class="tot-cnt">6</span></span>
+              <strong style="font-size:1.1rem; color:var(--green); font-family:'JetBrains Mono';" class="sub-pct">100%</strong>
+            </div>
+          </div>
+        </div>
+        <div class="bar-container">
+          <div class="bar-fill" style="width: 100%;"></div>
+        </div>
+        <div style="font-size:0.75rem; color:var(--green); font-weight:700; margin-top:0.2rem;">✓ Safe! Can bunk 2 classes</div>
+      </div>
+      <div class="action-row">
+        <button class="btn-act btn-p" onclick="markSubject(this, true)">✓ Present (+1)</button>
+        <button class="btn-act btn-a" onclick="markSubject(this, false)">✕ Absent (-1)</button>
+      </div>
+    </div>
+
+    <!-- Subject 3: Compiler Design -->
+    <div class="glass-card subject-card" data-present="10" data-total="14" style="border-color: rgba(239, 68, 68, 0.3);">
+      <div>
+        <div class="card-top">
+          <img src="icons/compiler.jpg" alt="Compiler Terminal" class="subject-icon-img">
+          <div class="subject-details" style="flex:1;">
+            <h3>Compiler Design</h3>
+            <p>Theory • Tue, Wed, Fri</p>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.4rem;">
+              <span style="font-size:0.82rem; color:var(--text-muted);"><span class="pres-cnt">10</span> / <span class="tot-cnt">14</span></span>
+              <strong style="font-size:1.1rem; color:var(--red); font-family:'JetBrains Mono';" class="sub-pct">71.4%</strong>
+            </div>
+          </div>
+        </div>
+        <div class="bar-container">
+          <div class="bar-fill" style="width: 71.4%; background: var(--red);"></div>
+        </div>
+        <div style="font-size:0.75rem; color:var(--red); font-weight:700; margin-top:0.2rem;">⚠ Attend next 2 classes to restore 75%</div>
+      </div>
+      <div class="action-row">
+        <button class="btn-act btn-p" onclick="markSubject(this, true)">✓ Present (+1)</button>
+        <button class="btn-act btn-a" onclick="markSubject(this, false)">✕ Absent (-1)</button>
+      </div>
+    </div>
+
+    <!-- Subject 4: Software Engineering Lab -->
+    <div class="glass-card subject-card" data-present="7" data-total="8">
+      <div>
+        <div class="card-top">
+          <img src="icons/software_engg.jpg" alt="Software Engineering Lab" class="subject-icon-img">
+          <div class="subject-details" style="flex:1;">
+            <h3>Software Engg Lab</h3>
+            <p>Practical • Thu 12:45-17:30</p>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.4rem;">
+              <span style="font-size:0.82rem; color:var(--text-muted);"><span class="pres-cnt">7</span> / <span class="tot-cnt">8</span></span>
+              <strong style="font-size:1.1rem; color:var(--green); font-family:'JetBrains Mono';" class="sub-pct">87.5%</strong>
+            </div>
+          </div>
+        </div>
+        <div class="bar-container">
+          <div class="bar-fill" style="width: 87.5%;"></div>
+        </div>
+        <div style="font-size:0.75rem; color:var(--green); font-weight:700; margin-top:0.2rem;">✓ Safe! Can bunk 1 class</div>
+      </div>
+      <div class="action-row">
+        <button class="btn-act btn-p" onclick="markSubject(this, true)">✓ Present (+1)</button>
+        <button class="btn-act btn-a" onclick="markSubject(this, false)">✕ Absent (-1)</button>
+      </div>
+    </div>
+
+    <!-- Subject 5: Industrial Management -->
+    <div class="glass-card subject-card" data-present="8" data-total="9">
+      <div>
+        <div class="card-top">
+          <img src="icons/industrial_mgmt.jpg" alt="Industrial Management" class="subject-icon-img">
+          <div class="subject-details" style="flex:1;">
+            <h3>Industrial Management</h3>
+            <p>Theory • Thu, Fri</p>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.4rem;">
+              <span style="font-size:0.82rem; color:var(--text-muted);"><span class="pres-cnt">8</span> / <span class="tot-cnt">9</span></span>
+              <strong style="font-size:1.1rem; color:var(--green); font-family:'JetBrains Mono';" class="sub-pct">88.8%</strong>
+            </div>
+          </div>
+        </div>
+        <div class="bar-container">
+          <div class="bar-fill" style="width: 88.8%;"></div>
+        </div>
+        <div style="font-size:0.75rem; color:var(--green); font-weight:700; margin-top:0.2rem;">✓ Safe! Can bunk 1 class</div>
+      </div>
+      <div class="action-row">
+        <button class="btn-act btn-p" onclick="markSubject(this, true)">✓ Present (+1)</button>
+        <button class="btn-act btn-a" onclick="markSubject(this, false)">✕ Absent (-1)</button>
+      </div>
+    </div>
+
+    <!-- Subject 6: Constitution of India -->
+    <div class="glass-card subject-card" data-present="7" data-total="8">
+      <div>
+        <div class="card-top">
+          <img src="icons/constitution.jpg" alt="Constitution of India" class="subject-icon-img">
+          <div class="subject-details" style="flex:1;">
+            <h3>Constitution of India</h3>
+            <p>Theory • Thu 11:45, Fri 11:45</p>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.4rem;">
+              <span style="font-size:0.82rem; color:var(--text-muted);"><span class="pres-cnt">7</span> / <span class="tot-cnt">8</span></span>
+              <strong style="font-size:1.1rem; color:var(--green); font-family:'JetBrains Mono';" class="sub-pct">87.5%</strong>
+            </div>
+          </div>
+        </div>
+        <div class="bar-container">
+          <div class="bar-fill" style="width: 87.5%;"></div>
+        </div>
+        <div style="font-size:0.75rem; color:var(--green); font-weight:700; margin-top:0.2rem;">✓ Safe! Can bunk 1 class</div>
+      </div>
+      <div class="action-row">
+        <button class="btn-act btn-p" onclick="markSubject(this, true)">✓ Present (+1)</button>
+        <button class="btn-act btn-a" onclick="markSubject(this, false)">✕ Absent (-1)</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+  // Animated Fluid Video-like background canvas
+  const canvas = document.getElementById('bg-canvas');
+  const ctx = canvas.getContext('2d');
+  let width, height;
+  let particles = [];
+
+  function resize() {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  for (let i = 0; i < 45; i++) {
+    particles.push({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      vx: (Math.random() - 0.5) * 0.8,
+      vy: (Math.random() - 0.5) * 0.8,
+      radius: Math.random() * 80 + 40,
+      color: i % 2 === 0 ? 'rgba(99, 102, 241, 0.12)' : 'rgba(168, 85, 247, 0.1)'
+    });
+  }
+
+  function animate() {
+    ctx.clearRect(0, 0, width, height);
+    particles.forEach(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      if (p.x < -p.radius) p.x = width + p.radius;
+      if (p.x > width + p.radius) p.x = -p.radius;
+      if (p.y < -p.radius) p.y = height + p.radius;
+      if (p.y > height + p.radius) p.y = -p.radius;
+
+      const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.radius);
+      g.addColorStop(0, p.color);
+      g.addColorStop(1, 'transparent');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    requestAnimationFrame(animate);
+  }
+  animate();
+
+  // Interactive Live Mark logic
+  function markSubject(btn, isPresent) {
+    const card = btn.closest('.subject-card');
+    let pres = parseInt(card.dataset.present);
+    let tot = parseInt(card.dataset.total);
+    if (isPresent) {
+      pres++;
+      tot++;
+    } else {
+      tot++;
+    }
+    card.dataset.present = pres;
+    card.dataset.total = tot;
+
+    const pct = ((pres / tot) * 100).toFixed(1);
+    card.querySelector('.pres-cnt').innerText = pres;
+    card.querySelector('.tot-cnt').innerText = tot;
+    card.querySelector('.sub-pct').innerText = pct + '%';
+    card.querySelector('.bar-fill').style.width = pct + '%';
+
+    // Recalculate totals
+    let totalP = 0, totalT = 0;
+    document.querySelectorAll('.subject-card').forEach(c => {
+      totalP += parseInt(c.dataset.present);
+      totalT += parseInt(c.dataset.total);
+    });
+    const overall = ((totalP / totalT) * 100).toFixed(1);
+    document.getElementById('total-pct').innerText = overall + '%';
+    document.getElementById('total-counts').innerText = `${totalP} / ${totalT}`;
+  }
+</script>
+
+</body>
+</html>

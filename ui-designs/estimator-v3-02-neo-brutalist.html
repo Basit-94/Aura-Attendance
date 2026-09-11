@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AuraAttend — Estimator 02: Neo-Brutalist Pop</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700;800;900&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #fffbeb;
+      --card-bg: #ffffff;
+      --border: #000000;
+      --yellow: #fde047;
+      --pink: #f472b6;
+      --green: #4ade80;
+      --purple: #c084fc;
+      --cyan: #38bdf8;
+      --danger: #fb7185;
+      --text: #000000;
+      --shadow-hard: 5px 5px 0px #000000;
+      --shadow-sm: 3px 3px 0px #000000;
+      --shadow-btn: 4px 4px 0px #000000;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Space Grotesk', sans-serif;
+      min-height: 100vh;
+      padding-bottom: 5rem;
+      background-image: radial-gradient(#000000 1.2px, transparent 1.2px);
+      background-size: 24px 24px;
+    }
+    header {
+      background: var(--yellow);
+      border-bottom: 3px solid var(--border);
+      padding: 1rem 2.2rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 0px rgba(0,0,0,0.15);
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+    .brand-cube {
+      width: 44px;
+      height: 44px;
+      border-radius: 8px;
+      background: #ffffff;
+      border: 3px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #000000;
+      font-family: 'Space Mono', monospace;
+      font-weight: 900;
+      font-size: 1.3rem;
+      box-shadow: var(--shadow-sm);
+    }
+    .container {
+      max-width: 1220px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.6rem;
+    }
+    .brutal-card {
+      background: var(--card-bg);
+      border: 3px solid var(--border);
+      border-radius: 12px;
+      padding: 1.6rem;
+      box-shadow: var(--shadow-hard);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .term-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      background: #ffffff;
+      border: 3px solid var(--border);
+      box-shadow: var(--shadow-hard);
+    }
+    .btn-brutal {
+      padding: 0.65rem 1.2rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 800;
+      font-family: 'Space Grotesk', sans-serif;
+      border: 2.5px solid var(--border);
+      background: #ffffff;
+      color: var(--text);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: var(--shadow-btn);
+      transition: all 0.1s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+    .btn-brutal:hover {
+      transform: translate(-2px, -2px);
+      box-shadow: 6px 6px 0px #000000;
+    }
+    .btn-brutal:active {
+      transform: translate(2px, 2px);
+      box-shadow: 2px 2px 0px #000000;
+    }
+    .btn-brutal-primary {
+      background: var(--pink);
+      color: #000000;
+    }
+    .btn-brutal-yellow {
+      background: var(--yellow);
+    }
+    .btn-brutal-green {
+      background: var(--green);
+    }
+    .tabs-bar {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      padding: 0.7rem 1.3rem;
+      border-radius: 8px;
+      border: 2.5px solid var(--border);
+      font-size: 0.9rem;
+      font-weight: 800;
+      color: #000000;
+      background: #ffffff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.1s;
+    }
+    .tab-btn:hover {
+      background: #fef08a;
+    }
+    .tab-btn.active {
+      background: var(--yellow);
+      box-shadow: var(--shadow-btn);
+      transform: translate(-2px, -2px);
+    }
+
+    /* Top 3 Widgets */
+    .widgets-grid {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr 1fr;
+      gap: 1.4rem;
+    }
+    @media (max-width: 950px) {
+      .widgets-grid { grid-template-columns: 1fr; }
+    }
+    .circle-wrap {
+      position: relative;
+      width: 96px;
+      height: 96px;
+      flex-shrink: 0;
+    }
+    .circle-wrap svg {
+      transform: rotate(-90deg);
+      width: 96px;
+      height: 96px;
+    }
+    .circle-bg {
+      fill: none;
+      stroke: #f1f5f9;
+      stroke-width: 12;
+    }
+    .circle-fg {
+      fill: none;
+      stroke: #000000;
+      stroke-width: 12;
+      stroke-linecap: square;
+      transition: stroke-dashoffset 0.4s ease;
+    }
+    .circle-val {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: 'Space Mono', monospace;
+      font-size: 1.3rem;
+      font-weight: 900;
+      color: #000000;
+    }
+    .brutal-track {
+      height: 14px;
+      background: #ffffff;
+      border: 2px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+      margin: 0.75rem 0 0.4rem;
+      box-shadow: 2px 2px 0px #000000;
+    }
+    .brutal-fill {
+      height: 100%;
+      background: var(--green);
+      transition: width 0.35s ease;
+    }
+
+    /* Thumbnails */
+    .thumb-realtime {
+      width: 66px;
+      height: 66px;
+      border-radius: 8px;
+      object-fit: cover;
+      border: 2.5px solid var(--border);
+      box-shadow: var(--shadow-sm);
+      flex-shrink: 0;
+      background: #fef08a;
+      transition: transform 0.15s ease;
+    }
+    .thumb-realtime:hover {
+      transform: rotate(-3deg) scale(1.05);
+    }
+    .thumb-mini {
+      width: 40px;
+      height: 40px;
+      border-radius: 6px;
+      object-fit: cover;
+      border: 2px solid var(--border);
+      background: #fef08a;
+      box-shadow: 2px 2px 0px #000000;
+    }
+    .check-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    .check-box {
+      background: #ffffff;
+      border: 2.5px solid var(--border);
+      border-radius: 8px;
+      padding: 0.95rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* Subject Cards Grid */
+    .subj-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 1.4rem;
+    }
+    .subj-card {
+      background: #ffffff;
+      border: 3px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: var(--shadow-hard);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 1.25rem;
+      transition: all 0.15s ease;
+    }
+    .subj-card:hover {
+      transform: translate(-3px, -3px);
+      box-shadow: 8px 8px 0px #000000;
+    }
+    .brutal-badge {
+      font-size: 0.75rem;
+      font-weight: 900;
+      font-family: 'Space Mono', monospace;
+      padding: 0.25rem 0.6rem;
+      border-radius: 4px;
+      border: 1.5px solid var(--border);
+      box-shadow: 1.5px 1.5px 0px #000000;
+      text-transform: uppercase;
+    }
+    .badge-lec {
+      background: var(--yellow);
+    }
+    .badge-lab {
+      background: var(--cyan);
+    }
+    .tech-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0.55rem;
+      padding-top: 0.85rem;
+      border-top: 2px dashed #cbd5e1;
+    }
+    .act-btn {
+      padding: 0.6rem 0.4rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 800;
+      font-family: 'Space Grotesk', sans-serif;
+      border: 2px solid var(--border);
+      background: #ffffff;
+      cursor: pointer;
+      box-shadow: 2px 2px 0px #000000;
+      transition: all 0.1s;
+    }
+    .act-btn:hover {
+      transform: translate(-1px, -1px);
+      box-shadow: 3px 3px 0px #000000;
+    }
+    .act-btn:active {
+      transform: translate(1px, 1px);
+      box-shadow: 1px 1px 0px #000000;
+    }
+    .act-p.active {
+      background: var(--green);
+      color: #000000;
+    }
+    .act-a.active {
+      background: var(--danger);
+      color: #ffffff;
+    }
+    .act-h.active {
+      background: var(--yellow);
+      color: #000000;
+    }
+
+    /* Modal */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-box {
+      background: #ffffff;
+      border: 3.5px solid var(--border);
+      border-radius: 14px;
+      padding: 2rem;
+      max-width: 480px;
+      width: 90%;
+      box-shadow: 8px 8px 0px #000000;
+    }
+    .input-field {
+      width: 100%;
+      padding: 0.8rem 1rem;
+      border: 2px solid var(--border);
+      border-radius: 6px;
+      font-size: 1rem;
+      font-family: 'Space Grotesk', sans-serif;
+      margin-top: 0.4rem;
+      outline: none;
+      box-shadow: 2px 2px 0px #000000;
+    }
+    .input-field:focus {
+      background: #fffbeb;
+      box-shadow: 4px 4px 0px #000000;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <div class="brand-cube">NB</div>
+      <div>
+        <div style="font-size: 1.3rem; font-weight: 900; letter-spacing: -0.02em;">AuraAttend</div>
+        <div style="font-size: 0.78rem; font-weight: 800; font-family: 'Space Mono', monospace;">Estimator 02 • Neo-Brutalist Pop</div>
+      </div>
+    </div>
+    <div style="display: flex; gap: 1rem; align-items: center; font-size: 0.9rem;">
+      <span class="brutal-badge badge-lec" style="font-size: 0.85rem; padding: 0.35rem 0.8rem;">CSE 3 Academic</span>
+      <span style="font-weight: 800;">Target: <strong>75.0%</strong></span>
+    </div>
+  </header>
+
+  <div class="container">
+    
+    <!-- Active Term Bar -->
+    <div class="brutal-card term-bar">
+      <div>
+        <div style="font-size: 0.75rem; font-weight: 900; text-transform: uppercase; color: #475569; font-family: 'Space Mono', monospace;">System Timetable</div>
+        <div style="font-size: 1.5rem; font-weight: 900; color: var(--text);">CSE 3 (Odd Semester 2026)</div>
+      </div>
+      <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+        <button class="btn-brutal btn-brutal-yellow" onclick="alert('Exporting PDF attendance summary...')">📄 Export PDF</button>
+        <button class="btn-brutal btn-brutal-primary" id="btn-open-modal" onclick="openAddSubjectModal()">+ Add Any Subject (Real-Time AI)</button>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="tabs-bar">
+      <button class="tab-btn active">📊 Dashboard</button>
+      <button class="tab-btn">📅 Weekly Schedule</button>
+      <button class="tab-btn">📈 Analytics & Predictors</button>
+      <button class="tab-btn">🗓 Calendar Logger</button>
+    </div>
+
+    <!-- 3 Summary Widgets -->
+    <div class="widgets-grid">
+      <!-- Widget 1: Overall -->
+      <div class="brutal-card" style="display: flex; gap: 1.3rem; align-items: center; background: #fef08a;">
+        <div class="circle-wrap">
+          <svg viewBox="0 0 100 100">
+            <circle class="circle-bg" cx="50" cy="50" r="38"></circle>
+            <circle class="circle-fg" id="cm-circle-fg" cx="50" cy="50" r="38" stroke-dasharray="238" stroke-dashoffset="40"></circle>
+          </svg>
+          <div class="circle-val" id="cm-circle-txt">82%</div>
+        </div>
+        <div style="flex: 1;">
+          <div style="font-size: 0.78rem; font-weight: 900; text-transform: uppercase; font-family: 'Space Mono', monospace;">Overall Attendance</div>
+          <div style="font-size: 2rem; font-weight: 900; line-height: 1.1;" id="cm-overall-pct">82.3%</div>
+          <div style="font-size: 0.85rem; font-weight: 800; margin-top: 0.2rem;">
+            <span id="cm-overall-att">102</span> / <span id="cm-overall-tot">124</span> Classes Logged
+          </div>
+          <div style="margin-top: 0.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <span class="brutal-badge" style="background: #ffffff;" id="cm-adv-75">Safe to miss 12</span>
+            <span class="brutal-badge" style="background: #ffffff;" id="cm-adv-85">Attend +3</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Widget 2: Lecture Aggregate -->
+      <div class="brutal-card" style="background: #ffffff;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 0.78rem; font-weight: 900; text-transform: uppercase; font-family: 'Space Mono', monospace;">Lecture Aggregate</span>
+          <span class="brutal-badge badge-lec">Lectures</span>
+        </div>
+        <div style="font-size: 1.8rem; font-weight: 900; margin-top: 0.4rem;" id="cm-lec-pct">81.8%</div>
+        <div style="font-size: 0.85rem; font-weight: 700; color: #334155;">
+          <span id="cm-lec-att">81</span> / <span id="cm-lec-tot">99</span> Hours Attended
+        </div>
+        <div class="brutal-track">
+          <div class="brutal-fill" id="cm-lec-fill" style="width: 81.8%; background: var(--purple);"></div>
+        </div>
+        <div style="font-size: 0.8rem; font-weight: 800; font-family: 'Space Mono', monospace;" id="cm-lec-adv-75">
+          Status: Safe to miss 9
+        </div>
+      </div>
+
+      <!-- Widget 3: Lab Aggregate -->
+      <div class="brutal-card" style="background: #ffffff;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 0.78rem; font-weight: 900; text-transform: uppercase; font-family: 'Space Mono', monospace;">Lab Aggregate</span>
+          <span class="brutal-badge badge-lab">Practicals</span>
+        </div>
+        <div style="font-size: 1.8rem; font-weight: 900; margin-top: 0.4rem;" id="cm-lab-pct">84.0%</div>
+        <div style="font-size: 0.85rem; font-weight: 700; color: #334155;">
+          <span id="cm-lab-att">21</span> / <span id="cm-lab-tot">25</span> Sessions Attended
+        </div>
+        <div class="brutal-track">
+          <div class="brutal-fill" id="cm-lab-fill" style="width: 84%; background: var(--cyan);"></div>
+        </div>
+        <div style="font-size: 0.8rem; font-weight: 800; font-family: 'Space Mono', monospace;" id="cm-lab-adv-75">
+          Status: Safe to miss 3
+        </div>
+      </div>
+    </div>
+
+    <!-- Today's Class Checklist -->
+    <div class="brutal-card" style="background: #ffffff;">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+        <div>
+          <div style="display: flex; align-items: center; gap: 0.6rem;">
+            <h2 style="font-size: 1.3rem; font-weight: 900;">Today's Classes (Friday)</h2>
+            <span class="brutal-badge" style="background: var(--pink); color: #000000;">5 Scheduled</span>
+          </div>
+          <p style="font-size: 0.85rem; font-weight: 700; color: #64748b; margin-top: 0.2rem;">Quick bulk logging for today's routine</p>
+        </div>
+        <div style="display: flex; gap: 0.55rem; flex-wrap: wrap;">
+          <button class="btn-brutal btn-brutal-green" style="font-size: 0.8rem; padding: 0.45rem 0.85rem;" onclick="bulkCheckIn('PRESENT')">All Present</button>
+          <button class="btn-brutal" style="font-size: 0.8rem; padding: 0.45rem 0.85rem; background: var(--danger); color: #fff;" onclick="bulkCheckIn('ABSENT')">All Absent</button>
+          <button class="btn-brutal btn-brutal-yellow" style="font-size: 0.8rem; padding: 0.45rem 0.85rem;" onclick="bulkCheckIn('HOLIDAY')">All Holiday</button>
+        </div>
+      </div>
+
+      <div class="check-grid" id="cm-today-grid">
+        <!-- Injected via JavaScript -->
+      </div>
+    </div>
+
+    <!-- Subject Check-Ins Section -->
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-top: 0.5rem;">
+      <div>
+        <h2 style="font-size: 1.5rem; font-weight: 900;">Subject Check-Ins & Real-Time AI Badges</h2>
+        <p style="font-size: 0.88rem; font-weight: 700; color: #475569;">Every icon badge is dynamically generated live by AI — no pre-saved files!</p>
+      </div>
+      <div class="tabs-bar" style="gap: 0.4rem;">
+        <button class="tab-btn active" style="padding: 0.45rem 0.9rem; font-size: 0.82rem;" onclick="setCMFilter('ALL', this)">All Subjects</button>
+        <button class="tab-btn" style="padding: 0.45rem 0.9rem; font-size: 0.82rem;" onclick="setCMFilter('LECTURE', this)">Lectures Only</button>
+        <button class="tab-btn" style="padding: 0.45rem 0.9rem; font-size: 0.82rem;" onclick="setCMFilter('LAB', this)">Labs Only</button>
+      </div>
+    </div>
+
+    <!-- Subject Grid -->
+    <div class="subj-grid" id="cm-subj-grid">
+      <!-- Injected via JavaScript -->
+    </div>
+
+  </div>
+
+  <!-- Dynamic Subject Modal -->
+  <div class="modal-backdrop" id="add-modal">
+    <div class="modal-box">
+      <h3 style="font-size: 1.3rem; font-weight: 900; margin-bottom: 0.4rem;">+ Add Custom Subject</h3>
+      <p style="font-size: 0.85rem; font-weight: 700; color: #475569; margin-bottom: 1.2rem;">
+        Enter any subject (e.g. <em>"History"</em>, <em>"Discrete Mathematics"</em>). Our real-time AI will automatically synthesize a matching 3D badge in real time!
+      </p>
+
+      <div style="margin-bottom: 1rem;">
+        <label style="font-size: 0.82rem; font-weight: 900; font-family: 'Space Mono', monospace; text-transform: uppercase;">Subject Name</label>
+        <input type="text" id="new-sub-name" class="input-field" placeholder="e.g. History or Microprocessors" value="History">
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin-bottom: 1.4rem;">
+        <div>
+          <label style="font-size: 0.82rem; font-weight: 900; font-family: 'Space Mono', monospace; text-transform: uppercase;">Course Code</label>
+          <input type="text" id="new-sub-code" class="input-field" placeholder="e.g. HS301" value="HIST101">
+        </div>
+        <div>
+          <label style="font-size: 0.82rem; font-weight: 900; font-family: 'Space Mono', monospace; text-transform: uppercase;">Category</label>
+          <select id="new-sub-type" class="input-field">
+            <option value="LECTURE">LECTURE</option>
+            <option value="LAB">LAB</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 0.6rem;">
+        <button class="btn-brutal" onclick="closeAddSubjectModal()">Cancel</button>
+        <button class="btn-brutal btn-brutal-primary" onclick="handleCreateDynamicSubject()">⚡ Generate & Add Live</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Real-Time Dynamic AI Icon Generator
+    function getLiveSubjectIcon(subjectName) {
+      const lower = subjectName.toLowerCase();
+      let visualKeyword = 'academic textbook education stationery emblem';
+
+      if (lower.includes('history')) visualKeyword = 'ancient greek roman marble parthenon temple column hourglass antique parchment history relic';
+      else if (lower.includes('operat') || lower.includes('os')) visualKeyword = 'sleek retro mechanical microchip neon cpu processor terminal window computer';
+      else if (lower.includes('compil') || lower.includes('design')) visualKeyword = 'syntax tree mechanical gears compiler machine code binary flow';
+      else if (lower.includes('softw') || lower.includes('engin')) visualKeyword = 'interlocking puzzle 3d isometric blueprint code cubes software engineering';
+      else if (lower.includes('manage') || lower.includes('industr')) visualKeyword = 'golden financial growth bar chart factory gear industrial management';
+      else if (lower.includes('constitut') || lower.includes('law')) visualKeyword = 'brass supreme court scales of justice legal book law gavel';
+      else if (lower.includes('math')) visualKeyword = 'golden compass geometry ruler calculus differential equation 3d shapes';
+      else if (lower.includes('physic')) visualKeyword = 'atomic quantum orbit nucleus glowing laser prism physics';
+      else if (lower.includes('chem')) visualKeyword = 'laboratory bubbling glass beaker chemical molecules test tubes';
+      else if (lower.includes('ai') || lower.includes('intel')) visualKeyword = 'artificial intelligence cybernetic brain neural network';
+
+      const prompt = `neo brutalist pop 3d icon badge of ${visualKeyword}, heavy black outlines, bright yellow and pink studio light background, high contrast 8k sticker`;
+      return `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=256&height=256&nologo=true`;
+    }
+
+    function getFallbackSvg(subjectName) {
+      const lower = subjectName.toLowerCase();
+      let emoji = '📚';
+      let color = '#fde047';
+      if (lower.includes('history')) { emoji = '🏛️'; color = '#fdba74'; }
+      else if (lower.includes('operat') || lower.includes('os')) { emoji = '💻'; color = '#38bdf8'; }
+      else if (lower.includes('compil')) { emoji = '⚙️'; color = '#c084fc'; }
+      else if (lower.includes('softw')) { emoji = '🧩'; color = '#4ade80'; }
+      else if (lower.includes('manage')) { emoji = '📊'; color = '#fde047'; }
+      else if (lower.includes('constitut')) { emoji = '⚖️'; color = '#fb7185'; }
+      const raw = `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect width="60" height="60" x="2" y="2" rx="8" fill="${color}" stroke="#000000" stroke-width="3"/><text x="50%" y="55%" font-size="28" text-anchor="middle" dominant-baseline="middle">${emoji}</text></svg>`;
+      return 'data:image/svg+xml;utf8,' + encodeURIComponent(raw);
+    }
+
+    const subjects = [
+      { id: 'os', name: 'Operating Systems', code: 'CS501', type: 'LECTURE', attended: 22, total: 26, target: 75, icon: getLiveSubjectIcon('Operating Systems'), todayStatus: null, time: '14:30 - 15:30' },
+      { id: 'compiler', name: 'Compiler Design', code: 'CS502', type: 'LECTURE', attended: 18, total: 24, target: 75, icon: getLiveSubjectIcon('Compiler Design'), todayStatus: null, time: '12:45 - 13:45' },
+      { id: 'software', name: 'Software Engineering', code: 'CS503', type: 'LECTURE', attended: 21, total: 24, target: 75, icon: getLiveSubjectIcon('Software Engineering'), todayStatus: null, time: '15:30 - 16:30' },
+      { id: 'mgmt', name: 'Industrial Management', code: 'HU501', type: 'LECTURE', attended: 19, total: 22, target: 75, icon: getLiveSubjectIcon('Industrial Management'), todayStatus: null, time: '09:30 - 10:30' },
+      { id: 'const', name: 'Constitution of India', code: 'MC501', type: 'LECTURE', attended: 17, total: 22, target: 75, icon: getLiveSubjectIcon('Constitution of India'), todayStatus: null, time: '11:45 - 12:45' },
+      { id: 'os_lab', name: 'Operating Systems Lab', code: 'CS591', type: 'LAB', attended: 12, total: 14, target: 75, icon: getLiveSubjectIcon('Operating Systems Lab'), todayStatus: null, time: '09:30 - 13:45 (Tue)' },
+      { id: 'se_lab', name: 'Software Engineering Lab', code: 'CS593', type: 'LAB', attended: 10, total: 12, target: 75, icon: getLiveSubjectIcon('Software Engineering Lab'), todayStatus: null, time: '12:45 - 17:30 (Thu)' }
+    ];
+
+    let filter = 'ALL';
+
+    function setCMFilter(f, el) {
+      filter = f;
+      el.parentElement.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      el.classList.add('active');
+      renderCM();
+    }
+
+    function calcAdvice(att, tot, goal) {
+      const g = goal / 100;
+      const pct = tot > 0 ? (att / tot) * 100 : 0;
+      if (pct >= goal) {
+        const canSkip = Math.floor((att - g * tot) / g);
+        return { isSafe: true, text: `Safe to miss ${canSkip} classes` };
+      } else {
+        const need = Math.ceil((g * tot - att) / (1 - g));
+        return { isSafe: false, text: `Attend +${need} classes` };
+      }
+    }
+
+    function renderCM() {
+      let totAtt = 0, totClasses = 0;
+      let lecAtt = 0, lecTot = 0;
+      let labAtt = 0, labTot = 0;
+
+      subjects.forEach(s => {
+        totAtt += s.attended;
+        totClasses += s.total;
+        if (s.type === 'LECTURE') {
+          lecAtt += s.attended;
+          lecTot += s.total;
+        } else {
+          labAtt += s.attended;
+          labTot += s.total;
+        }
+      });
+
+      const ovPct = totClasses > 0 ? ((totAtt / totClasses) * 100).toFixed(1) : 0;
+      const lPct = lecTot > 0 ? ((lecAtt / lecTot) * 100).toFixed(1) : 0;
+      const lbPct = labTot > 0 ? ((labAtt / labTot) * 100).toFixed(1) : 0;
+
+      document.getElementById('cm-overall-pct').innerText = ovPct + '%';
+      document.getElementById('cm-overall-att').innerText = totAtt;
+      document.getElementById('cm-overall-tot').innerText = totClasses;
+      document.getElementById('cm-circle-txt').innerText = Math.round(ovPct) + '%';
+      const offset = 238 - (238 * Math.min(ovPct, 100)) / 100;
+      document.getElementById('cm-circle-fg').style.strokeDashoffset = offset;
+      document.getElementById('cm-adv-75').innerText = calcAdvice(totAtt, totClasses, 75).text;
+      document.getElementById('cm-adv-85').innerText = calcAdvice(totAtt, totClasses, 85).text;
+
+      document.getElementById('cm-lec-pct').innerText = lPct + '%';
+      document.getElementById('cm-lec-att').innerText = lecAtt;
+      document.getElementById('cm-lec-tot').innerText = lecTot;
+      document.getElementById('cm-lec-fill').style.width = Math.min(lPct, 100) + '%';
+      document.getElementById('cm-lec-adv-75').innerText = calcAdvice(lecAtt, lecTot, 75).text;
+
+      document.getElementById('cm-lab-pct').innerText = lbPct + '%';
+      document.getElementById('cm-lab-att').innerText = labAtt;
+      document.getElementById('cm-lab-tot').innerText = labTot;
+      document.getElementById('cm-lab-fill').style.width = Math.min(lbPct, 100) + '%';
+      document.getElementById('cm-lab-adv-75').innerText = calcAdvice(labAtt, labTot, 75).text;
+
+      // Checklist
+      const checkGrid = document.getElementById('cm-today-grid');
+      checkGrid.innerHTML = '';
+      subjects.slice(0, 5).forEach((s, idx) => {
+        const item = document.createElement('div');
+        item.className = 'check-box';
+        item.innerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <img src="${s.icon}" alt="${s.name}" class="thumb-mini" onerror="this.src='${getFallbackSvg(s.name)}'">
+              <div>
+                <div style="font-weight: 900; font-size: 0.95rem;">${s.name}</div>
+                <div style="font-size: 0.75rem; font-weight: 700; color: #64748b; font-family: 'Space Mono', monospace;">${s.time}</div>
+              </div>
+            </div>
+            <span class="brutal-badge ${s.type === 'LECTURE' ? 'badge-lec' : 'badge-lab'}">${s.type}</span>
+          </div>
+          <div class="tech-actions" style="padding-top: 0.5rem; border-top: none;">
+            <button class="act-btn act-p ${s.todayStatus === 'PRESENT' ? 'active' : ''}" onclick="toggleToday(${idx}, 'PRESENT')">Present</button>
+            <button class="act-btn act-a ${s.todayStatus === 'ABSENT' ? 'active' : ''}" onclick="toggleToday(${idx}, 'ABSENT')">Absent</button>
+            <button class="act-btn act-h ${s.todayStatus === 'HOLIDAY' ? 'active' : ''}" onclick="toggleToday(${idx}, 'HOLIDAY')">Holiday</button>
+          </div>
+        `;
+        checkGrid.appendChild(item);
+      });
+
+      // Grid
+      const grid = document.getElementById('cm-subj-grid');
+      grid.innerHTML = '';
+      const filtered = subjects.filter(s => filter === 'ALL' || s.type === filter);
+
+      filtered.forEach(s => {
+        const origIdx = subjects.findIndex(item => item.id === s.id);
+        const pct = s.total > 0 ? ((s.attended / s.total) * 100).toFixed(1) : 0;
+        const isSafe = pct >= s.target;
+        const adv = calcAdvice(s.attended, s.total, s.target);
+
+        const card = document.createElement('div');
+        card.className = 'subj-card';
+        card.innerHTML = `
+          <div>
+            <div style="display: flex; gap: 1rem; align-items: center;">
+              <img src="${s.icon}" alt="${s.name}" class="thumb-realtime" onerror="this.src='${getFallbackSvg(s.name)}'">
+              <div style="flex: 1; min-width: 0;">
+                <div style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.25rem;">
+                  <span class="brutal-badge ${s.type === 'LECTURE' ? 'badge-lec' : 'badge-lab'}">${s.type}</span>
+                  <span style="font-size: 0.75rem; font-weight: 900; color: #475569; font-family: 'Space Mono', monospace;">${s.code}</span>
+                </div>
+                <div style="font-weight: 900; font-size: 1.2rem; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${s.name}">${s.name}</div>
+                <div style="font-size: 0.8rem; font-weight: 800; color: #64748b; margin-top: 0.2rem; font-family: 'Space Mono', monospace;">Goal: ${s.target}%</div>
+              </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.2rem;">
+              <div>
+                <div style="font-size: 1.85rem; font-weight: 900; font-family: 'Space Mono', monospace; color: ${isSafe ? '#15803d' : '#e11d48'}">${pct}%</div>
+                <div style="font-size: 0.82rem; font-weight: 700; color: #475569;">${s.attended} / ${s.total} classes logged</div>
+              </div>
+              <div class="brutal-badge" style="background: ${isSafe ? 'var(--green)' : 'var(--danger)'}; color: ${isSafe ? '#000000' : '#ffffff'}; font-size: 0.82rem; padding: 0.4rem 0.8rem;">
+                ${adv.text}
+              </div>
+            </div>
+
+            <div class="brutal-track" style="margin-top: 0.9rem;">
+              <div class="brutal-fill" style="width: ${Math.min(pct, 100)}%; background: ${isSafe ? 'var(--green)' : 'var(--danger)'};"></div>
+            </div>
+
+            <div style="margin-top: 0.6rem; font-size: 0.78rem; font-weight: 800; color: #475569; font-family: 'Space Mono', monospace; display: flex; justify-content: space-between;">
+              <span>75%: ${calcAdvice(s.attended, s.total, 75).text}</span>
+              <span>85%: ${calcAdvice(s.attended, s.total, 85).text}</span>
+            </div>
+          </div>
+
+          <div>
+            <div style="font-size: 0.78rem; font-weight: 900; color: #475569; font-family: 'Space Mono', monospace; margin-bottom: 0.4rem;">LOG ATTENDANCE TODAY:</div>
+            <div class="tech-actions">
+              <button class="act-btn act-p ${s.todayStatus === 'PRESENT' ? 'active' : ''}" onclick="toggleToday(${origIdx}, 'PRESENT')">Present</button>
+              <button class="act-btn act-a ${s.todayStatus === 'ABSENT' ? 'active' : ''}" onclick="toggleToday(${origIdx}, 'ABSENT')">Absent</button>
+              <button class="act-btn act-h ${s.todayStatus === 'HOLIDAY' ? 'active' : ''}" onclick="toggleToday(${origIdx}, 'HOLIDAY')">Holiday</button>
+            </div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function toggleToday(idx, status) {
+      const s = subjects[idx];
+      if (s.todayStatus === status) {
+        if (s.todayStatus === 'PRESENT') { s.attended -= 1; s.total -= 1; }
+        else if (s.todayStatus === 'ABSENT') { s.total -= 1; }
+        s.todayStatus = null;
+      } else {
+        if (s.todayStatus === 'PRESENT') { s.attended -= 1; s.total -= 1; }
+        else if (s.todayStatus === 'ABSENT') { s.total -= 1; }
+        s.todayStatus = status;
+        if (status === 'PRESENT') { s.attended += 1; s.total += 1; }
+        else if (status === 'ABSENT') { s.total += 1; }
+      }
+      renderCM();
+    }
+
+    function bulkCheckIn(status) {
+      for (let i = 0; i < 5; i++) {
+        const s = subjects[i];
+        if (s.todayStatus === status) {
+          if (s.todayStatus === 'PRESENT') { s.attended -= 1; s.total -= 1; }
+          else if (s.todayStatus === 'ABSENT') { s.total -= 1; }
+          s.todayStatus = status;
+          if (status === 'PRESENT') { s.attended += 1; s.total += 1; }
+          else if (status === 'ABSENT') { s.total += 1; }
+        } else {
+          s.todayStatus = status;
+          if (status === 'PRESENT') { s.attended += 1; s.total += 1; }
+          else if (status === 'ABSENT') { s.total += 1; }
+        }
+      }
+      renderCM();
+    }
+
+    function openAddSubjectModal() {
+      document.getElementById('add-modal').style.display = 'flex';
+      document.getElementById('new-sub-name').focus();
+    }
+
+    function closeAddSubjectModal() {
+      document.getElementById('add-modal').style.display = 'none';
+    }
+
+    function handleCreateDynamicSubject() {
+      const name = document.getElementById('new-sub-name').value.trim();
+      const code = document.getElementById('new-sub-code').value.trim() || 'SUB01';
+      const type = document.getElementById('new-sub-type').value;
+
+      if (!name) {
+        alert('Please enter a subject name (e.g. "History")');
+        return;
+      }
+
+      const dynamicIcon = getLiveSubjectIcon(name);
+
+      subjects.push({
+        id: 'sub_' + Date.now(),
+        name: name,
+        code: code,
+        type: type,
+        attended: 14,
+        total: 16,
+        target: 75,
+        icon: dynamicIcon,
+        todayStatus: null,
+        time: '10:00 - 11:00'
+      });
+
+      closeAddSubjectModal();
+      renderCM();
+    }
+
+    renderCM();
+  </script>
+</body>
+</html>
