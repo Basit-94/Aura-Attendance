@@ -176,15 +176,15 @@ const getSlotLog = (
 const OFFICIAL_CSE3_SLOTS = [
   // MONDAY
   { subjectName: 'Operating Systems', type: 'LECTURE', dayOfWeek: 'MONDAY', startTime: '09:30', endTime: '10:30' },
-  { subjectName: 'Computer Graphics & Artificial Intelligence', type: 'LECTURE', dayOfWeek: 'MONDAY', startTime: '10:30', endTime: '11:30' },
+  { subjectName: 'Computer Graphics and Artificial Intelligence', type: 'LECTURE', dayOfWeek: 'MONDAY', startTime: '10:30', endTime: '11:30' },
   { subjectName: 'Software Engineering', type: 'LECTURE', dayOfWeek: 'MONDAY', startTime: '11:45', endTime: '12:45' },
-  { subjectName: 'Object Oriented Programming Lab', type: 'LAB', dayOfWeek: 'MONDAY', startTime: '12:45', endTime: '13:45' },
-  { subjectName: 'Object Oriented Programming Lab', type: 'LAB', dayOfWeek: 'MONDAY', startTime: '14:30', endTime: '17:30' },
+  { subjectName: 'Object Oriented Programming Laboratory', type: 'LAB', dayOfWeek: 'MONDAY', startTime: '12:45', endTime: '13:45' },
+  { subjectName: 'Object Oriented Programming Laboratory', type: 'LAB', dayOfWeek: 'MONDAY', startTime: '14:30', endTime: '17:30' },
 
   // TUESDAY
   { subjectName: 'Operating Systems Lab', type: 'LAB', dayOfWeek: 'TUESDAY', startTime: '09:30', endTime: '13:45' },
   { subjectName: 'Compiler Design', type: 'LECTURE', dayOfWeek: 'TUESDAY', startTime: '14:30', endTime: '15:30' },
-  { subjectName: 'Computer Graphics & Artificial Intelligence', type: 'LECTURE', dayOfWeek: 'TUESDAY', startTime: '15:30', endTime: '16:30' },
+  { subjectName: 'Computer Graphics and Artificial Intelligence', type: 'LECTURE', dayOfWeek: 'TUESDAY', startTime: '15:30', endTime: '16:30' },
   { subjectName: 'Object Oriented Programming', type: 'LECTURE', dayOfWeek: 'TUESDAY', startTime: '16:30', endTime: '17:30' },
 
   // WEDNESDAY
@@ -197,12 +197,12 @@ const OFFICIAL_CSE3_SLOTS = [
   { subjectName: 'Industrial Management', type: 'LECTURE', dayOfWeek: 'THURSDAY', startTime: '09:30', endTime: '10:30' },
   { subjectName: 'Object Oriented Programming', type: 'LECTURE', dayOfWeek: 'THURSDAY', startTime: '10:30', endTime: '11:30' },
   { subjectName: 'Constitution of India', type: 'LECTURE', dayOfWeek: 'THURSDAY', startTime: '11:45', endTime: '12:45' },
-  { subjectName: 'Software Engineering Lab', type: 'LAB', dayOfWeek: 'THURSDAY', startTime: '12:45', endTime: '13:45' },
-  { subjectName: 'Software Engineering Lab', type: 'LAB', dayOfWeek: 'THURSDAY', startTime: '14:30', endTime: '17:30' },
+  { subjectName: 'Software Engineering Laboratory', type: 'LAB', dayOfWeek: 'THURSDAY', startTime: '12:45', endTime: '13:45' },
+  { subjectName: 'Software Engineering Laboratory', type: 'LAB', dayOfWeek: 'THURSDAY', startTime: '14:30', endTime: '17:30' },
 
   // FRIDAY
   { subjectName: 'Industrial Management', type: 'LECTURE', dayOfWeek: 'FRIDAY', startTime: '09:30', endTime: '10:30' },
-  { subjectName: 'Computer Graphics & Artificial Intelligence', type: 'LECTURE', dayOfWeek: 'FRIDAY', startTime: '10:30', endTime: '11:30' },
+  { subjectName: 'Computer Graphics and Artificial Intelligence', type: 'LECTURE', dayOfWeek: 'FRIDAY', startTime: '10:30', endTime: '11:30' },
   { subjectName: 'Constitution of India', type: 'LECTURE', dayOfWeek: 'FRIDAY', startTime: '11:45', endTime: '12:45' },
   { subjectName: 'Compiler Design', type: 'LECTURE', dayOfWeek: 'FRIDAY', startTime: '12:45', endTime: '13:45' },
   { subjectName: 'Operating Systems', type: 'LECTURE', dayOfWeek: 'FRIDAY', startTime: '14:30', endTime: '15:30' },

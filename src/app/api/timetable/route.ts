@@ -3,7 +3,8 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
-import { parseTimetableImage, normalizeSubjectName } from '@/lib/ocr';
+import { parseTimetableImage, normalizeSubjectName, canonicalSubjectKey } from '@/lib/ocr';
+import { mergeDuplicateSubjects } from '@/lib/subject-merge';
 
 // Retrieve all scheduled slots of the active semester
 export async function GET() {
@@ -130,11 +131,12 @@ export async function POST(req: Request) {
       });
     }
 
-    const newSubjectKeySet = new Set(validSlots.map(s => `${s.subjectName.toLowerCase()}_${s.type}`));
+    // 1. Run automatic duplicate merging before processing timetable upload
+    await mergeDuplicateSubjects(activeSemester.id);
 
     // Save verified schedule slots safely inside a transaction block with a higher timeout
     await db.$transaction(async (tx) => {
-      // 1. CLEAR ALL EXISTING SCHEDULE SLOTS FOR THE ACTIVE SEMESTER
+      // 2. CLEAR ALL EXISTING SCHEDULE SLOTS FOR THE ACTIVE SEMESTER
       // This ensures that when uploading a new timetable, old slots are completely replaced!
       await tx.scheduleSlot.deleteMany({
         where: {
@@ -144,46 +146,72 @@ export async function POST(req: Request) {
         },
       });
 
-      // 2. Remove orphaned subjects from previous timetable that have ZERO attendance logs
+      // 3. Keep local map of subjects in active semester mapped by canonical key
+      const existingSubjects = await tx.subject.findMany({
+        where: { semesterId: activeSemester.id },
+        include: { attendanceLogs: true },
+      });
+
+      const subjectMap = new Map<string, typeof existingSubjects[0]>();
+      for (const sub of existingSubjects) {
+        subjectMap.set(canonicalSubjectKey(sub.name, sub.type), sub);
+      }
+
+      const slotToSubjectMap = new Map<string, typeof existingSubjects[0]>();
+
+      // 4. Match slots to existing subjects or create genuine missing subjects
+      for (const slot of validSlots) {
+        const slotKey = `${slot.subjectName.toLowerCase()}_${slot.type}`;
+        if (slotToSubjectMap.has(slotKey)) continue;
+
+        const cKey = canonicalSubjectKey(slot.subjectName, slot.type);
+        let matchedSub = subjectMap.get(cKey);
+
+        if (!matchedSub) {
+          // Loose matching: check if clean names contain each other with identical lab/lecture type
+          matchedSub = existingSubjects.find((s) => {
+            const isSubLab = s.type === 'LAB' || s.type.toLowerCase().includes('lab');
+            const isSlotLab = slot.type === 'LAB' || slot.type.toLowerCase().includes('lab');
+            if (isSubLab !== isSlotLab) return false;
+            const sClean = s.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+            const slClean = slot.subjectName.toLowerCase().replace(/[^a-z0-9]/g, '');
+            return sClean.includes(slClean) || slClean.includes(sClean);
+          });
+        }
+
+        if (!matchedSub) {
+          const normName = normalizeSubjectName(slot.subjectName);
+          matchedSub = await tx.subject.create({
+            data: {
+              semesterId: activeSemester.id,
+              name: normName,
+              type: slot.type,
+              targetPercentage: 75.0,
+            },
+            include: { attendanceLogs: true },
+          });
+          existingSubjects.push(matchedSub);
+          subjectMap.set(cKey, matchedSub);
+        }
+
+        slotToSubjectMap.set(slotKey, matchedSub);
+      }
+
+      // 5. Remove orphaned subjects from previous timetable that have ZERO attendance logs
       // and are not part of the new timetable (preserves subjects with actual student logs!)
-      for (const sub of activeSemester.subjects) {
-        const subKey = `${sub.name.toLowerCase()}_${sub.type}`;
-        if (sub.attendanceLogs.length === 0 && !newSubjectKeySet.has(subKey)) {
+      const activeSubjectIds = new Set(Array.from(slotToSubjectMap.values()).map((s) => s.id));
+      for (const sub of existingSubjects) {
+        if (sub.attendanceLogs.length === 0 && !activeSubjectIds.has(sub.id)) {
           await tx.subject.delete({
             where: { id: sub.id },
           }).catch((e) => console.warn(`Could not delete orphaned subject ${sub.name}:`, e));
         }
       }
 
-      // 3. Keep local map of subjects in active semester
-      const existingSubjects = await tx.subject.findMany({
-        where: { semesterId: activeSemester.id },
-      });
-      const subjectMap = new Map<string, typeof existingSubjects[0]>();
-      for (const sub of existingSubjects) {
-        subjectMap.set(`${sub.name.toLowerCase()}_${sub.type}`, sub);
-      }
-
-      // 4. Create missing subjects for the new timetable
+      // 6. Insert all new schedule slots linked directly to existing subjects
       for (const slot of validSlots) {
-        const key = `${slot.subjectName.toLowerCase()}_${slot.type}`;
-        if (!subjectMap.has(key)) {
-          const newSub = await tx.subject.create({
-            data: {
-              semesterId: activeSemester.id,
-              name: slot.subjectName,
-              type: slot.type,
-              targetPercentage: 75.0,
-            },
-          });
-          subjectMap.set(key, newSub);
-        }
-      }
-
-      // 5. Insert all new schedule slots
-      for (const slot of validSlots) {
-        const key = `${slot.subjectName.toLowerCase()}_${slot.type}`;
-        const subject = subjectMap.get(key);
+        const slotKey = `${slot.subjectName.toLowerCase()}_${slot.type}`;
+        const subject = slotToSubjectMap.get(slotKey);
         if (!subject) continue;
 
         await tx.scheduleSlot.create({

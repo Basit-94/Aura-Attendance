@@ -513,8 +513,52 @@ export function normalizeSubjectName(name: string): string {
     if (lower.includes('iv') || lower.includes('4')) return 'Mathematics IV';
     return 'Mathematics';
   }
+  if ((lower.includes('cg') || lower.includes('computer graphic') || lower.includes('graphics')) && (lower.includes('ai') || lower.includes('artificial intelligence') || lower.includes('intelligence') || lower === 'cg' || lower === 'cg/ai')) {
+    if (lower.includes('lab')) return 'Computer Graphics and Artificial Intelligence Lab';
+    return 'Computer Graphics and Artificial Intelligence';
+  }
+  if (lower.includes('software engineer') || lower.includes('s/w engg') || lower.includes('se lab') || (lower.includes('software') && lower.includes('eng'))) {
+    if (lower.includes('lab') || lower.includes('laboratory')) return 'Software Engineering Laboratory';
+    return 'Software Engineering';
+  }
+  if (lower.includes('object oriented') || lower.includes('oop') || lower.includes('oops')) {
+    if (lower.includes('lab') || lower.includes('laboratory')) return 'Object Oriented Programming Laboratory';
+    return 'Object Oriented Programming';
+  }
+  if (lower.includes('compiler') || /\bcd\b/i.test(clean)) {
+    if (lower.includes('lab')) return 'Compiler Design Lab';
+    return 'Compiler Design';
+  }
+  if (lower.includes('constitution') || lower.includes('indian const')) {
+    return 'Constitution of India';
+  }
+  if (lower.includes('indus') || lower.includes('industrial manage')) {
+    return 'Industrial Management';
+  }
   
   return clean;
+}
+
+/**
+ * Returns a canonical matching key for subject name & type to guarantee exact deduplication
+ */
+export function canonicalSubjectKey(name: string, type?: string): string {
+  const norm = normalizeSubjectName(name);
+  let clean = norm
+    .toLowerCase()
+    .replace(/\band\b/g, '&')
+    .replace(/\blaboratory\b/g, 'lab')
+    .replace(/[^a-z0-9]/g, '');
+
+  const isLab = type 
+    ? (type.toUpperCase() === 'LAB' || type.toLowerCase().includes('lab')) 
+    : (clean.includes('lab') || clean.endsWith('lab'));
+
+  if (isLab && !clean.endsWith('lab')) {
+    clean += 'lab';
+  }
+
+  return `${clean}_${isLab ? 'LAB' : 'LECTURE'}`;
 }
 
 /**
