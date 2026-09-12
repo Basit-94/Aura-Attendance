@@ -29,7 +29,8 @@ import {
   Edit,
   Sparkles,
   Zap,
-  Bell
+  Bell,
+  ArrowUpDown
 } from 'lucide-react';
 
 const AttendanceChart = dynamic(() => import('@/components/AttendanceChart'), {
@@ -140,6 +141,53 @@ const getLocalDateString = (date = new Date()) => {
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
+};
+
+// Helper to format YYYY-MM-DD into a readable date e.g. "Sat, Sep 12, 2026"
+const formatFriendlyDate = (dateStr: string) => {
+  try {
+    const raw = dateStr.split('T')[0];
+    const parts = raw.split('-');
+    if (parts.length === 3) {
+      const year = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const day = parseInt(parts[2], 10);
+      const d = new Date(year, month, day);
+      return d.toLocaleDateString('en-US', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      });
+    }
+  } catch {}
+  return dateStr;
+};
+
+// Helper to format ISO log date with time if present
+const formatLogDateTime = (isoDateStr: string) => {
+  try {
+    const datePartOnly = isoDateStr.split('T')[0];
+    const friendlyDate = formatFriendlyDate(datePartOnly);
+    let timePart: string | null = null;
+    if (isoDateStr.includes('T')) {
+      const timeCandidate = isoDateStr.split('T')[1].substring(0, 5);
+      if (timeCandidate && timeCandidate !== '00:00') {
+        timePart = timeCandidate;
+      }
+    }
+    return {
+      formattedDate: friendlyDate,
+      timePart,
+      isoDateOnly: datePartOnly
+    };
+  } catch {
+    return {
+      formattedDate: isoDateStr,
+      timePart: null,
+      isoDateOnly: isoDateStr
+    };
+  }
 };
 
 // Helper to match an attendance log to a specific class slot on a given date
@@ -434,6 +482,20 @@ export default function Home() {
   // Predictor Slider state
   const [selectedSubjectId, setSelectedSubjectId] = useState('');
   const [bunkCount, setBunkCount] = useState(0);
+
+  // Heatmap interactive tooltip for mobile/touch
+  const [activeHeatmapCell, setActiveHeatmapCell] = useState<{
+    subjectId: string;
+    dateStr: string;
+    formattedDate: string;
+    status: string;
+    statusClass: string;
+  } | null>(null);
+
+  // Subject Full Attendance History Modal
+  const [selectedSubjectForHistory, setSelectedSubjectForHistory] = useState<Subject | null>(null);
+  const [historyStatusFilter, setHistoryStatusFilter] = useState<'ALL' | 'PRESENT' | 'ABSENT' | 'HOLIDAY'>('ALL');
+  const [historySortAsc, setHistorySortAsc] = useState<boolean>(true);
 
   // Modals
   const [showAddSubject, setShowAddSubject] = useState(false);
@@ -3172,7 +3234,13 @@ export default function Home() {
                 );
 
                 return (
-                  <div key={sub.id} className="glass-card subject-card">
+                  <div 
+                    key={sub.id} 
+                    className="glass-card subject-card"
+                    onClick={() => setSelectedSubjectForHistory(sub)}
+                    style={{ cursor: 'pointer' }}
+                    title="Click to view full attendance history for this subject"
+                  >
                     <div className="subject-card-header">
                       <div className="subject-card-title">
                         <span className={`subject-badge ${sub.type.toLowerCase()}`}>{sub.type}</span>
@@ -3212,7 +3280,10 @@ export default function Home() {
                           type="button"
                           className={`check-btn check-btn-present ${todayLog?.status === 'PRESENT' ? 'active' : ''}`}
                           disabled={!isTeacherEditingUnlocked || inFlightChecks[sub.id]}
-                          onClick={() => handleTeacherCheckIn(sub.id, todayLog?.status === 'PRESENT' ? 'REMOVE' : 'PRESENT')}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleTeacherCheckIn(sub.id, todayLog?.status === 'PRESENT' ? 'REMOVE' : 'PRESENT');
+                          }}
                           style={{ opacity: (!isTeacherEditingUnlocked || inFlightChecks[sub.id]) ? 0.5 : 1, cursor: isTeacherEditingUnlocked && !inFlightChecks[sub.id] ? 'pointer' : 'not-allowed' }}
                         >
                           Present
@@ -3221,7 +3292,10 @@ export default function Home() {
                           type="button"
                           className={`check-btn check-btn-absent ${todayLog?.status === 'ABSENT' ? 'active' : ''}`}
                           disabled={!isTeacherEditingUnlocked || inFlightChecks[sub.id]}
-                          onClick={() => handleTeacherCheckIn(sub.id, todayLog?.status === 'ABSENT' ? 'REMOVE' : 'ABSENT')}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleTeacherCheckIn(sub.id, todayLog?.status === 'ABSENT' ? 'REMOVE' : 'ABSENT');
+                          }}
                           style={{ opacity: (!isTeacherEditingUnlocked || inFlightChecks[sub.id]) ? 0.5 : 1, cursor: isTeacherEditingUnlocked && !inFlightChecks[sub.id] ? 'pointer' : 'not-allowed' }}
                         >
                           Absent
@@ -3230,7 +3304,10 @@ export default function Home() {
                           type="button"
                           className={`check-btn check-btn-holiday ${todayLog?.status === 'HOLIDAY' ? 'active' : ''}`}
                           disabled={!isTeacherEditingUnlocked || inFlightChecks[sub.id]}
-                          onClick={() => handleTeacherCheckIn(sub.id, todayLog?.status === 'HOLIDAY' ? 'REMOVE' : 'HOLIDAY')}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleTeacherCheckIn(sub.id, todayLog?.status === 'HOLIDAY' ? 'REMOVE' : 'HOLIDAY');
+                          }}
                           style={{ opacity: (!isTeacherEditingUnlocked || inFlightChecks[sub.id]) ? 0.5 : 1, cursor: isTeacherEditingUnlocked && !inFlightChecks[sub.id] ? 'pointer' : 'not-allowed' }}
                         >
                           Holiday
@@ -3240,25 +3317,145 @@ export default function Home() {
 
                     {/* Collapsible Calendar Heatmap for Teacher */}
                     <div className="calendar-heatmap-wrapper">
-                      <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Last 30 Days History:</span>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
+                        <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Last 30 Days History:</span>
+                        <button
+                          type="button"
+                          className="view-full-history-btn"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedSubjectForHistory(sub);
+                          }}
+                          style={{
+                            background: 'rgba(99, 102, 241, 0.12)',
+                            border: '1px solid rgba(99, 102, 241, 0.25)',
+                            color: 'var(--primary)',
+                            fontSize: '0.72rem',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.25rem',
+                            padding: '0.2rem 0.55rem',
+                            borderRadius: '6px',
+                            transition: 'var(--transition-smooth)'
+                          }}
+                          title="View complete attendance history for this subject"
+                        >
+                          <History size={11} />
+                          <span>Full History →</span>
+                        </button>
+                      </div>
                       <div className="heatmap-grid">
                         {getLast30Days().map((dateStr) => {
                           const log = sub.logs?.find((l) => l.date.split('T')[0] === dateStr);
                           let statusClass = 'empty';
                           let tooltipText = `${dateStr}: No class`;
+                          let statusLabel = 'No class';
                           if (log) {
                             statusClass = log.status.toLowerCase();
                             tooltipText = `${dateStr}: ${log.status}`;
+                            statusLabel = log.status;
                           }
+                          const isSelected = activeHeatmapCell?.subjectId === sub.id && activeHeatmapCell?.dateStr === dateStr;
                           return (
                             <div 
                               key={dateStr} 
-                              className={`heatmap-cell ${statusClass}`} 
+                              className={`heatmap-cell ${statusClass} ${isSelected ? 'active-cell' : ''}`} 
                               title={tooltipText}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (isSelected) {
+                                  setActiveHeatmapCell(null);
+                                } else {
+                                  setActiveHeatmapCell({
+                                    subjectId: sub.id,
+                                    dateStr,
+                                    formattedDate: formatFriendlyDate(dateStr),
+                                    status: statusLabel,
+                                    statusClass
+                                  });
+                                }
+                              }}
                             />
                           );
                         })}
                       </div>
+                      {activeHeatmapCell?.subjectId === sub.id && (
+                        <div
+                          className="heatmap-tap-info"
+                          style={{
+                            marginTop: '0.45rem',
+                            padding: '0.4rem 0.65rem',
+                            borderRadius: '8px',
+                            background: 'rgba(255, 255, 255, 0.05)',
+                            border: '1px solid var(--border-color)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            gap: '0.5rem',
+                            fontSize: '0.78rem'
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}>
+                            <span
+                              style={{
+                                width: '8px',
+                                height: '8px',
+                                borderRadius: '50%',
+                                display: 'inline-block',
+                                background:
+                                  activeHeatmapCell.statusClass === 'present'
+                                    ? 'var(--success)'
+                                    : activeHeatmapCell.statusClass === 'absent'
+                                    ? 'var(--danger)'
+                                    : activeHeatmapCell.statusClass === 'holiday'
+                                    ? 'var(--warning)'
+                                    : 'var(--text-muted)'
+                              }}
+                            />
+                            <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                              {activeHeatmapCell.formattedDate}:
+                            </span>
+                            <span
+                              style={{
+                                fontWeight: 700,
+                                textTransform: 'uppercase',
+                                fontSize: '0.75rem',
+                                color:
+                                  activeHeatmapCell.statusClass === 'present'
+                                    ? 'var(--success)'
+                                    : activeHeatmapCell.statusClass === 'absent'
+                                    ? 'var(--danger)'
+                                    : activeHeatmapCell.statusClass === 'holiday'
+                                    ? 'var(--warning)'
+                                    : 'var(--text-secondary)'
+                              }}
+                            >
+                              {activeHeatmapCell.status}
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setActiveHeatmapCell(null);
+                            }}
+                            aria-label="Close date info"
+                            style={{
+                              background: 'transparent',
+                              border: 'none',
+                              color: 'var(--text-muted)',
+                              cursor: 'pointer',
+                              padding: '2px',
+                              display: 'flex',
+                              alignItems: 'center'
+                            }}
+                          >
+                            <X size={13} />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 );
@@ -4458,7 +4655,13 @@ export default function Home() {
                           );
 
                           return (
-                            <div key={sub.id} className="glass-card subject-card">
+                            <div 
+                              key={sub.id} 
+                              className="glass-card subject-card"
+                              onClick={() => setSelectedSubjectForHistory(sub)}
+                              style={{ cursor: 'pointer' }}
+                              title="Click subject card to view full attendance history"
+                            >
                               <div className="subject-card-header">
                                 <div className="subject-card-title">
                                   <span className={`subject-badge ${sub.type.toLowerCase()}`}>{sub.type}</span>
@@ -4473,7 +4676,10 @@ export default function Home() {
                                 <button
                                   type="button"
                                   style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
-                                  onClick={() => handleDeleteSubject(sub.id)}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteSubject(sub.id);
+                                  }}
                                 >
                                   <Trash size={16} />
                                 </button>
@@ -4534,7 +4740,10 @@ export default function Home() {
                                     type="button"
                                     className={`check-btn check-btn-present ${todayLog?.status === 'PRESENT' ? 'active' : ''}`}
                                     disabled={inFlightChecks[sub.id]}
-                                    onClick={() => handleCheckIn(sub.id, todayLog?.status === 'PRESENT' ? 'REMOVE' : 'PRESENT')}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleCheckIn(sub.id, todayLog?.status === 'PRESENT' ? 'REMOVE' : 'PRESENT');
+                                    }}
                                     style={{ opacity: inFlightChecks[sub.id] ? 0.5 : 1, cursor: inFlightChecks[sub.id] ? 'not-allowed' : 'pointer' }}
                                   >
                                     Present
@@ -4543,7 +4752,10 @@ export default function Home() {
                                     type="button"
                                     className={`check-btn check-btn-absent ${todayLog?.status === 'ABSENT' ? 'active' : ''}`}
                                     disabled={inFlightChecks[sub.id]}
-                                    onClick={() => handleCheckIn(sub.id, todayLog?.status === 'ABSENT' ? 'REMOVE' : 'ABSENT')}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleCheckIn(sub.id, todayLog?.status === 'ABSENT' ? 'REMOVE' : 'ABSENT');
+                                    }}
                                     style={{ opacity: inFlightChecks[sub.id] ? 0.5 : 1, cursor: inFlightChecks[sub.id] ? 'not-allowed' : 'pointer' }}
                                   >
                                     Absent
@@ -4552,7 +4764,10 @@ export default function Home() {
                                     type="button"
                                     className={`check-btn check-btn-holiday ${todayLog?.status === 'HOLIDAY' ? 'active' : ''}`}
                                     disabled={inFlightChecks[sub.id]}
-                                    onClick={() => handleCheckIn(sub.id, todayLog?.status === 'HOLIDAY' ? 'REMOVE' : 'HOLIDAY')}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleCheckIn(sub.id, todayLog?.status === 'HOLIDAY' ? 'REMOVE' : 'HOLIDAY');
+                                    }}
                                     style={{ opacity: inFlightChecks[sub.id] ? 0.5 : 1, cursor: inFlightChecks[sub.id] ? 'not-allowed' : 'pointer' }}
                                   >
                                     Holiday
@@ -4562,25 +4777,145 @@ export default function Home() {
 
                               {/* Collapsible Calendar Heatmap for Student */}
                               <div className="calendar-heatmap-wrapper">
-                                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Last 30 Days History:</span>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
+                                  <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Last 30 Days History:</span>
+                                  <button
+                                    type="button"
+                                    className="view-full-history-btn"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedSubjectForHistory(sub);
+                                    }}
+                                    style={{
+                                      background: 'rgba(99, 102, 241, 0.12)',
+                                      border: '1px solid rgba(99, 102, 241, 0.25)',
+                                      color: 'var(--primary)',
+                                      fontSize: '0.72rem',
+                                      fontWeight: 600,
+                                      cursor: 'pointer',
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '0.25rem',
+                                      padding: '0.2rem 0.55rem',
+                                      borderRadius: '6px',
+                                      transition: 'var(--transition-smooth)'
+                                    }}
+                                    title="View complete attendance history for this subject"
+                                  >
+                                    <History size={11} />
+                                    <span>Full History →</span>
+                                  </button>
+                                </div>
                                 <div className="heatmap-grid">
                                   {getLast30Days().map((dateStr) => {
                                     const log = sub.logs?.find((l) => l.date.split('T')[0] === dateStr);
                                     let statusClass = 'empty';
                                     let tooltipText = `${dateStr}: No class`;
+                                    let statusLabel = 'No class';
                                     if (log) {
                                       statusClass = log.status.toLowerCase();
                                       tooltipText = `${dateStr}: ${log.status}`;
+                                      statusLabel = log.status;
                                     }
+                                    const isSelected = activeHeatmapCell?.subjectId === sub.id && activeHeatmapCell?.dateStr === dateStr;
                                     return (
                                       <div 
                                         key={dateStr} 
-                                        className={`heatmap-cell ${statusClass}`} 
+                                        className={`heatmap-cell ${statusClass} ${isSelected ? 'active-cell' : ''}`} 
                                         title={tooltipText}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          if (isSelected) {
+                                            setActiveHeatmapCell(null);
+                                          } else {
+                                            setActiveHeatmapCell({
+                                              subjectId: sub.id,
+                                              dateStr,
+                                              formattedDate: formatFriendlyDate(dateStr),
+                                              status: statusLabel,
+                                              statusClass
+                                            });
+                                          }
+                                        }}
                                       />
                                     );
                                   })}
                                 </div>
+                                {activeHeatmapCell?.subjectId === sub.id && (
+                                  <div
+                                    className="heatmap-tap-info"
+                                    style={{
+                                      marginTop: '0.45rem',
+                                      padding: '0.4rem 0.65rem',
+                                      borderRadius: '8px',
+                                      background: 'rgba(255, 255, 255, 0.05)',
+                                      border: '1px solid var(--border-color)',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'space-between',
+                                      gap: '0.5rem',
+                                      fontSize: '0.78rem'
+                                    }}
+                                  >
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}>
+                                      <span
+                                        style={{
+                                          width: '8px',
+                                          height: '8px',
+                                          borderRadius: '50%',
+                                          display: 'inline-block',
+                                          background:
+                                            activeHeatmapCell.statusClass === 'present'
+                                              ? 'var(--success)'
+                                              : activeHeatmapCell.statusClass === 'absent'
+                                              ? 'var(--danger)'
+                                              : activeHeatmapCell.statusClass === 'holiday'
+                                              ? 'var(--warning)'
+                                              : 'var(--text-muted)'
+                                        }}
+                                      />
+                                      <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                                        {activeHeatmapCell.formattedDate}:
+                                      </span>
+                                      <span
+                                        style={{
+                                          fontWeight: 700,
+                                          textTransform: 'uppercase',
+                                          fontSize: '0.75rem',
+                                          color:
+                                            activeHeatmapCell.statusClass === 'present'
+                                              ? 'var(--success)'
+                                              : activeHeatmapCell.statusClass === 'absent'
+                                              ? 'var(--danger)'
+                                              : activeHeatmapCell.statusClass === 'holiday'
+                                              ? 'var(--warning)'
+                                              : 'var(--text-secondary)'
+                                        }}
+                                      >
+                                        {activeHeatmapCell.status}
+                                      </span>
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setActiveHeatmapCell(null);
+                                      }}
+                                      aria-label="Close date info"
+                                      style={{
+                                        background: 'transparent',
+                                        border: 'none',
+                                        color: 'var(--text-muted)',
+                                        cursor: 'pointer',
+                                        padding: '2px',
+                                        display: 'flex',
+                                        alignItems: 'center'
+                                      }}
+                                    >
+                                      <X size={13} />
+                                    </button>
+                                  </div>
+                                )}
                               </div>
                             </div>
                           );
@@ -6255,6 +6590,347 @@ export default function Home() {
           </span>
         </div>
       )}
+
+      {/* Modal 8: Subject Full Attendance History */}
+      {selectedSubjectForHistory && (() => {
+        // Find subject reactively in case attendance was updated
+        const activeSub: Subject =
+          subjects.find((s: Subject) => s.id === selectedSubjectForHistory.id) ||
+          ((teacherViewingData as any)?.subjects?.find((s: any) => s.id === selectedSubjectForHistory.id)) ||
+          selectedSubjectForHistory;
+
+        const rawLogs: Array<{ id: string; date: string; status: 'PRESENT' | 'ABSENT' | 'HOLIDAY' }> = activeSub.logs || [];
+        const presentCount = rawLogs.filter((l) => l.status === 'PRESENT').length;
+        const absentCount = rawLogs.filter((l) => l.status === 'ABSENT').length;
+        const holidayCount = rawLogs.filter((l) => l.status === 'HOLIDAY').length;
+        const totalCount = rawLogs.length;
+
+        const filteredLogs = rawLogs.filter((l) => {
+          if (historyStatusFilter === 'ALL') return true;
+          return l.status === historyStatusFilter;
+        });
+
+        // Default sort: Chronological from start of semester to present (asc: oldest first)
+        const sortedLogs = [...filteredLogs].sort((a, b) => {
+          const timeA = new Date(a.date).getTime() || 0;
+          const timeB = new Date(b.date).getTime() || 0;
+          return historySortAsc ? timeA - timeB : timeB - timeA;
+        });
+
+        return (
+          <div 
+            className="modal-overlay" 
+            onClick={() => setSelectedSubjectForHistory(null)}
+            style={{ zIndex: 11000 }}
+          >
+            <div 
+              className="glass-card modal-card" 
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                width: '94%',
+                maxWidth: '560px',
+                maxHeight: '88vh',
+                display: 'flex',
+                flexDirection: 'column',
+                padding: 'clamp(1.2rem, 3.5vw, 1.75rem)',
+                gap: '1rem',
+                boxShadow: '0 25px 60px rgba(0, 0, 0, 0.7), 0 0 30px rgba(99, 102, 241, 0.2)',
+                border: '1px solid rgba(99, 102, 241, 0.35)',
+                animation: 'fadeIn 0.25s ease'
+              }}
+            >
+              {/* Modal Header */}
+              <div className="flex-between" style={{ alignItems: 'flex-start' }}>
+                <div style={{ flex: 1, paddingRight: '0.5rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem', flexWrap: 'wrap' }}>
+                    <span className={`subject-badge ${activeSub.type.toLowerCase()}`}>
+                      {activeSub.type}
+                    </span>
+                    <span style={{ 
+                      fontSize: '0.75rem', 
+                      color: 'var(--text-muted)', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '0.3rem',
+                      fontWeight: 500
+                    }}>
+                      <History size={12} /> Full Attendance History
+                    </span>
+                  </div>
+                  <h3 style={{ fontSize: '1.35rem', lineHeight: 1.2, margin: 0, wordBreak: 'break-word' }}>
+                    {activeSub.name}
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.06)',
+                    border: '1px solid var(--border-color)',
+                    color: 'var(--text-secondary)',
+                    cursor: 'pointer',
+                    borderRadius: '50%',
+                    width: '32px',
+                    height: '32px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0
+                  }}
+                  onClick={() => setSelectedSubjectForHistory(null)}
+                  aria-label="Close"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Attendance Stat Summary Cards */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(4, 1fr)',
+                gap: '0.5rem',
+                background: 'rgba(0, 0, 0, 0.25)',
+                padding: '0.75rem 0.5rem',
+                borderRadius: 'var(--border-radius-sm)',
+                border: '1px solid var(--border-color)'
+              }}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ 
+                    fontSize: '1.25rem', 
+                    fontWeight: 700, 
+                    color: activeSub.stats.percentage >= activeSub.targetPercentage ? 'var(--success)' : 'var(--danger)' 
+                  }}>
+                    {activeSub.stats.percentage}%
+                  </div>
+                  <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>Attendance</div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--success)' }}>
+                    {presentCount}
+                  </div>
+                  <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>Present</div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--danger)' }}>
+                    {absentCount}
+                  </div>
+                  <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>Absent</div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--warning)' }}>
+                    {holidayCount}
+                  </div>
+                  <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>Holiday</div>
+                </div>
+              </div>
+
+              {/* Filter Pills & Sort Toggle Toolbar */}
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center', 
+                flexWrap: 'wrap', 
+                gap: '0.5rem' 
+              }}>
+                {/* Status Filters */}
+                <div style={{ 
+                  display: 'flex', 
+                  background: 'rgba(0, 0, 0, 0.25)', 
+                  padding: '0.2rem', 
+                  borderRadius: '8px', 
+                  gap: '0.25rem',
+                  overflowX: 'auto',
+                  maxWidth: '100%'
+                }}>
+                  {(['ALL', 'PRESENT', 'ABSENT', 'HOLIDAY'] as const).map((filterVal) => {
+                    const count = 
+                      filterVal === 'ALL' ? totalCount :
+                      filterVal === 'PRESENT' ? presentCount :
+                      filterVal === 'ABSENT' ? absentCount : holidayCount;
+                    const isActive = historyStatusFilter === filterVal;
+                    return (
+                      <button
+                        key={filterVal}
+                        type="button"
+                        onClick={() => setHistoryStatusFilter(filterVal)}
+                        style={{
+                          background: isActive ? 'var(--primary)' : 'transparent',
+                          color: isActive ? '#fff' : 'var(--text-secondary)',
+                          border: 'none',
+                          padding: '0.3rem 0.6rem',
+                          borderRadius: '6px',
+                          fontSize: '0.72rem',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          whiteSpace: 'nowrap',
+                          transition: 'var(--transition-smooth)'
+                        }}
+                      >
+                        {filterVal === 'ALL' ? 'All' : filterVal.charAt(0) + filterVal.slice(1).toLowerCase()} ({count})
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Sort Order Toggle */}
+                <button
+                  type="button"
+                  onClick={() => setHistorySortAsc((prev) => !prev)}
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid var(--border-color)',
+                    color: 'var(--text-secondary)',
+                    padding: '0.3rem 0.65rem',
+                    borderRadius: '8px',
+                    fontSize: '0.72rem',
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.35rem',
+                    marginLeft: 'auto'
+                  }}
+                  title="Toggle chronological sort order"
+                >
+                  <ArrowUpDown size={12} />
+                  <span>{historySortAsc ? 'Start → Present' : 'Present → Start'}</span>
+                </button>
+              </div>
+
+              {/* Scrollable Log Entries List */}
+              <div style={{
+                overflowY: 'auto',
+                flex: 1,
+                maxHeight: '44vh',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.45rem',
+                paddingRight: '0.2rem'
+              }}>
+                {sortedLogs.length === 0 ? (
+                  <div style={{
+                    textAlign: 'center',
+                    padding: '2.5rem 1rem',
+                    color: 'var(--text-muted)',
+                    fontSize: '0.85rem'
+                  }}>
+                    <BookOpen size={36} style={{ margin: '0 auto 0.75rem', opacity: 0.5 }} />
+                    <p>No {historyStatusFilter !== 'ALL' ? historyStatusFilter.toLowerCase() : ''} attendance logs recorded yet.</p>
+                  </div>
+                ) : (
+                  sortedLogs.map((log, index) => {
+                    const dateInfo = formatLogDateTime(log.date);
+                    const isPresent = log.status === 'PRESENT';
+                    const isAbsent = log.status === 'ABSENT';
+                    const isHoliday = log.status === 'HOLIDAY';
+
+                    return (
+                      <div
+                        key={log.id || `${log.date}-${index}`}
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          padding: '0.65rem 0.85rem',
+                          background: 'rgba(255, 255, 255, 0.03)',
+                          border: '1px solid var(--border-color)',
+                          borderRadius: '10px',
+                          gap: '0.75rem'
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                          <div style={{
+                            width: '28px',
+                            height: '28px',
+                            borderRadius: '8px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            background: isPresent ? 'rgba(16, 185, 129, 0.15)' :
+                                        isAbsent ? 'rgba(239, 68, 68, 0.15)' :
+                                        'rgba(245, 158, 11, 0.15)',
+                            color: isPresent ? 'var(--success)' :
+                                   isAbsent ? 'var(--danger)' :
+                                   'var(--warning)',
+                            flexShrink: 0
+                          }}>
+                            {isPresent && <Check size={15} />}
+                            {isAbsent && <X size={15} />}
+                            {isHoliday && <Sun size={15} />}
+                          </div>
+                          <div>
+                            <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                              {dateInfo.formattedDate}
+                            </div>
+                            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                              <span>Class #{historySortAsc ? index + 1 : sortedLogs.length - index}</span>
+                              {dateInfo.timePart && (
+                                <>
+                                  <span>•</span>
+                                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }}>
+                                    <Clock size={10} /> {dateInfo.timePart}
+                                  </span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <span
+                          style={{
+                            padding: '0.25rem 0.6rem',
+                            borderRadius: '20px',
+                            fontSize: '0.72rem',
+                            fontWeight: 700,
+                            letterSpacing: '0.04em',
+                            textTransform: 'uppercase',
+                            background: isPresent ? 'rgba(16, 185, 129, 0.12)' :
+                                        isAbsent ? 'rgba(239, 68, 68, 0.12)' :
+                                        'rgba(245, 158, 11, 0.12)',
+                            border: `1px solid ${
+                              isPresent ? 'rgba(16, 185, 129, 0.3)' :
+                              isAbsent ? 'rgba(239, 68, 68, 0.3)' :
+                              'rgba(245, 158, 11, 0.3)'
+                            }`,
+                            color: isPresent ? 'var(--success)' :
+                                   isAbsent ? 'var(--danger)' :
+                                   'var(--warning)',
+                            flexShrink: 0
+                          }}
+                        >
+                          {log.status}
+                        </span>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              {/* Modal Footer */}
+              <div style={{ 
+                borderTop: '1px solid var(--border-color)', 
+                paddingTop: '0.75rem', 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                fontSize: '0.75rem',
+                color: 'var(--text-muted)',
+                flexWrap: 'wrap',
+                gap: '0.5rem'
+              }}>
+                <span>Showing {sortedLogs.length} of {totalCount} total logged classes</span>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  style={{ width: 'auto', padding: '0.4rem 0.9rem', fontSize: '0.8rem' }}
+                  onClick={() => setSelectedSubjectForHistory(null)}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Offline Status indicator banner */}
       {(isBrowserOffline || isOfflineSyncPending) && (

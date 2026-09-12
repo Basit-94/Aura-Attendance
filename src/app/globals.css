@@ -1463,6 +1463,19 @@ button, input, select {
   box-shadow: 0 0 4px var(--warning);
 }
 
+.heatmap-cell.active-cell {
+  outline: 2px solid #fff !important;
+  transform: scale(1.35) !important;
+  z-index: 5 !important;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.6) !important;
+}
+
+.view-full-history-btn:hover {
+  background: rgba(99, 102, 241, 0.25) !important;
+  border-color: var(--primary) !important;
+  transform: translateY(-1px);
+}
+
 @keyframes scan {
   0% { top: 0%; opacity: 0; }
   10% { opacity: 1; }
