@@ -213,6 +213,143 @@ const OFFICIAL_CSE3_SLOTS = [
 // Cutoff timestamp: Existing accounts registered during/before the routine revision rollout
 const CSE3_ROUTINE_UPDATE_CUTOFF = new Date('2026-09-30T00:00:00+05:30').getTime();
 
+// Effective date when the new CSE 3 routine comes into effect (Monday, Sep 14, 2026)
+const NEW_ROUTINE_EFFECTIVE_DATE = '2026-09-14';
+
+// Previous Official Routine Slots in effect until Friday, Sep 11, 2026 (Dates < 2026-09-14)
+const PREVIOUS_CSE3_SLOTS = [
+  // MONDAY
+  { subjectName: 'Operating Systems', type: 'LECTURE' as const, dayOfWeek: 'MONDAY', startTime: '09:30', endTime: '10:30' },
+  { subjectName: 'Software Engineering', type: 'LECTURE' as const, dayOfWeek: 'MONDAY', startTime: '10:30', endTime: '11:30' },
+  { subjectName: 'Object Oriented Programming', type: 'LECTURE' as const, dayOfWeek: 'MONDAY', startTime: '11:45', endTime: '12:45' },
+  { subjectName: 'Object Oriented Programming Laboratory', type: 'LAB' as const, dayOfWeek: 'MONDAY', startTime: '11:45', endTime: '17:30' },
+
+  // TUESDAY
+  { subjectName: 'Operating Systems Lab', type: 'LAB' as const, dayOfWeek: 'TUESDAY', startTime: '09:30', endTime: '13:45' },
+  { subjectName: 'Computer Graphics and Artificial Intelligence', type: 'LECTURE' as const, dayOfWeek: 'TUESDAY', startTime: '14:30', endTime: '15:30' },
+  { subjectName: 'Compiler Design', type: 'LECTURE' as const, dayOfWeek: 'TUESDAY', startTime: '15:30', endTime: '16:30' },
+  { subjectName: 'Constitution of India', type: 'LECTURE' as const, dayOfWeek: 'TUESDAY', startTime: '16:30', endTime: '17:30' },
+
+  // WEDNESDAY
+  { subjectName: 'Object Oriented Programming', type: 'LECTURE' as const, dayOfWeek: 'WEDNESDAY', startTime: '09:30', endTime: '10:30' },
+  { subjectName: 'Industrial Management', type: 'LECTURE' as const, dayOfWeek: 'WEDNESDAY', startTime: '10:30', endTime: '11:30' },
+  { subjectName: 'Software Engineering', type: 'LECTURE' as const, dayOfWeek: 'WEDNESDAY', startTime: '11:45', endTime: '12:45' },
+  { subjectName: 'Operating Systems', type: 'LECTURE' as const, dayOfWeek: 'WEDNESDAY', startTime: '12:45', endTime: '13:45' },
+  { subjectName: 'Constitution of India', type: 'LECTURE' as const, dayOfWeek: 'WEDNESDAY', startTime: '15:30', endTime: '16:30' },
+
+  // THURSDAY
+  { subjectName: 'Compiler Design', type: 'LECTURE' as const, dayOfWeek: 'THURSDAY', startTime: '09:30', endTime: '10:30' },
+  { subjectName: 'Object Oriented Programming', type: 'LECTURE' as const, dayOfWeek: 'THURSDAY', startTime: '10:30', endTime: '11:30' },
+  { subjectName: 'Constitution of India', type: 'LECTURE' as const, dayOfWeek: 'THURSDAY', startTime: '11:45', endTime: '12:45' },
+  { subjectName: 'Industrial Management', type: 'LECTURE' as const, dayOfWeek: 'THURSDAY', startTime: '12:45', endTime: '13:45' },
+  { subjectName: 'Operating Systems', type: 'LECTURE' as const, dayOfWeek: 'THURSDAY', startTime: '14:30', endTime: '15:30' },
+  { subjectName: 'Computer Graphics and Artificial Intelligence', type: 'LECTURE' as const, dayOfWeek: 'THURSDAY', startTime: '15:30', endTime: '16:30' },
+  { subjectName: 'Software Engineering', type: 'LECTURE' as const, dayOfWeek: 'THURSDAY', startTime: '16:30', endTime: '17:30' },
+
+  // FRIDAY (The exact 4-period schedule in effect till Friday, Sep 11, 2026)
+  { subjectName: 'Industrial Management', type: 'LECTURE' as const, dayOfWeek: 'FRIDAY', startTime: '09:30', endTime: '10:30' },
+  { subjectName: 'Compiler Design', type: 'LECTURE' as const, dayOfWeek: 'FRIDAY', startTime: '10:30', endTime: '11:30' },
+  { subjectName: 'Computer Graphics and Artificial Intelligence', type: 'LECTURE' as const, dayOfWeek: 'FRIDAY', startTime: '11:45', endTime: '12:45' },
+  { subjectName: 'Software Engineering Laboratory', type: 'LAB' as const, dayOfWeek: 'FRIDAY', startTime: '12:45', endTime: '17:30' },
+];
+
+// Helper: Match a slot to student subjects flexibly with fallback and log-presence prioritization
+const findSubjectForSlot = (
+  subjectsList: Subject[],
+  slotSubjectName: string,
+  slotType: string,
+  dateStr?: string,
+  slotStartTime?: string
+): Subject | undefined => {
+  if (!subjectsList || subjectsList.length === 0) return undefined;
+
+  const cleanText = (str: string) =>
+    str
+      .toLowerCase()
+      .replace(/\band\b/g, '&')
+      .replace(/\blaboratory\b/g, 'lab')
+      .replace(/[^a-z0-9]/g, '');
+
+  const normSlot = cleanText(slotSubjectName);
+
+  // 1. Direct clean text and type match
+  let candidates = subjectsList.filter((s) => {
+    return cleanText(s.name) === normSlot && s.type?.toUpperCase() === slotType.toUpperCase();
+  });
+
+  // 2. Direct clean text match (ignore type if mismatch)
+  if (candidates.length === 0) {
+    candidates = subjectsList.filter((s) => cleanText(s.name) === normSlot);
+  }
+
+  // 3. Substring / inclusion match
+  if (candidates.length === 0) {
+    candidates = subjectsList.filter((s) => {
+      const sClean = cleanText(s.name);
+      return (sClean.includes(normSlot) || normSlot.includes(sClean)) &&
+        (s.type?.toUpperCase() === slotType.toUpperCase());
+    });
+  }
+
+  if (candidates.length === 0) {
+    candidates = subjectsList.filter((s) => {
+      const sClean = cleanText(s.name);
+      return sClean.includes(normSlot) || normSlot.includes(sClean);
+    });
+  }
+
+  if (candidates.length === 0) return undefined;
+  if (candidates.length === 1) return candidates[0];
+
+  // If multiple candidates exist, prioritize the one with an attendance log on dateStr
+  if (dateStr) {
+    const candidateWithDateLog = candidates.find((cand) =>
+      cand.logs?.some((l) => {
+        const dPart = l.date.split('T')[0];
+        if (dPart !== dateStr) return false;
+        if (slotStartTime) {
+          return l.date.includes(`T${slotStartTime}`) || l.date.includes(`${slotStartTime}:`);
+        }
+        return true;
+      })
+    );
+    if (candidateWithDateLog) return candidateWithDateLog;
+  }
+
+  // Next prioritize exact type match
+  const exactTypeMatch = candidates.find((c) => c.type?.toUpperCase() === slotType.toUpperCase());
+  if (exactTypeMatch) return exactTypeMatch;
+
+  return candidates[0];
+};
+
+// Helper: Determine if user belongs to CSE 3 (via notice action, local storage, or academic signature)
+const isCse3Student = (subjectsList: Subject[], timetableList: ScheduleSlot[], noticeStatus: string) => {
+  if (noticeStatus === 'applied_cse3') return true;
+  if (typeof window !== 'undefined' && (
+    localStorage.getItem('routine_notice_status_cse3_v5') === 'applied_cse3' ||
+    localStorage.getItem('routine_notice_status_cse3_v3') === 'applied_cse3'
+  )) {
+    return true;
+  }
+
+  // Check if subject list has core CSE 3 signature subjects
+  const subNames = subjectsList.map((s) => s.name.toLowerCase());
+  const hasCompiler = subNames.some((n) => n.includes('compiler'));
+  const hasManagement = subNames.some((n) => n.includes('management') || n.includes('industrial'));
+  const hasGraphics = subNames.some((n) => n.includes('graphics'));
+  if (hasCompiler && hasManagement && hasGraphics) return true;
+
+  // Check if timetable has CSE 3 signature slots
+  const hasCse3Slots = timetableList.some(
+    (s) => s.subjectName?.toLowerCase().includes('compiler') ||
+           (s.subjectName?.toLowerCase().includes('management') && s.dayOfWeek.toUpperCase() === 'FRIDAY')
+  );
+  if (hasCse3Slots && (hasCompiler || hasManagement)) return true;
+
+  return false;
+};
+
 const isUserEligibleForRoutineNotice = (user?: { createdAt?: string } | null) => {
   if (!user) return false;
   // If user payload has no createdAt, default to eligible (existing account)
@@ -2126,6 +2263,43 @@ export default function Home() {
     return getTypeStatsFull(subjectsList, type).percentage;
   };
 
+  // Helper: Retrieve scheduled slots effective for a specific date,
+  // respecting the official routine transition on Sept 14, 2026.
+  const getEffectiveSlotsForDate = (dateStr: string, dayOfWeekName: string): ScheduleSlot[] => {
+    const normalizedDay = dayOfWeekName.toUpperCase();
+    const standardSlots = timetable.filter((s) => s.dayOfWeek.toUpperCase() === normalizedDay);
+
+    // If date is on or after the new routine effective date, use the standard active timetable
+    if (dateStr >= NEW_ROUTINE_EFFECTIVE_DATE) {
+      return standardSlots;
+    }
+
+    // Check if user belongs to CSE 3
+    const isCse3 = isCse3Student(subjects, timetable, routineNoticeStatus);
+    if (!isCse3) {
+      return standardSlots;
+    }
+
+    // Pre-2026-09-14: Return previous CSE 3 routine slots for this weekday
+    const prevSlotsForDay = PREVIOUS_CSE3_SLOTS.filter((s) => s.dayOfWeek === normalizedDay);
+    if (prevSlotsForDay.length === 0) {
+      return standardSlots;
+    }
+
+    return prevSlotsForDay.map((slot) => {
+      const matchingSubject = findSubjectForSlot(subjects, slot.subjectName, slot.type, dateStr, slot.startTime);
+      return {
+        id: `prev-${dateStr}-${matchingSubject ? matchingSubject.id : slot.subjectName}-${slot.startTime}`,
+        subjectId: matchingSubject ? matchingSubject.id : '',
+        subjectName: matchingSubject ? matchingSubject.name : slot.subjectName,
+        type: slot.type as 'LECTURE' | 'LAB',
+        dayOfWeek: slot.dayOfWeek,
+        startTime: slot.startTime,
+        endTime: slot.endTime,
+      };
+    });
+  };
+
   // Helper: Get dates in the last 14 days where there was a scheduled class but no attendance log was recorded
   const getMissedLogDates = () => {
     if (subjects.length === 0 || timetable.length === 0) return [];
@@ -2193,13 +2367,14 @@ export default function Home() {
       const dayNames = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
       const dayOfWeek = dayNames[d.getDay()];
 
-      // Check if there are scheduled classes on this weekday
-      const slots = timetable.filter((s) => s.dayOfWeek.toUpperCase() === dayOfWeek);
+      // Check if there are scheduled classes on this weekday (respecting date-specific routine)
+      const slots = getEffectiveSlotsForDate(dateStr, dayOfWeek);
       if (slots.length === 0) continue;
 
       // Check if any slot is missing an attendance log
       let hasMissedSlot = false;
       for (const slot of slots) {
+        if (!slot.subjectId) continue;
         const sub = subjects.find((s) => s.id === slot.subjectId);
         if (!sub) continue;
 
@@ -2225,7 +2400,7 @@ export default function Home() {
     dateStr: string,
     slots: any[]
   ) => {
-    const eligibleSlots = slots;
+    const eligibleSlots = slots.filter((s) => !!s.subjectId);
     if (eligibleSlots.length === 0) return;
 
     const previousSubjects = [...subjects];
@@ -2370,8 +2545,9 @@ export default function Home() {
       const dayNames = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
       const dayOfWeek = dayNames[dateObj.getDay()];
 
-      const slots = timetable.filter((s) => s.dayOfWeek.toUpperCase() === dayOfWeek);
+      const slots = getEffectiveSlotsForDate(dateStr, dayOfWeek);
       slots.forEach((slot) => {
+        if (!slot.subjectId) return;
         const sub = subjects.find((s) => s.id === slot.subjectId);
         if (!sub) return;
 
@@ -2504,7 +2680,8 @@ export default function Home() {
   // "Should I Skip Today?" Advisor logic
   const getAdvisorOutput = () => {
     const todayName = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
-    const todaySlots = timetable.filter((slot) => slot.dayOfWeek.toUpperCase() === todayName);
+    const todayDateStr = getLocalDateString();
+    const todaySlots = getEffectiveSlotsForDate(todayDateStr, todayName);
     
     if (todaySlots.length === 0) {
       return {
@@ -3735,10 +3912,10 @@ export default function Home() {
                       </div>
                       <div>
                         <h4 style={{ fontSize: '0.98rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
-                          CSE 3 Class Routine Changed!
+                          CSE 3 Routine Changed (Effective Monday, Sep 14)
                         </h4>
                         <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: '0.2rem 0 0', lineHeight: 1.4 }}>
-                          Our college schedule has been updated. Are you in CSE 3? Apply your verified routine in 1 click.
+                          New routine starts this Monday, Sep 14. Past attendance accurately keeps your previous schedule. Are you in CSE 3? Apply now in 1 click.
                         </p>
                       </div>
                     </div>
@@ -4004,8 +4181,8 @@ export default function Home() {
                 {/* Today's Checklist Widget */}
                 {(() => {
                   const todayDayName = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'][new Date().getDay()];
-                  const todaySlots = timetable
-                    .filter((slot) => slot.dayOfWeek.toUpperCase() === todayDayName)
+                  const todayDateStr = getLocalDateString();
+                  const todaySlots = getEffectiveSlotsForDate(todayDateStr, todayDayName)
                     .sort((a, b) => a.startTime.localeCompare(b.startTime));
                   
                   if (todaySlots.length === 0) return null;
@@ -4013,13 +4190,12 @@ export default function Home() {
                   // Group slots by subjectId
                   const groupedTodaySlots: Record<string, ScheduleSlot[]> = {};
                   for (const slot of todaySlots) {
+                    if (!slot.subjectId) continue;
                     if (!groupedTodaySlots[slot.subjectId]) {
                       groupedTodaySlots[slot.subjectId] = [];
                     }
                     groupedTodaySlots[slot.subjectId].push(slot);
                   }
-
-                  const todayDateStr = getLocalDateString();
 
                   return (
                     <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -4531,6 +4707,27 @@ export default function Home() {
                     />
                   </div>
 
+                  {isCse3Student(subjects, timetable, routineNoticeStatus) && (
+                    <div style={{
+                      marginTop: '1rem',
+                      marginBottom: '1rem',
+                      padding: '0.75rem 1rem',
+                      background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(168, 85, 247, 0.08))',
+                      border: '1px solid rgba(99, 102, 241, 0.25)',
+                      borderRadius: 'var(--border-radius-md)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.65rem',
+                      fontSize: '0.82rem',
+                      color: 'var(--text-secondary)'
+                    }}>
+                      <Sparkles size={16} style={{ color: 'var(--secondary)', flexShrink: 0 }} />
+                      <span>
+                        <strong>CSE 3 Routine Notice:</strong> This revised weekly routine is in effect starting <strong>Monday, September 14, 2026</strong>. All attendance history prior to Sep 14 (including yesterday Friday, Sep 11) retains your previous routine schedule.
+                      </span>
+                    </div>
+                  )}
+
                   {isOcrLoading ? (
                     <div className="scanning-container" style={{ position: 'relative', overflow: 'hidden', padding: '3rem 2rem', background: 'rgba(255,255,255,0.01)', borderRadius: 'var(--border-radius-md)', border: '1px dashed var(--border-color)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
                       <div className="scanning-line" style={{ position: 'absolute', left: 0, right: 0, height: '4px', background: 'linear-gradient(90deg, transparent, var(--secondary), transparent)', top: 0, animation: 'scan 2s linear infinite', boxShadow: '0 0 12px var(--secondary)' }} />
@@ -4921,8 +5118,9 @@ export default function Home() {
               const daysOfWeekMap = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
               const selectedDayOfWeekName = daysOfWeekMap[new Date(selectedDate).getDay()];
 
-              const scheduledSlotsForDay = timetable.filter(
-                (slot) => slot.dayOfWeek.toUpperCase() === selectedDayOfWeekName
+              const scheduledSlotsForDay = getEffectiveSlotsForDate(
+                selectedDate,
+                selectedDayOfWeekName
               );
 
               return (
@@ -5075,9 +5273,24 @@ export default function Home() {
                         <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>
                           {selectedDayOfWeekName}
                         </span>
-                        <h3 style={{ fontSize: '1.4rem', marginTop: '0.15rem' }}>
-                          {new Date(selectedDate).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-                        </h3>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.15rem' }}>
+                          <h3 style={{ fontSize: '1.4rem', margin: 0 }}>
+                            {new Date(selectedDate).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                          </h3>
+                          {selectedDate < NEW_ROUTINE_EFFECTIVE_DATE && isCse3Student(subjects, timetable, routineNoticeStatus) && (
+                            <span style={{
+                              fontSize: '0.72rem',
+                              fontWeight: 600,
+                              padding: '0.2rem 0.55rem',
+                              borderRadius: '4px',
+                              background: 'rgba(99, 102, 241, 0.12)',
+                              color: 'var(--secondary)',
+                              border: '1px solid rgba(99, 102, 241, 0.3)',
+                            }}>
+                              Previous Routine (in effect till Sep 11)
+                            </span>
+                          )}
+                        </div>
                       </div>
 
                       {/* SECTION 1: TIMETABLE SCHEDULE FOR THIS DAY */}
@@ -5915,7 +6128,7 @@ export default function Home() {
                   Semester Schedule Notice
                 </span>
                 <h3 style={{ fontSize: '1.3rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
-                  Class Routine Changed!
+                  Class Routine Changed (Effective Monday, Sep 14)
                 </h3>
               </div>
             </div>
@@ -5931,7 +6144,7 @@ export default function Home() {
                 Are you in <span style={{ color: 'var(--secondary)' }}>CSE 3</span>?
               </h4>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', lineHeight: 1.5, margin: 0 }}>
-                Our college class timetable has been officially revised. If you are in <strong>CSE 3</strong>, you can apply your full verified schedule in 1 click without typing class codes or uploading images.
+                Our college class timetable has been officially revised and takes effect from <strong>Monday, September 14, 2026</strong>. Past attendance dates (including yesterday Friday, Sep 11) retain your previous schedule. If you are in <strong>CSE 3</strong>, you can apply your full verified schedule in 1 click.
               </p>
             </div>
 
@@ -5948,11 +6161,12 @@ export default function Home() {
                 <span>Verified CSE 3 Highlights:</span>
               </div>
               <ul style={{ margin: 0, paddingLeft: '1.2rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                <li><strong>Effective From:</strong> Monday, September 14, 2026</li>
                 <li><strong>Mon:</strong> OS, CG/AI, SE + OOP Lab (12:45 – 17:30)</li>
                 <li><strong>Tue:</strong> OS Lab (09:30 – 13:45) + Compiler, CG/AI, OOP</li>
                 <li><strong>Wed:</strong> 4 Morning Lectures • Afternoon Campus Drive Free</li>
                 <li><strong>Thu:</strong> IM, OOP, Constitution + S/W Engg Lab</li>
-                <li><strong>Fri:</strong> Full 7-period schedule</li>
+                <li><strong>Fri (Sep 18+):</strong> Full 7-period schedule (Previous 4-period schedule preserved for Sep 11)</li>
               </ul>
             </div>
 
@@ -6034,7 +6248,7 @@ export default function Home() {
             animation: 'pulse 1.5s infinite'
           }} />
           <span style={{ fontSize: '0.8rem', color: '#f1f5f9', fontWeight: 500, whiteSpace: 'nowrap' }}>
-            Notice: CSE 3 Routine Changed
+            Notice: CSE 3 Routine (Effective Sep 14)
           </span>
           <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: 600, textDecoration: 'underline' }}>
             View &amp; Apply &rarr;
