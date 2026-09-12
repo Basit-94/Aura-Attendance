@@ -142,6 +142,36 @@ const getLocalDateString = (date = new Date()) => {
   return `${year}-${month}-${day}`;
 };
 
+// Helper to match an attendance log to a specific class slot on a given date
+const getSlotLog = (
+  sub: Subject | undefined,
+  dateStr: string,
+  slotStartTime?: string,
+  allSubjectSlotsOnDay?: { startTime: string }[]
+) => {
+  if (!sub || !sub.logs || sub.logs.length === 0) return undefined;
+
+  const dayLogs = sub.logs.filter((l) => l.date.split('T')[0] === dateStr);
+  if (dayLogs.length === 0) return undefined;
+
+  if (!slotStartTime) return dayLogs[0];
+
+  // 1. Exact match by slot start time (e.g. T09:30 or 09:30:)
+  const exactMatch = dayLogs.find(
+    (l) => l.date.includes(`T${slotStartTime}`) || l.date.includes(`${slotStartTime}:`)
+  );
+  if (exactMatch) return exactMatch;
+
+  // 2. Legacy fallback: If there is ONLY ONE slot for this subject on this day, match legacy 00:00 log
+  const hasMultipleSlotsOnDay = allSubjectSlotsOnDay && allSubjectSlotsOnDay.length > 1;
+  if (!hasMultipleSlotsOnDay) {
+    const legacyLog = dayLogs.find((l) => l.date.includes('T00:00') || l.date.endsWith('00:00.000Z'));
+    if (legacyLog) return legacyLog;
+  }
+
+  return undefined;
+};
+
 // Official Verified Routine Slots for CAC 3 / CSE 3 (Updated Sept 2026)
 const OFFICIAL_CSE3_SLOTS = [
   // MONDAY
@@ -788,24 +818,48 @@ export default function Home() {
     }
   };
 
-  // Quick Check-in Actions
-  const handleCheckIn = async (subjectId: string, status: 'PRESENT' | 'ABSENT' | 'HOLIDAY' | 'REMOVE', dateOverride?: string) => {
-    // Abort previous request for this subject if it exists
-    if (checkInAbortControllers.current[subjectId]) {
-      checkInAbortControllers.current[subjectId].abort();
+  // Quick Check-in Actions with slot-specific timing support
+  const handleCheckIn = async (
+    subjectId: string, 
+    status: 'PRESENT' | 'ABSENT' | 'HOLIDAY' | 'REMOVE', 
+    dateOverride?: string,
+    slotStartTime?: string
+  ) => {
+    const checkKey = slotStartTime ? `${subjectId}_${slotStartTime}` : subjectId;
+
+    // Abort previous request for this specific slot if it exists
+    if (checkInAbortControllers.current[checkKey]) {
+      checkInAbortControllers.current[checkKey].abort();
     }
     const controller = new AbortController();
-    checkInAbortControllers.current[subjectId] = controller;
+    checkInAbortControllers.current[checkKey] = controller;
     
+    // Set in-flight check indicator
+    setInFlightChecks(prev => ({ ...prev, [checkKey]: true }));
+
+    const targetDateStr = dateOverride || getLocalDateString();
+    const fullDateTimeStr = slotStartTime 
+      ? `${targetDateStr}T${slotStartTime}:00.000Z` 
+      : `${targetDateStr}T00:00:00.000Z`;
+
     // Optimistic Update
     const previousSubjects = [...subjects];
     setSubjects(prevSubjects => {
       return prevSubjects.map(sub => {
         if (sub.id !== subjectId) return sub;
 
-        const todayDateStr = dateOverride || getLocalDateString();
         let updatedLogs = sub.logs ? [...sub.logs] : [];
-        const todayLogIndex = updatedLogs.findIndex(log => log.date.split('T')[0] === todayDateStr);
+        const todayLogIndex = updatedLogs.findIndex(log => {
+          const logDatePart = log.date.split('T')[0];
+          if (logDatePart !== targetDateStr) return false;
+          if (slotStartTime) {
+            return log.date.includes(`T${slotStartTime}`) || log.date.includes(`${slotStartTime}:`);
+          }
+          return true;
+        });
+
+        const oldTodayLog = todayLogIndex !== -1 ? sub.logs?.[todayLogIndex] : undefined;
+        const oldStatus = oldTodayLog?.status || 'NONE';
 
         if (status === 'REMOVE') {
           if (todayLogIndex !== -1) {
@@ -815,12 +869,9 @@ export default function Home() {
           if (todayLogIndex !== -1) {
             updatedLogs[todayLogIndex] = { ...updatedLogs[todayLogIndex], status };
           } else {
-            updatedLogs = [{ id: `temp-${Date.now()}`, date: dateOverride ? new Date(dateOverride).toISOString() : new Date(getLocalDateString()).toISOString(), status }, ...updatedLogs];
+            updatedLogs = [{ id: `temp-${Date.now()}-${slotStartTime || '00'}`, date: fullDateTimeStr, status }, ...updatedLogs];
           }
         }
-
-        const oldTodayLog = sub.logs?.find(log => log.date.split('T')[0] === todayDateStr);
-        const oldStatus = oldTodayLog?.status || 'NONE';
         
         let presentDiff = 0;
         let absentDiff = 0;
@@ -861,7 +912,7 @@ export default function Home() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           subjectId,
-          date: dateOverride || getLocalDateString(),
+          date: fullDateTimeStr,
           status,
         }),
         signal: controller.signal,
@@ -874,15 +925,20 @@ export default function Home() {
       }
     } catch (err: any) {
       if (err.name === 'AbortError') {
-        console.log('[handleCheckIn] Request aborted for subject:', subjectId);
+        console.log('[handleCheckIn] Request aborted for slot:', checkKey);
         return;
       }
       console.warn('[handleCheckIn] Network request failed. Saving check-in locally.', err);
-      addToOfflineQueue(subjectId, status, dateOverride);
+      addToOfflineQueue(subjectId, status, fullDateTimeStr);
       setSuccess('Offline Mode: Attendance saved locally. We will sync it when connection returns.');
     } finally {
-      if (checkInAbortControllers.current[subjectId] === controller) {
-        delete checkInAbortControllers.current[subjectId];
+      setInFlightChecks(prev => {
+        const next = { ...prev };
+        delete next[checkKey];
+        return next;
+      });
+      if (checkInAbortControllers.current[checkKey] === controller) {
+        delete checkInAbortControllers.current[checkKey];
       }
     }
   };
@@ -2147,10 +2203,9 @@ export default function Home() {
         const sub = subjects.find((s) => s.id === slot.subjectId);
         if (!sub) continue;
 
-        const hasLog = (sub.logs || []).some(
-          (log) => log.date.split('T')[0] === dateStr
-        );
-        if (!hasLog) {
+        const slotsForThisSub = slots.filter((s) => s.subjectId === slot.subjectId);
+        const log = getSlotLog(sub, dateStr, slot.startTime, slotsForThisSub);
+        if (!log) {
           hasMissedSlot = true;
           break;
         }
@@ -2178,45 +2233,54 @@ export default function Home() {
     // Optimistically update frontend state
     setSubjects((prevSubjects) => {
       return prevSubjects.map((sub) => {
-        const matchingSlot = eligibleSlots.find((slot) => slot.subjectId === sub.id);
-        if (!matchingSlot) return sub;
+        const slotsForSub = eligibleSlots.filter((slot) => slot.subjectId === sub.id);
+        if (slotsForSub.length === 0) return sub;
 
         let updatedLogs = sub.logs ? [...sub.logs] : [];
-        const logIndex = updatedLogs.findIndex((log) => log.date.split('T')[0] === dateStr);
-
-        if (status === 'REMOVE') {
-          if (logIndex !== -1) {
-            updatedLogs.splice(logIndex, 1);
-          }
-        } else {
-          if (logIndex !== -1) {
-            updatedLogs[logIndex] = { ...updatedLogs[logIndex], status };
-          } else {
-            updatedLogs = [
-              {
-                id: `temp-${Date.now()}-${sub.id}`,
-                date: new Date(dateStr).toISOString(),
-                status,
-              },
-              ...updatedLogs,
-            ];
-          }
-        }
-
-        const oldLog = sub.logs?.find((log) => log.date.split('T')[0] === dateStr);
-        const oldStatus = oldLog?.status || 'NONE';
-
         let presentDiff = 0;
         let absentDiff = 0;
         let holidayDiff = 0;
 
-        if (oldStatus === 'PRESENT') presentDiff--;
-        else if (oldStatus === 'ABSENT') absentDiff--;
-        else if (oldStatus === 'HOLIDAY') holidayDiff--;
+        slotsForSub.forEach((slot) => {
+          const slotTime = slot.startTime;
+          const slotFullDate = `${dateStr}T${slotTime}:00.000Z`;
 
-        if (status === 'PRESENT') presentDiff++;
-        else if (status === 'ABSENT') absentDiff++;
-        else if (status === 'HOLIDAY') holidayDiff++;
+          const logIndex = updatedLogs.findIndex((log) => {
+            const logDatePart = log.date.split('T')[0];
+            if (logDatePart !== dateStr) return false;
+            return log.date.includes(`T${slotTime}`) || log.date.includes(`${slotTime}:`);
+          });
+
+          const oldLog = logIndex !== -1 ? updatedLogs[logIndex] : undefined;
+          const oldStatus = oldLog?.status || 'NONE';
+
+          if (status === 'REMOVE') {
+            if (logIndex !== -1) {
+              updatedLogs.splice(logIndex, 1);
+            }
+          } else {
+            if (logIndex !== -1) {
+              updatedLogs[logIndex] = { ...updatedLogs[logIndex], status };
+            } else {
+              updatedLogs = [
+                {
+                  id: `temp-${Date.now()}-${sub.id}-${slotTime}`,
+                  date: slotFullDate,
+                  status,
+                },
+                ...updatedLogs,
+              ];
+            }
+          }
+
+          if (oldStatus === 'PRESENT') presentDiff--;
+          else if (oldStatus === 'ABSENT') absentDiff--;
+          else if (oldStatus === 'HOLIDAY') holidayDiff--;
+
+          if (status === 'PRESENT') presentDiff++;
+          else if (status === 'ABSENT') absentDiff++;
+          else if (status === 'HOLIDAY') holidayDiff++;
+        });
 
         const newPresent = Math.max(0, sub.stats.present + presentDiff);
         const newAbsent = Math.max(0, sub.stats.absent + absentDiff);
@@ -2243,18 +2307,25 @@ export default function Home() {
       // Fire parallel requests
       await Promise.all(
         eligibleSlots.map(async (slot) => {
+          const slotFullDate = `${dateStr}T${slot.startTime}:00.000Z`;
+
           // If status is REMOVE, only call API for subjects that actually have a log on this date
           if (status === 'REMOVE') {
             const sub = previousSubjects.find((s) => s.id === slot.subjectId);
-            const hasLog = sub?.logs?.some((log) => log.date.split('T')[0] === dateStr);
+            const hasLog = sub?.logs?.some((log) => {
+              const logDatePart = log.date.split('T')[0];
+              if (logDatePart !== dateStr) return false;
+              return log.date.includes(`T${slot.startTime}`) || log.date.includes('00:00');
+            });
             if (!hasLog) return;
           }
 
-          if (checkInAbortControllers.current[slot.subjectId]) {
-            checkInAbortControllers.current[slot.subjectId].abort();
+          const slotKey = `${slot.subjectId}_${slot.startTime}`;
+          if (checkInAbortControllers.current[slotKey]) {
+            checkInAbortControllers.current[slotKey].abort();
           }
           const controller = new AbortController();
-          checkInAbortControllers.current[slot.subjectId] = controller;
+          checkInAbortControllers.current[slotKey] = controller;
 
           try {
             const res = await fetch('/api/attendance/log', {
@@ -2262,15 +2333,15 @@ export default function Home() {
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 subjectId: slot.subjectId,
-                date: dateStr,
+                date: slotFullDate,
                 status,
               }),
               signal: controller.signal,
             });
             if (!res.ok) throw new Error('API failure');
           } finally {
-            if (checkInAbortControllers.current[slot.subjectId] === controller) {
-              delete checkInAbortControllers.current[slot.subjectId];
+            if (checkInAbortControllers.current[slotKey] === controller) {
+              delete checkInAbortControllers.current[slotKey];
             }
           }
         })
@@ -2291,7 +2362,7 @@ export default function Home() {
     const missedDates = getMissedLogDates();
     if (missedDates.length === 0) return;
 
-    const missedOps: Array<{ subjectId: string; date: string }> = [];
+    const missedOps: Array<{ subjectId: string; date: string; startTime: string }> = [];
 
     missedDates.forEach((dateStr) => {
       const [y, m, d] = dateStr.split('-').map(Number);
@@ -2304,11 +2375,14 @@ export default function Home() {
         const sub = subjects.find((s) => s.id === slot.subjectId);
         if (!sub) return;
 
-        const hasLog = (sub.logs || []).some(
-          (log) => log.date.split('T')[0] === dateStr
-        );
-        if (!hasLog) {
-          missedOps.push({ subjectId: slot.subjectId, date: dateStr });
+        const slotsForThisSub = slots.filter((s) => s.subjectId === slot.subjectId);
+        const log = getSlotLog(sub, dateStr, slot.startTime, slotsForThisSub);
+        if (!log) {
+          missedOps.push({
+            subjectId: slot.subjectId,
+            date: `${dateStr}T${slot.startTime}:00.000Z`,
+            startTime: slot.startTime,
+          });
         }
       });
     });
@@ -2330,8 +2404,8 @@ export default function Home() {
         opsForSub.forEach((op) => {
           updatedLogs = [
             {
-              id: `temp-${Date.now()}-${sub.id}-${op.date}`,
-              date: new Date(op.date).toISOString(),
+              id: `temp-${Date.now()}-${sub.id}-${op.startTime}`,
+              date: op.date,
               status,
             },
             ...updatedLogs,
@@ -2366,11 +2440,12 @@ export default function Home() {
     try {
       await Promise.all(
         missedOps.map(async (op) => {
-          if (checkInAbortControllers.current[op.subjectId]) {
-            checkInAbortControllers.current[op.subjectId].abort();
+          const slotKey = `${op.subjectId}_${op.startTime}`;
+          if (checkInAbortControllers.current[slotKey]) {
+            checkInAbortControllers.current[slotKey].abort();
           }
           const controller = new AbortController();
-          checkInAbortControllers.current[op.subjectId] = controller;
+          checkInAbortControllers.current[slotKey] = controller;
 
           try {
             const res = await fetch('/api/attendance/log', {
@@ -2385,8 +2460,8 @@ export default function Home() {
             });
             if (!res.ok) throw new Error('API failure');
           } finally {
-            if (checkInAbortControllers.current[op.subjectId] === controller) {
-              delete checkInAbortControllers.current[op.subjectId];
+            if (checkInAbortControllers.current[slotKey] === controller) {
+              delete checkInAbortControllers.current[slotKey];
             }
           }
         })
@@ -4062,68 +4137,49 @@ export default function Home() {
                         </div>
                       </div>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1rem' }}>
-                        {Object.keys(groupedTodaySlots).map((subjectId) => {
-                          const slots = groupedTodaySlots[subjectId];
-                          const matchingSubject = subjects.find((s) => s.id === subjectId);
+                        {todaySlots.map((slot, index) => {
+                          const matchingSubject = subjects.find((s) => s.id === slot.subjectId);
                           if (!matchingSubject) return null;
 
-                          const todayLog = matchingSubject.logs?.find(
-                            (log) => log.date.split('T')[0] === todayDateStr
-                          );
-
-                          // Display merged times if consecutive, otherwise list them
-                          const isConsecutive = slots.length > 1 && (() => {
-                            const toMin = (t: string) => {
-                              const [h, m] = t.split(':').map(Number);
-                              return h * 60 + m;
-                            };
-                            for (let i = 0; i < slots.length - 1; i++) {
-                              const currentEnd = toMin(slots[i].endTime);
-                              const nextStart = toMin(slots[i+1].startTime);
-                              if (nextStart - currentEnd > 30) return false;
-                            }
-                            return true;
-                          })();
-
-                          const timeDisplay = isConsecutive
-                            ? `${slots[0].startTime} - ${slots[slots.length - 1].endTime}`
-                            : slots.map((s) => `${s.startTime}-${s.endTime}`).join(', ');
+                          const slotsForThisSubject = todaySlots.filter((s) => s.subjectId === slot.subjectId);
+                          const todayLog = getSlotLog(matchingSubject, todayDateStr, slot.startTime, slotsForThisSubject);
+                          const slotKey = `${matchingSubject.id}_${slot.startTime}`;
 
                           return (
-                            <div key={subjectId} className="glass-card" style={{ padding: '0.75rem 1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', background: 'rgba(255,255,255,0.01)', border: '1px solid var(--border-color)' }}>
+                            <div key={`${slot.id || slot.subjectId}-${slot.startTime}-${index}`} className="glass-card" style={{ padding: '0.75rem 1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', background: 'rgba(255,255,255,0.01)', border: '1px solid var(--border-color)' }}>
                               <div className="flex-between">
                                 <span style={{ fontWeight: 600, fontSize: '0.95rem' }}>{matchingSubject.name}</span>
                                 <span className={`subject-badge ${matchingSubject.type.toLowerCase()}`} style={{ scale: '0.85', transformOrigin: 'right center' }}>{matchingSubject.type}</span>
                               </div>
                               <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                                Time: <strong>{timeDisplay}</strong>
+                                Period Time: <strong>{slot.startTime} - {slot.endTime}</strong>
                               </span>
                               
                               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.35rem', marginTop: '0.25rem' }}>
                                 <button
                                   type="button"
                                   className={`check-btn check-btn-present ${todayLog?.status === 'PRESENT' ? 'active' : ''}`}
-                                  style={{ padding: '0.35rem', fontSize: '0.75rem', opacity: inFlightChecks[matchingSubject.id] ? 0.5 : 1, cursor: inFlightChecks[matchingSubject.id] ? 'not-allowed' : 'pointer' }}
-                                  disabled={inFlightChecks[matchingSubject.id]}
-                                  onClick={() => handleCheckIn(matchingSubject.id, todayLog?.status === 'PRESENT' ? 'REMOVE' : 'PRESENT')}
+                                  style={{ padding: '0.35rem', fontSize: '0.75rem', opacity: inFlightChecks[slotKey] ? 0.5 : 1, cursor: inFlightChecks[slotKey] ? 'not-allowed' : 'pointer' }}
+                                  disabled={inFlightChecks[slotKey]}
+                                  onClick={() => handleCheckIn(matchingSubject.id, todayLog?.status === 'PRESENT' ? 'REMOVE' : 'PRESENT', undefined, slot.startTime)}
                                 >
                                   Present
                                 </button>
                                 <button
                                   type="button"
                                   className={`check-btn check-btn-absent ${todayLog?.status === 'ABSENT' ? 'active' : ''}`}
-                                  style={{ padding: '0.35rem', fontSize: '0.75rem', opacity: inFlightChecks[matchingSubject.id] ? 0.5 : 1, cursor: inFlightChecks[matchingSubject.id] ? 'not-allowed' : 'pointer' }}
-                                  disabled={inFlightChecks[matchingSubject.id]}
-                                  onClick={() => handleCheckIn(matchingSubject.id, todayLog?.status === 'ABSENT' ? 'REMOVE' : 'ABSENT')}
+                                  style={{ padding: '0.35rem', fontSize: '0.75rem', opacity: inFlightChecks[slotKey] ? 0.5 : 1, cursor: inFlightChecks[slotKey] ? 'not-allowed' : 'pointer' }}
+                                  disabled={inFlightChecks[slotKey]}
+                                  onClick={() => handleCheckIn(matchingSubject.id, todayLog?.status === 'ABSENT' ? 'REMOVE' : 'ABSENT', undefined, slot.startTime)}
                                 >
                                   Absent
                                 </button>
                                 <button
                                   type="button"
                                   className={`check-btn check-btn-holiday ${todayLog?.status === 'HOLIDAY' ? 'active' : ''}`}
-                                  style={{ padding: '0.35rem', fontSize: '0.75rem', opacity: inFlightChecks[matchingSubject.id] ? 0.5 : 1, cursor: inFlightChecks[matchingSubject.id] ? 'not-allowed' : 'pointer' }}
-                                  disabled={inFlightChecks[matchingSubject.id]}
-                                  onClick={() => handleCheckIn(matchingSubject.id, todayLog?.status === 'HOLIDAY' ? 'REMOVE' : 'HOLIDAY')}
+                                  style={{ padding: '0.35rem', fontSize: '0.75rem', opacity: inFlightChecks[slotKey] ? 0.5 : 1, cursor: inFlightChecks[slotKey] ? 'not-allowed' : 'pointer' }}
+                                  disabled={inFlightChecks[slotKey]}
+                                  onClick={() => handleCheckIn(matchingSubject.id, todayLog?.status === 'HOLIDAY' ? 'REMOVE' : 'HOLIDAY', undefined, slot.startTime)}
                                 >
                                   Holiday
                                 </button>
@@ -5150,8 +5206,10 @@ export default function Home() {
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                             {scheduledSlotsForDay.map((slot) => {
                               const sub = subjects.find(s => s.id === slot.subjectId);
-                              const slotLog = sub?.logs?.find(log => log.date.split('T')[0] === selectedDate);
+                              const slotsForThisSub = scheduledSlotsForDay.filter(s => s.subjectId === slot.subjectId);
+                              const slotLog = getSlotLog(sub, selectedDate, slot.startTime, slotsForThisSub);
                               const status = slotLog?.status;
+                              const slotKey = `${slot.subjectId}_${slot.startTime}`;
 
                               return (
                                 <div 
@@ -5188,27 +5246,27 @@ export default function Home() {
                                     <button
                                       type="button"
                                       className={`check-btn check-btn-present ${status === 'PRESENT' ? 'active' : ''}`}
-                                      disabled={inFlightChecks[slot.subjectId]}
-                                      onClick={() => handleCheckIn(slot.subjectId, status === 'PRESENT' ? 'REMOVE' : 'PRESENT', selectedDate)}
-                                      style={{ opacity: inFlightChecks[slot.subjectId] ? 0.5 : 1, cursor: inFlightChecks[slot.subjectId] ? 'not-allowed' : 'pointer' }}
+                                      disabled={inFlightChecks[slotKey]}
+                                      onClick={() => handleCheckIn(slot.subjectId, status === 'PRESENT' ? 'REMOVE' : 'PRESENT', selectedDate, slot.startTime)}
+                                      style={{ opacity: inFlightChecks[slotKey] ? 0.5 : 1, cursor: inFlightChecks[slotKey] ? 'not-allowed' : 'pointer' }}
                                     >
                                       Present
                                     </button>
                                     <button
                                       type="button"
                                       className={`check-btn check-btn-absent ${status === 'ABSENT' ? 'active' : ''}`}
-                                      disabled={inFlightChecks[slot.subjectId]}
-                                      onClick={() => handleCheckIn(slot.subjectId, status === 'ABSENT' ? 'REMOVE' : 'ABSENT', selectedDate)}
-                                      style={{ opacity: inFlightChecks[slot.subjectId] ? 0.5 : 1, cursor: inFlightChecks[slot.subjectId] ? 'not-allowed' : 'pointer' }}
+                                      disabled={inFlightChecks[slotKey]}
+                                      onClick={() => handleCheckIn(slot.subjectId, status === 'ABSENT' ? 'REMOVE' : 'ABSENT', selectedDate, slot.startTime)}
+                                      style={{ opacity: inFlightChecks[slotKey] ? 0.5 : 1, cursor: inFlightChecks[slotKey] ? 'not-allowed' : 'pointer' }}
                                     >
                                       Absent
                                     </button>
                                     <button
                                       type="button"
                                       className={`check-btn check-btn-holiday ${status === 'HOLIDAY' ? 'active' : ''}`}
-                                      disabled={inFlightChecks[slot.subjectId]}
-                                      onClick={() => handleCheckIn(slot.subjectId, status === 'HOLIDAY' ? 'REMOVE' : 'HOLIDAY', selectedDate)}
-                                      style={{ opacity: inFlightChecks[slot.subjectId] ? 0.5 : 1, cursor: inFlightChecks[slot.subjectId] ? 'not-allowed' : 'pointer' }}
+                                      disabled={inFlightChecks[slotKey]}
+                                      onClick={() => handleCheckIn(slot.subjectId, status === 'HOLIDAY' ? 'REMOVE' : 'HOLIDAY', selectedDate, slot.startTime)}
+                                      style={{ opacity: inFlightChecks[slotKey] ? 0.5 : 1, cursor: inFlightChecks[slotKey] ? 'not-allowed' : 'pointer' }}
                                     >
                                       Holiday
                                     </button>

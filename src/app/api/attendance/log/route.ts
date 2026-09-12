@@ -50,6 +50,8 @@ export async function POST(req: Request) {
     }
 
     const logDate = new Date(date);
+    const dateStr = typeof date === 'string' ? date : '';
+    const isSpecificTime = dateStr.includes('T') && !dateStr.includes('T00:00:00');
 
     // Enforce: Teachers can only edit attendance for today!
     if (isTeacherAction) {
@@ -68,7 +70,29 @@ export async function POST(req: Request) {
           date: logDate,
         },
       });
+      if (isSpecificTime) {
+        const dayPart = logDate.toISOString().split('T')[0];
+        const legacyDate = new Date(`${dayPart}T00:00:00.000Z`);
+        await db.attendanceLog.deleteMany({
+          where: {
+            subjectId,
+            date: legacyDate,
+          },
+        });
+      }
       return NextResponse.json({ message: 'Attendance log cleared successfully' });
+    }
+
+    // If logging a slot with a specific time, clean up any legacy 00:00:00 record for this subject on this date
+    if (isSpecificTime) {
+      const dayPart = logDate.toISOString().split('T')[0];
+      const legacyDate = new Date(`${dayPart}T00:00:00.000Z`);
+      await db.attendanceLog.deleteMany({
+        where: {
+          subjectId,
+          date: legacyDate,
+        },
+      });
     }
 
     // Validate standard statuses
