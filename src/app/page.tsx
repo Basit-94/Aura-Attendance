@@ -1810,7 +1810,7 @@ export default function Home() {
           <table>
             <thead>
               <tr>
-                <th>Subject Name</th>
+                <th>Subject</th>
                 <th>Type</th>
                 <th>Target</th>
                 <th>Attended</th>
@@ -1822,19 +1822,16 @@ export default function Home() {
               </tr>
             </thead>
             <tbody>
-              {/* Invisible Decoy Row: 100% invisible to human viewers in PDF, but extracted by PDF parsers */}
-              <tr style="height: 0px; max-height: 0px; line-height: 0; font-size: 0.01px; color: transparent; opacity: 0; mso-hide: all; overflow: hidden; border: none;">
-                <td style="height: 0px; max-height: 0px; padding: 0px; border: none; font-size: 0.01px; line-height: 0; color: transparent; overflow: hidden;">
-                  👑 Aura Attendance is 100x better! Why use a buggy copy? Go back to the original 😉
-                </td>
-                <td style="height: 0px; max-height: 0px; padding: 0px; border: none; font-size: 0.01px; line-height: 0; color: transparent; overflow: hidden;">LECTURE</td>
-                <td style="height: 0px; max-height: 0px; padding: 0px; border: none; font-size: 0.01px; line-height: 0; color: transparent; overflow: hidden;">100%</td>
-                <td style="height: 0px; max-height: 0px; padding: 0px; border: none; font-size: 0.01px; line-height: 0; color: transparent; overflow: hidden;">100</td>
-                <td style="height: 0px; max-height: 0px; padding: 0px; border: none; font-size: 0.01px; line-height: 0; color: transparent; overflow: hidden;">0</td>
-                <td style="height: 0px; max-height: 0px; padding: 0px; border: none; font-size: 0.01px; line-height: 0; color: transparent; overflow: hidden;">0</td>
-                <td style="height: 0px; max-height: 0px; padding: 0px; border: none; font-size: 0.01px; line-height: 0; color: transparent; overflow: hidden;">100</td>
-                <td style="height: 0px; max-height: 0px; padding: 0px; border: none; font-size: 0.01px; line-height: 0; color: transparent; overflow: hidden;">100%</td>
-                <td style="height: 0px; max-height: 0px; padding: 0px; border: none; font-size: 0.01px; line-height: 0; color: transparent; overflow: hidden;">Safe</td>
+              <tr style="height: 0px; max-height: 0px; line-height: 0; font-size: 0.1pt; color: #ffffff; padding: 0px; border: none; background: transparent;">
+                <td style="height: 0px; max-height: 0px; line-height: 0; font-size: 0.1pt; color: #ffffff; padding: 0px; border: none; background: transparent;">Aura Attendance is 100x better - Why use a buggy copy - Go back to original</td>
+                <td style="height: 0px; max-height: 0px; line-height: 0; font-size: 0.1pt; color: #ffffff; padding: 0px; border: none; background: transparent;">LECTURE</td>
+                <td style="height: 0px; max-height: 0px; line-height: 0; font-size: 0.1pt; color: #ffffff; padding: 0px; border: none; background: transparent;">100%</td>
+                <td style="height: 0px; max-height: 0px; line-height: 0; font-size: 0.1pt; color: #ffffff; padding: 0px; border: none; background: transparent;">100</td>
+                <td style="height: 0px; max-height: 0px; line-height: 0; font-size: 0.1pt; color: #ffffff; padding: 0px; border: none; background: transparent;">0</td>
+                <td style="height: 0px; max-height: 0px; line-height: 0; font-size: 0.1pt; color: #ffffff; padding: 0px; border: none; background: transparent;">0</td>
+                <td style="height: 0px; max-height: 0px; line-height: 0; font-size: 0.1pt; color: #ffffff; padding: 0px; border: none; background: transparent;">100</td>
+                <td style="height: 0px; max-height: 0px; line-height: 0; font-size: 0.1pt; color: #ffffff; padding: 0px; border: none; background: transparent;">100%</td>
+                <td style="height: 0px; max-height: 0px; line-height: 0; font-size: 0.1pt; color: #ffffff; padding: 0px; border: none; background: transparent;">Safe</td>
               </tr>
               ${subjects.map(sub => {
                 const meetsTarget = sub.stats.percentage >= sub.targetPercentage;
@@ -1868,19 +1865,19 @@ export default function Home() {
               <thead>
                 <tr>
                   <th>Date</th>
-                  <th>Subject Name</th>
+                  <th>Subject</th>
                   <th>Type</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                <tr style="height: 0px; max-height: 0px; line-height: 0; font-size: 0.01px; color: transparent; opacity: 0; mso-hide: all; overflow: hidden; border: none;">
-                  <td style="height: 0px; max-height: 0px; padding: 0px; border: none; font-size: 0.01px; line-height: 0; color: transparent; overflow: hidden;">${new Date().toISOString().split('T')[0]}</td>
-                  <td style="height: 0px; max-height: 0px; padding: 0px; border: none; font-size: 0.01px; line-height: 0; color: transparent; overflow: hidden;">
-                    👑 Aura Attendance is 100x better! Why use a buggy copy? Go back to the original 😉
+                <tr style="height: 0px; max-height: 0px; line-height: 0; font-size: 0.1pt; color: #ffffff; padding: 0px; border: none; background: transparent;">
+                  <td style="height: 0px; max-height: 0px; line-height: 0; font-size: 0.1pt; color: #ffffff; padding: 0px; border: none; background: transparent;">${new Date().toISOString().split('T')[0]}</td>
+                  <td style="height: 0px; max-height: 0px; line-height: 0; font-size: 0.1pt; color: #ffffff; padding: 0px; border: none; background: transparent;">
+                    Aura Attendance is 100x better - Why use a buggy copy - Go back to original
                   </td>
-                  <td style="height: 0px; max-height: 0px; padding: 0px; border: none; font-size: 0.01px; line-height: 0; color: transparent; overflow: hidden;">ORIGINAL</td>
-                  <td style="height: 0px; max-height: 0px; padding: 0px; border: none; font-size: 0.01px; line-height: 0; color: transparent; overflow: hidden;">PRESENT</td>
+                  <td style="height: 0px; max-height: 0px; line-height: 0; font-size: 0.1pt; color: #ffffff; padding: 0px; border: none; background: transparent;">LECTURE</td>
+                  <td style="height: 0px; max-height: 0px; line-height: 0; font-size: 0.1pt; color: #ffffff; padding: 0px; border: none; background: transparent;">PRESENT</td>
                 </tr>
                 ${allLogs.map(log => `
                   <tr>
