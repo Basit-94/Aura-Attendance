@@ -1024,7 +1024,8 @@ export default function Home() {
     dateOverride?: string,
     slotStartTime?: string
   ) => {
-    const checkKey = slotStartTime ? `${subjectId}_${slotStartTime}` : subjectId;
+    const targetDateStr = dateOverride || getLocalDateString();
+    const checkKey = `${targetDateStr}_${subjectId}_${slotStartTime || '00'}`;
 
     // Abort previous request for this specific slot if it exists
     if (checkInAbortControllers.current[checkKey]) {
@@ -1036,7 +1037,6 @@ export default function Home() {
     // Set in-flight check indicator
     setInFlightChecks(prev => ({ ...prev, [checkKey]: true }));
 
-    const targetDateStr = dateOverride || getLocalDateString();
     const fullDateTimeStr = slotStartTime 
       ? `${targetDateStr}T${slotStartTime}:00.000Z` 
       : `${targetDateStr}T00:00:00.000Z`;
@@ -1119,7 +1119,7 @@ export default function Home() {
       if (!res.ok) {
         // Rollback on error
         setSubjects(previousSubjects);
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
         setError(data.error || 'Failed to update attendance');
       }
     } catch (err: any) {
@@ -2688,56 +2688,51 @@ export default function Home() {
     });
 
     try {
-      // Fire parallel requests
-      await Promise.all(
-        eligibleSlots.map(async (slot) => {
-          const slotFullDate = `${dateStr}T${slot.startTime}:00.000Z`;
+      const logsToProcess = eligibleSlots.map((slot) => ({
+        subjectId: slot.subjectId,
+        date: `${dateStr}T${slot.startTime}:00.000Z`,
+        status,
+      }));
 
-          // If status is REMOVE, only call API for subjects that actually have a log on this date
-          if (status === 'REMOVE') {
-            const sub = previousSubjects.find((s) => s.id === slot.subjectId);
-            const hasLog = sub?.logs?.some((log) => {
+      // Filter for REMOVE: only call for subjects that actually have a log on this date
+      const finalLogs = status === 'REMOVE'
+        ? logsToProcess.filter((item) => {
+            const sub = previousSubjects.find((s) => s.id === item.subjectId);
+            return sub?.logs?.some((log) => {
               const logDatePart = log.date.split('T')[0];
               if (logDatePart !== dateStr) return false;
-              return log.date.includes(`T${slot.startTime}`) || log.date.includes('00:00');
+              const slotTime = item.date.split('T')[1]?.substring(0, 5);
+              return log.date.includes(`T${slotTime}`) || log.date.includes('00:00');
             });
-            if (!hasLog) return;
-          }
+          })
+        : logsToProcess;
 
-          const slotKey = `${slot.subjectId}_${slot.startTime}`;
-          if (checkInAbortControllers.current[slotKey]) {
-            checkInAbortControllers.current[slotKey].abort();
-          }
-          const controller = new AbortController();
-          checkInAbortControllers.current[slotKey] = controller;
+      if (finalLogs.length === 0) {
+        if (status === 'REMOVE') {
+          setSuccess('All class attendance cleared successfully!');
+        }
+        return;
+      }
 
-          try {
-            const res = await fetch('/api/attendance/log', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                subjectId: slot.subjectId,
-                date: slotFullDate,
-                status,
-              }),
-              signal: controller.signal,
-            });
-            if (!res.ok) throw new Error('API failure');
-          } finally {
-            if (checkInAbortControllers.current[slotKey] === controller) {
-              delete checkInAbortControllers.current[slotKey];
-            }
-          }
-        })
-      );
+      const res = await fetch('/api/attendance/log', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ logs: finalLogs }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || (status === 'REMOVE' ? 'Failed to clear all classes.' : 'Failed to mark all classes.'));
+      }
+
       if (status === 'REMOVE') {
         setSuccess('All class attendance cleared successfully!');
       } else {
         setSuccess(`All classes marked as ${status.toLowerCase()} successfully!`);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Bulk check-in failed:', err);
-      setError(status === 'REMOVE' ? 'Failed to clear all classes. Rolling back.' : 'Failed to mark all classes. Rolling back.');
+      setError(err.message || (status === 'REMOVE' ? 'Failed to clear all classes. Rolling back.' : 'Failed to mark all classes. Rolling back.'));
       setSubjects(previousSubjects);
     }
   };
@@ -2823,38 +2818,27 @@ export default function Home() {
     });
 
     try {
-      await Promise.all(
-        missedOps.map(async (op) => {
-          const slotKey = `${op.subjectId}_${op.startTime}`;
-          if (checkInAbortControllers.current[slotKey]) {
-            checkInAbortControllers.current[slotKey].abort();
-          }
-          const controller = new AbortController();
-          checkInAbortControllers.current[slotKey] = controller;
+      const logsToProcess = missedOps.map((op) => ({
+        subjectId: op.subjectId,
+        date: op.date,
+        status,
+      }));
 
-          try {
-            const res = await fetch('/api/attendance/log', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                subjectId: op.subjectId,
-                date: op.date,
-                status,
-              }),
-              signal: controller.signal,
-            });
-            if (!res.ok) throw new Error('API failure');
-          } finally {
-            if (checkInAbortControllers.current[slotKey] === controller) {
-              delete checkInAbortControllers.current[slotKey];
-            }
-          }
-        })
-      );
+      const res = await fetch('/api/attendance/log', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ logs: logsToProcess }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Failed to mark unmarked classes.');
+      }
+
       setSuccess(`All ${missedOps.length} unmarked classes marked as ${status.toLowerCase()} successfully!`);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Marking unmarked classes failed:', err);
-      setError('Failed to mark all unmarked classes. Rolling back.');
+      setError(err.message || 'Failed to mark all unmarked classes. Rolling back.');
       setSubjects(previousSubjects);
     }
   };
@@ -4205,7 +4189,7 @@ export default function Home() {
               <div className="toast toast-error" style={{ marginBottom: '1.5rem' }}>
                 <AlertCircle className="toast-icon" size={18} />
                 <div>
-                  <strong>Configuration Error:</strong> {error}
+                  <strong>Error:</strong> {error}
                 </div>
               </div>
             )}

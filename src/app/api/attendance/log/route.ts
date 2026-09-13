@@ -2,15 +2,11 @@ import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
 
-// Upsert or remove attendance marks
+// Upsert or remove attendance marks (supports both single and batch operations)
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { subjectId, date, status, studentCode, teacherEditPin } = body; // status can be PRESENT, ABSENT, HOLIDAY, or REMOVE
-
-    if (!subjectId || !date || !status) {
-      return NextResponse.json({ error: 'Subject ID, date, and status are required' }, { status: 400 });
-    }
+    const { subjectId, date, status, logs, studentCode, teacherEditPin } = body; // status can be PRESENT, ABSENT, HOLIDAY, or REMOVE
 
     let authenticatedStudentId: string | null = null;
     let isTeacherAction = false;
@@ -35,6 +31,97 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
       authenticatedStudentId = student.id;
+    }
+
+    // Handle batch logs if provided
+    if (Array.isArray(logs) && logs.length > 0) {
+      const userSubjects = await db.subject.findMany({
+        where: {
+          semester: { studentId: authenticatedStudentId },
+        },
+        select: { id: true },
+      });
+      const userSubjectIds = new Set(userSubjects.map((s) => s.id));
+
+      const validLogs = logs.filter(
+        (item: any) =>
+          item.subjectId &&
+          userSubjectIds.has(item.subjectId) &&
+          item.date &&
+          ['PRESENT', 'ABSENT', 'HOLIDAY', 'REMOVE'].includes(item.status)
+      );
+
+      if (validLogs.length === 0) {
+        return NextResponse.json({ message: 'No valid attendance entries to process' });
+      }
+
+      await db.$transaction(
+        async (tx) => {
+          for (const item of validLogs) {
+            const logDate = new Date(item.date);
+            const dateStr = typeof item.date === 'string' ? item.date : '';
+            const isSpecificTime = dateStr.includes('T') && !dateStr.includes('T00:00:00');
+
+            if (item.status === 'REMOVE') {
+              await tx.attendanceLog.deleteMany({
+                where: {
+                  subjectId: item.subjectId,
+                  date: logDate,
+                },
+              });
+              if (isSpecificTime) {
+                const dayPart = logDate.toISOString().split('T')[0];
+                const legacyDate = new Date(`${dayPart}T00:00:00.000Z`);
+                await tx.attendanceLog.deleteMany({
+                  where: {
+                    subjectId: item.subjectId,
+                    date: legacyDate,
+                  },
+                });
+              }
+            } else {
+              if (isSpecificTime) {
+                const dayPart = logDate.toISOString().split('T')[0];
+                const legacyDate = new Date(`${dayPart}T00:00:00.000Z`);
+                await tx.attendanceLog.deleteMany({
+                  where: {
+                    subjectId: item.subjectId,
+                    date: legacyDate,
+                  },
+                });
+              }
+
+              await tx.attendanceLog.upsert({
+                where: {
+                  subjectId_date: {
+                    subjectId: item.subjectId,
+                    date: logDate,
+                  },
+                },
+                update: { status: item.status },
+                create: {
+                  subjectId: item.subjectId,
+                  date: logDate,
+                  status: item.status,
+                },
+              });
+            }
+          }
+        },
+        {
+          maxWait: 15000,
+          timeout: 30000,
+        }
+      );
+
+      return NextResponse.json({
+        message: 'Batch attendance processed successfully',
+        count: validLogs.length,
+      });
+    }
+
+    if (!subjectId || !date || !status) {
+      return NextResponse.json({ error: 'Subject ID, date, and status are required' }, { status: 400 });
     }
 
     // Verify ownership of the subject
