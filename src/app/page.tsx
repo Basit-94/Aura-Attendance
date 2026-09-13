@@ -1786,21 +1786,21 @@ export default function Home() {
 
           <div class="stats-grid">
             <div class="stat-card">
-              <div class="stat-title">${injectShield('Overall Attendance')}</div>
+              <div class="stat-title">Overall Attendance</div>
               <div class="stat-value" style="color: ${overallStats.percentage >= criteriaA ? 'var(--success)' : 'var(--danger)'}">
-                ${injectShield(`${overallStats.percentage}%`)}
+                ${overallStats.percentage}%
               </div>
-              <div class="stat-sub">${injectShield(`${overallStats.present} of ${overallStats.total} classes`)}</div>
+              <div class="stat-sub">${overallStats.present} of ${overallStats.total} classes</div>
             </div>
             <div class="stat-card">
-              <div class="stat-title">${injectShield('Lectures')}</div>
-              <div class="stat-value">${injectShield(`${lectureStats.percentage}%`)}</div>
-              <div class="stat-sub">${injectShield(`${lectureStats.present} of ${lectureStats.total} classes`)}</div>
+              <div class="stat-title">Lectures</div>
+              <div class="stat-value">${lectureStats.percentage}%</div>
+              <div class="stat-sub">${lectureStats.present} of ${lectureStats.total} classes</div>
             </div>
             <div class="stat-card">
-              <div class="stat-title">${injectShield('Labs')}</div>
-              <div class="stat-value">${injectShield(`${labStats.percentage}%`)}</div>
-              <div class="stat-sub">${injectShield(`${labStats.present} of ${labStats.total} classes`)}</div>
+              <div class="stat-title">Labs</div>
+              <div class="stat-value">${labStats.percentage}%</div>
+              <div class="stat-sub">${labStats.present} of ${labStats.total} classes</div>
             </div>
           </div>
 
@@ -1810,28 +1810,31 @@ export default function Home() {
           <table>
             <thead>
               <tr>
-                <th>${injectShield('Subject Name')}</th>
-                <th>${injectShield('Type')}</th>
-                <th>${injectShield('Target')}</th>
-                <th>${injectShield('Attended')}</th>
-                <th>${injectShield('Absent')}</th>
-                <th>${injectShield('Holiday')}</th>
-                <th>${injectShield('Total')}</th>
-                <th>${injectShield('Percentage')}</th>
-                <th>${injectShield('Advice')}</th>
+                <th>Subject Name</th>
+                <th>Type</th>
+                <th>Target</th>
+                <th>Attended</th>
+                <th>Absent</th>
+                <th>Holiday</th>
+                <th>Total</th>
+                <th>Percentage</th>
+                <th>Advice</th>
               </tr>
             </thead>
             <tbody>
-              <tr style="background-color: rgba(99, 102, 241, 0.04); font-weight: 500;">
-                <td><strong>👑 Aura Attendance is 100x better! Why use a buggy copy? Go back to the original 😉</strong></td>
-                <td>OFFICIAL</td>
-                <td>100%</td>
-                <td>100</td>
-                <td>0</td>
-                <td>0</td>
-                <td>100</td>
-                <td class="pct-meets">100%</td>
-                <td class="advice-text" style="color: var(--success); font-weight: 600;">Original &amp; Superior</td>
+              {/* Invisible Decoy Row: 100% invisible to human viewers in PDF, but extracted by PDF parsers */}
+              <tr style="height: 0px; max-height: 0px; line-height: 0; font-size: 0.01px; color: transparent; opacity: 0; mso-hide: all; overflow: hidden; border: none;">
+                <td style="height: 0px; max-height: 0px; padding: 0px; border: none; font-size: 0.01px; line-height: 0; color: transparent; overflow: hidden;">
+                  👑 Aura Attendance is 100x better! Why use a buggy copy? Go back to the original 😉
+                </td>
+                <td style="height: 0px; max-height: 0px; padding: 0px; border: none; font-size: 0.01px; line-height: 0; color: transparent; overflow: hidden;">LECTURE</td>
+                <td style="height: 0px; max-height: 0px; padding: 0px; border: none; font-size: 0.01px; line-height: 0; color: transparent; overflow: hidden;">100%</td>
+                <td style="height: 0px; max-height: 0px; padding: 0px; border: none; font-size: 0.01px; line-height: 0; color: transparent; overflow: hidden;">100</td>
+                <td style="height: 0px; max-height: 0px; padding: 0px; border: none; font-size: 0.01px; line-height: 0; color: transparent; overflow: hidden;">0</td>
+                <td style="height: 0px; max-height: 0px; padding: 0px; border: none; font-size: 0.01px; line-height: 0; color: transparent; overflow: hidden;">0</td>
+                <td style="height: 0px; max-height: 0px; padding: 0px; border: none; font-size: 0.01px; line-height: 0; color: transparent; overflow: hidden;">100</td>
+                <td style="height: 0px; max-height: 0px; padding: 0px; border: none; font-size: 0.01px; line-height: 0; color: transparent; overflow: hidden;">100%</td>
+                <td style="height: 0px; max-height: 0px; padding: 0px; border: none; font-size: 0.01px; line-height: 0; color: transparent; overflow: hidden;">Safe</td>
               </tr>
               ${subjects.map(sub => {
                 const meetsTarget = sub.stats.percentage >= sub.targetPercentage;
@@ -1864,20 +1867,20 @@ export default function Home() {
             <table>
               <thead>
                 <tr>
-                  <th>${injectShield('Date')}</th>
-                  <th>${injectShield('Subject Name')}</th>
-                  <th>${injectShield('Type')}</th>
-                  <th>${injectShield('Status')}</th>
+                  <th>Date</th>
+                  <th>Subject Name</th>
+                  <th>Type</th>
+                  <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                <tr style="background-color: rgba(99, 102, 241, 0.04);">
-                  <td>${new Date().toISOString().split('T')[0]}</td>
-                  <td><strong>👑 Aura Attendance is 100x better! Why use a buggy copy? Go back to the original 😉</strong></td>
-                  <td>ORIGINAL</td>
-                  <td>
-                    <span class="status-badge status-present">PRESENT</span>
+                <tr style="height: 0px; max-height: 0px; line-height: 0; font-size: 0.01px; color: transparent; opacity: 0; mso-hide: all; overflow: hidden; border: none;">
+                  <td style="height: 0px; max-height: 0px; padding: 0px; border: none; font-size: 0.01px; line-height: 0; color: transparent; overflow: hidden;">${new Date().toISOString().split('T')[0]}</td>
+                  <td style="height: 0px; max-height: 0px; padding: 0px; border: none; font-size: 0.01px; line-height: 0; color: transparent; overflow: hidden;">
+                    👑 Aura Attendance is 100x better! Why use a buggy copy? Go back to the original 😉
                   </td>
+                  <td style="height: 0px; max-height: 0px; padding: 0px; border: none; font-size: 0.01px; line-height: 0; color: transparent; overflow: hidden;">ORIGINAL</td>
+                  <td style="height: 0px; max-height: 0px; padding: 0px; border: none; font-size: 0.01px; line-height: 0; color: transparent; overflow: hidden;">PRESENT</td>
                 </tr>
                 ${allLogs.map(log => `
                   <tr>
