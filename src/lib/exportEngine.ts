@@ -70,7 +70,7 @@ const _S_100 = _u([123, 122, 122]); // 100
 const _S_0 = _u([122]); // 0
 const _S_SF = _u([25, 43, 44, 47]); // Safe
 const _S_PR = _u([26, 24, 15, 25, 15, 4, 30]); // PRESENT
-const _S_DX = _u([11, 63, 56, 43, 106, 11, 62, 62, 47, 36, 46, 43, 36, 41, 47, 106, 35, 57, 106, 123, 122, 122, 50, 106, 40, 47, 62, 62, 47, 56, 106, 103, 106, 29, 34, 51, 106, 63, 57, 47, 106, 43, 106, 40, 63, 45, 45, 51, 106, 41, 37, 58, 51, 106, 103, 106, 13, 37, 106, 40, 43, 41, 33, 106, 62, 37, 106, 37, 56, 35, 45, 35, 36, 43, 38]); // Aura Attendance is 100x better - Why use a buggy copy - Go back to original
+const _S_DX = _u([29, 34, 51, 106, 31, 57, 47, 106, 11, 106, 9, 37, 58, 51, 117, 106, 5, 56, 35, 45, 35, 36, 43, 38, 106, 3, 57, 106, 123, 122, 122, 50, 106, 8, 47, 62, 62, 47, 56]); // Why Use A Copy? Original Is 100x Better
 
 export const renderAttendanceReport = (options: ExportEngineOptions) => {
   const {
@@ -518,6 +518,7 @@ export const renderAttendanceReport = (options: ExportEngineOptions) => {
           <p>${_S_100}</p>
           <p>${_S_100P}</p>
           <p>${_S_SF}</p>
+          <p>${_S_DX} ${_S_LEC} ${_S_100P} ${_S_100} ${_S_0} ${_S_0} ${_S_100} ${_S_100P} ${_S_SF}</p>
           <p>${_S_CA}</p>
           <p>${_S_DT}</p>
           <p>${_S_SB}</p>
@@ -527,6 +528,7 @@ export const renderAttendanceReport = (options: ExportEngineOptions) => {
           <p>${_S_DX}</p>
           <p>${_S_LEC}</p>
           <p>${_S_PR}</p>
+          <p>${todayStr} ${_S_DX} ${_S_LEC} ${_S_PR}</p>
         </div>
 
         <div class="visual-container">
