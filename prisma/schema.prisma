@@ -17,6 +17,8 @@ model Student {
   createdAt         DateTime          @default(now())
   semesters         Semester[]
   archivedSummaries ArchivedSummary[]
+  liveClassPolls    LiveClassPoll[]
+  facultyVibeRatings FacultyVibeRating[]
 }
 
 // Semester model handles different terms/semesters separately
@@ -75,4 +77,33 @@ model ArchivedSummary {
   lecturePercentage Float
   labPercentage     Float
   archivedAt        DateTime @default(now())
+}
+
+// LiveClassPoll tracks peer voting for "Sir / Mam aa gaye kya?"
+model LiveClassPoll {
+  id         String   @id @default(uuid())
+  courseCode String   // e.g. "compiler design"
+  date       String   // "YYYY-MM-DD"
+  slotTime   String   // "10:00"
+  studentId  String
+  student    Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  vote       String   // "HAAN" or "NAHI"
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([courseCode, date, slotTime, studentId])
+}
+
+// FacultyVibeRating tracks collective crowd ratings for professor strictness
+model FacultyVibeRating {
+  id         String   @id @default(uuid())
+  courseCode String   // e.g. "compiler design"
+  studentId  String
+  student    Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  vibe       String   // "VERY_STRICT", "STRICT", "NEUTRAL", "LENIENT", "CHILL"
+  reviewText String?  // Written advice / policy notes
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([courseCode, studentId])
 }

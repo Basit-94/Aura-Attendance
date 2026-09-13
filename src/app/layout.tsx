@@ -29,7 +29,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={outfit.className}>
       <body>
-        <div className="glow-orb-3" />
+        <div className="glow-orb-3" style={{ position: 'fixed', pointerEvents: 'none', zIndex: -2 }} />
         {children}
         <SpeedInsights />
         <Analytics />
