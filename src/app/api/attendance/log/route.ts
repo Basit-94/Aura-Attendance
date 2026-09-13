@@ -62,20 +62,33 @@ export async function POST(req: Request) {
             const dateStr = typeof item.date === 'string' ? item.date : '';
             const isSpecificTime = dateStr.includes('T') && !dateStr.includes('T00:00:00');
 
+            const dayPart = logDate.toISOString().split('T')[0];
+            const dayStart = new Date(`${dayPart}T00:00:00.000Z`);
+            const dayEnd = new Date(`${dayPart}T23:59:59.999Z`);
+
             if (item.status === 'REMOVE') {
-              await tx.attendanceLog.deleteMany({
-                where: {
-                  subjectId: item.subjectId,
-                  date: logDate,
-                },
-              });
               if (isSpecificTime) {
-                const dayPart = logDate.toISOString().split('T')[0];
+                await tx.attendanceLog.deleteMany({
+                  where: {
+                    subjectId: item.subjectId,
+                    date: logDate,
+                  },
+                });
                 const legacyDate = new Date(`${dayPart}T00:00:00.000Z`);
                 await tx.attendanceLog.deleteMany({
                   where: {
                     subjectId: item.subjectId,
                     date: legacyDate,
+                  },
+                });
+              } else {
+                await tx.attendanceLog.deleteMany({
+                  where: {
+                    subjectId: item.subjectId,
+                    date: {
+                      gte: dayStart,
+                      lte: dayEnd,
+                    },
                   },
                 });
               }
@@ -151,19 +164,32 @@ export async function POST(req: Request) {
 
     // Option to clear the attendance record completely
     if (status === 'REMOVE') {
-      await db.attendanceLog.deleteMany({
-        where: {
-          subjectId,
-          date: logDate,
-        },
-      });
+      const dayPart = logDate.toISOString().split('T')[0];
+      const dayStart = new Date(`${dayPart}T00:00:00.000Z`);
+      const dayEnd = new Date(`${dayPart}T23:59:59.999Z`);
+
       if (isSpecificTime) {
-        const dayPart = logDate.toISOString().split('T')[0];
+        await db.attendanceLog.deleteMany({
+          where: {
+            subjectId,
+            date: logDate,
+          },
+        });
         const legacyDate = new Date(`${dayPart}T00:00:00.000Z`);
         await db.attendanceLog.deleteMany({
           where: {
             subjectId,
             date: legacyDate,
+          },
+        });
+      } else {
+        await db.attendanceLog.deleteMany({
+          where: {
+            subjectId,
+            date: {
+              gte: dayStart,
+              lte: dayEnd,
+            },
           },
         });
       }

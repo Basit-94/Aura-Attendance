@@ -1159,9 +1159,27 @@ export default function Home() {
         const oldTodayLog = todayLogIndex !== -1 ? sub.logs?.[todayLogIndex] : undefined;
         const oldStatus = oldTodayLog?.status || 'NONE';
 
+        let presentDiff = 0;
+        let absentDiff = 0;
+        let holidayDiff = 0;
+
         if (status === 'REMOVE') {
-          if (todayLogIndex !== -1) {
-            updatedLogs.splice(todayLogIndex, 1);
+          if (slotStartTime) {
+            if (todayLogIndex !== -1) {
+              const old = updatedLogs[todayLogIndex];
+              if (old.status === 'PRESENT') presentDiff--;
+              else if (old.status === 'ABSENT') absentDiff--;
+              else if (old.status === 'HOLIDAY') holidayDiff--;
+              updatedLogs.splice(todayLogIndex, 1);
+            }
+          } else {
+            const logsToRemove = updatedLogs.filter(log => log.date.split('T')[0] === targetDateStr);
+            logsToRemove.forEach(l => {
+              if (l.status === 'PRESENT') presentDiff--;
+              else if (l.status === 'ABSENT') absentDiff--;
+              else if (l.status === 'HOLIDAY') holidayDiff--;
+            });
+            updatedLogs = updatedLogs.filter(log => log.date.split('T')[0] !== targetDateStr);
           }
         } else {
           if (todayLogIndex !== -1) {
@@ -1169,19 +1187,15 @@ export default function Home() {
           } else {
             updatedLogs = [{ id: `temp-${Date.now()}-${slotStartTime || '00'}`, date: fullDateTimeStr, status }, ...updatedLogs];
           }
+
+          if (oldStatus === 'PRESENT') presentDiff--;
+          else if (oldStatus === 'ABSENT') absentDiff--;
+          else if (oldStatus === 'HOLIDAY') holidayDiff--;
+
+          if (status === 'PRESENT') presentDiff++;
+          else if (status === 'ABSENT') absentDiff++;
+          else if (status === 'HOLIDAY') holidayDiff++;
         }
-        
-        let presentDiff = 0;
-        let absentDiff = 0;
-        let holidayDiff = 0;
-
-        if (oldStatus === 'PRESENT') presentDiff--;
-        else if (oldStatus === 'ABSENT') absentDiff--;
-        else if (oldStatus === 'HOLIDAY') holidayDiff--;
-
-        if (status === 'PRESENT') presentDiff++;
-        else if (status === 'ABSENT') absentDiff++;
-        else if (status === 'HOLIDAY') holidayDiff++;
 
         const newPresent = Math.max(0, sub.stats.present + presentDiff);
         const newAbsent = Math.max(0, sub.stats.absent + absentDiff);
@@ -2683,6 +2697,71 @@ export default function Home() {
     } catch (err: any) {
       console.error('Bulk check-in failed:', err);
       setError(err.message || (status === 'REMOVE' ? 'Failed to clear all classes. Rolling back.' : 'Failed to mark all classes. Rolling back.'));
+      setSubjects(previousSubjects);
+    }
+  };
+
+  // Completely clear all logged classes for a date (routine slots and custom classes)
+  const handleClearAllLogsForDate = async (dateStr: string) => {
+    const subsWithLogs = subjects.filter((s) => (s.logs || []).some((l) => l.date.split('T')[0] === dateStr));
+    if (subsWithLogs.length === 0) return;
+
+    const previousSubjects = [...subjects];
+
+    setSubjects((prev) => {
+      return prev.map((sub) => {
+        const logsOnDate = (sub.logs || []).filter((l) => l.date.split('T')[0] === dateStr);
+        if (logsOnDate.length === 0) return sub;
+
+        let presentDiff = 0;
+        let absentDiff = 0;
+        let holidayDiff = 0;
+        logsOnDate.forEach((l) => {
+          if (l.status === 'PRESENT') presentDiff--;
+          else if (l.status === 'ABSENT') absentDiff--;
+          else if (l.status === 'HOLIDAY') holidayDiff--;
+        });
+
+        const newPresent = Math.max(0, sub.stats.present + presentDiff);
+        const newAbsent = Math.max(0, sub.stats.absent + absentDiff);
+        const newHoliday = Math.max(0, sub.stats.holiday + holidayDiff);
+        const newTotal = newPresent + newAbsent;
+        const newPercentage = newTotal > 0 ? (newPresent / newTotal) * 100 : 100.0;
+
+        return {
+          ...sub,
+          logs: (sub.logs || []).filter((l) => l.date.split('T')[0] !== dateStr),
+          stats: {
+            ...sub.stats,
+            present: newPresent,
+            absent: newAbsent,
+            holiday: newHoliday,
+            total: newTotal,
+            percentage: Math.round(newPercentage * 10) / 10,
+          },
+        };
+      });
+    });
+
+    try {
+      const logsToProcess = subsWithLogs.map((s) => ({
+        subjectId: s.id,
+        date: `${dateStr}T00:00:00.000Z`,
+        status: 'REMOVE' as const,
+      }));
+
+      const res = await fetch('/api/attendance/log', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ logs: logsToProcess }),
+      });
+
+      if (!res.ok) {
+        throw new Error('Failed to clear logs');
+      }
+      setSuccess(`All attendance markings for ${dateStr} cleared successfully!`);
+    } catch (err: any) {
+      setError('Failed to clear logs for this date. Rolling back.');
       setSubjects(previousSubjects);
     }
   };
@@ -6902,7 +6981,7 @@ export default function Home() {
                                 type="button"
                                 onClick={() => {
                                   if (confirm(`Are you sure you want to clear all attendance markings for ${selectedDateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}?`)) {
-                                    handleBulkCheckIn('REMOVE', selectedDate, scheduledSlotsForDay);
+                                    handleClearAllLogsForDate(selectedDate);
                                   }
                                 }}
                                 style={{
@@ -7014,10 +7093,38 @@ export default function Home() {
 
                       {/* SECTION 2: LOG OTHER SUBJECTS */}
                       <div>
-                        <h4 style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                          <BookOpen size={16} className="text-secondary" />
-                          <span>Log Other Classes on this Date</span>
-                        </h4>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                          <h4 style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-secondary)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                            <BookOpen size={16} className="text-secondary" />
+                            <span>Log Other Classes on this Date</span>
+                          </h4>
+                          {scheduledSlotsForDay.length === 0 && subjects.some(s => (s.logs || []).some(l => l.date.split('T')[0] === selectedDate)) && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (confirm(`Are you sure you want to clear all attendance markings for ${selectedDateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}?`)) {
+                                  handleClearAllLogsForDate(selectedDate);
+                                }
+                              }}
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '0.25rem',
+                                padding: '0.25rem 0.5rem',
+                                fontSize: '0.72rem',
+                                fontWeight: 600,
+                                borderRadius: '20px',
+                                background: 'rgba(239, 68, 68, 0.1)',
+                                color: '#ef4444',
+                                border: '1px solid rgba(239, 68, 68, 0.3)',
+                                cursor: 'pointer',
+                                transition: 'var(--transition-smooth)'
+                              }}
+                            >
+                              🧹 Clear All Markings
+                            </button>
+                          )}
+                        </div>
 
                         {subjects.length === 0 ? (
                           <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>No subjects configured in this semester.</p>
