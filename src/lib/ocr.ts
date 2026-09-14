@@ -454,9 +454,11 @@ export function mergeConsecutiveSlots(slots: ParsedClass[]): ParsedClass[] {
       const normName = (name: string) => name.toLowerCase().replace(/[^a-z0-9]/g, '');
       const namesMatch = normName(current.subjectName) === normName(next.subjectName);
       const typesMatch = current.type === next.type;
+      const isLab = current.type === 'LAB' && next.type === 'LAB';
+      const gap = nextStart - currentEnd;
 
-      // Check if same subject and consecutive/close (gap <= 30 mins)
-      if (namesMatch && typesMatch && nextStart >= currentEnd && (nextStart - currentEnd) <= 30) {
+      // Check if same subject and consecutive/close (gap <= 60 mins for lectures, or split sessions on same day for labs)
+      if (namesMatch && typesMatch && nextStart >= currentEnd && (isLab || gap <= 60)) {
         // Merge: update end time of current slot to end time of next slot
         current.endTime = next.endTime;
       } else {

@@ -131,6 +131,27 @@ export async function POST(req: Request) {
       });
     }
 
+    // Merge split lab sessions for the same subject on the same day into a single slot
+    const mergedValidSlots: typeof validSlots = [];
+    const labSlotMap = new Map<string, typeof validSlots[0]>();
+
+    for (const slot of validSlots) {
+      if (slot.type === 'LAB') {
+        const key = `${slot.subjectName.toLowerCase()}_${slot.dayOfWeek}`;
+        const existing = labSlotMap.get(key);
+        if (existing) {
+          if (slot.startTime < existing.startTime) existing.startTime = slot.startTime;
+          if (slot.endTime > existing.endTime) existing.endTime = slot.endTime;
+        } else {
+          const newSlot = { ...slot };
+          labSlotMap.set(key, newSlot);
+          mergedValidSlots.push(newSlot);
+        }
+      } else {
+        mergedValidSlots.push(slot);
+      }
+    }
+
     // 1. Run automatic duplicate merging before processing timetable upload
     await mergeDuplicateSubjects(activeSemester.id);
 
@@ -160,7 +181,7 @@ export async function POST(req: Request) {
       const slotToSubjectMap = new Map<string, typeof existingSubjects[0]>();
 
       // 4. Match slots to existing subjects or create genuine missing subjects
-      for (const slot of validSlots) {
+      for (const slot of mergedValidSlots) {
         const slotKey = `${slot.subjectName.toLowerCase()}_${slot.type}`;
         if (slotToSubjectMap.has(slotKey)) continue;
 
@@ -209,7 +230,7 @@ export async function POST(req: Request) {
       }
 
       // 6. Insert all new schedule slots linked directly to existing subjects
-      for (const slot of validSlots) {
+      for (const slot of mergedValidSlots) {
         const slotKey = `${slot.subjectName.toLowerCase()}_${slot.type}`;
         const subject = slotToSubjectMap.get(slotKey);
         if (!subject) continue;
@@ -230,7 +251,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       message: 'Timetable saved successfully and schedule updated!',
-      count: validSlots.length,
+      count: mergedValidSlots.length,
     });
   } catch (error: any) {
     console.error('Timetable saving endpoint error:', error);

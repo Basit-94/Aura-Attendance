@@ -229,11 +229,12 @@ const getSlotLog = (
   );
   if (exactMatch) return exactMatch;
 
-  // 2. Legacy fallback: If there is ONLY ONE slot for this subject on this day, match legacy 00:00 log
+  // 2. Legacy fallback: If there is ONLY ONE slot for this subject on this day, match legacy 00:00 log or single log
   const hasMultipleSlotsOnDay = allSubjectSlotsOnDay && allSubjectSlotsOnDay.length > 1;
   if (!hasMultipleSlotsOnDay) {
     const legacyLog = dayLogs.find((l) => l.date.includes('T00:00') || l.date.endsWith('00:00.000Z'));
     if (legacyLog) return legacyLog;
+    if (dayLogs.length === 1) return dayLogs[0];
   }
 
   return undefined;
@@ -245,8 +246,7 @@ const OFFICIAL_CSE3_SLOTS = [
   { subjectName: 'Operating Systems', type: 'LECTURE', dayOfWeek: 'MONDAY', startTime: '09:30', endTime: '10:30' },
   { subjectName: 'Computer Graphics and Artificial Intelligence', type: 'LECTURE', dayOfWeek: 'MONDAY', startTime: '10:30', endTime: '11:30' },
   { subjectName: 'Software Engineering', type: 'LECTURE', dayOfWeek: 'MONDAY', startTime: '11:45', endTime: '12:45' },
-  { subjectName: 'Object Oriented Programming Laboratory', type: 'LAB', dayOfWeek: 'MONDAY', startTime: '12:45', endTime: '13:45' },
-  { subjectName: 'Object Oriented Programming Laboratory', type: 'LAB', dayOfWeek: 'MONDAY', startTime: '14:30', endTime: '17:30' },
+  { subjectName: 'Object Oriented Programming Laboratory', type: 'LAB', dayOfWeek: 'MONDAY', startTime: '12:45', endTime: '17:30' },
 
   // TUESDAY
   { subjectName: 'Operating Systems Lab', type: 'LAB', dayOfWeek: 'TUESDAY', startTime: '09:30', endTime: '13:45' },
@@ -264,8 +264,7 @@ const OFFICIAL_CSE3_SLOTS = [
   { subjectName: 'Industrial Management', type: 'LECTURE', dayOfWeek: 'THURSDAY', startTime: '09:30', endTime: '10:30' },
   { subjectName: 'Object Oriented Programming', type: 'LECTURE', dayOfWeek: 'THURSDAY', startTime: '10:30', endTime: '11:30' },
   { subjectName: 'Constitution of India', type: 'LECTURE', dayOfWeek: 'THURSDAY', startTime: '11:45', endTime: '12:45' },
-  { subjectName: 'Software Engineering Laboratory', type: 'LAB', dayOfWeek: 'THURSDAY', startTime: '12:45', endTime: '13:45' },
-  { subjectName: 'Software Engineering Laboratory', type: 'LAB', dayOfWeek: 'THURSDAY', startTime: '14:30', endTime: '17:30' },
+  { subjectName: 'Software Engineering Laboratory', type: 'LAB', dayOfWeek: 'THURSDAY', startTime: '12:45', endTime: '17:30' },
 
   // FRIDAY
   { subjectName: 'Industrial Management', type: 'LECTURE', dayOfWeek: 'FRIDAY', startTime: '09:30', endTime: '10:30' },
@@ -1418,10 +1417,12 @@ export default function Home() {
       const nextDay = new Date(start);
       nextDay.setDate(start.getDate() + i);
       const dayOfWeekName = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'][nextDay.getDay()];
+      const sub = subjects.find(s => s.id === subjectId);
+      const isLab = sub?.type === 'LAB';
       const matchingSlots = timetable.filter(
         slot => slot.subjectId === subjectId && slot.dayOfWeek.toUpperCase() === dayOfWeekName
       );
-      missCount += matchingSlots.length;
+      missCount += isLab && matchingSlots.length > 0 ? 1 : matchingSlots.length;
     }
     return missCount;
   };
@@ -2128,41 +2129,84 @@ export default function Home() {
     return getTypeStatsFull(subjectsList, type).percentage;
   };
 
+  // Helper to merge multiple split lab sessions for the same subject on the same day into one slot
+  const mergeLabSlots = (slots: ScheduleSlot[]): ScheduleSlot[] => {
+    if (slots.length <= 1) return slots;
+    const result: ScheduleSlot[] = [];
+    const labSlotsBySubject: Record<string, ScheduleSlot[]> = {};
+
+    for (const slot of slots) {
+      if (slot.type === 'LAB') {
+        const key = slot.subjectId || slot.subjectName;
+        if (!labSlotsBySubject[key]) {
+          labSlotsBySubject[key] = [];
+        }
+        labSlotsBySubject[key].push(slot);
+      } else {
+        result.push(slot);
+      }
+    }
+
+    for (const labSlots of Object.values(labSlotsBySubject)) {
+      if (labSlots.length === 1) {
+        result.push(labSlots[0]);
+      } else {
+        labSlots.sort((a, b) => a.startTime.localeCompare(b.startTime));
+        const firstSlot = labSlots[0];
+        let maxEndTime = firstSlot.endTime;
+        for (const s of labSlots) {
+          if (s.endTime > maxEndTime) maxEndTime = s.endTime;
+        }
+        result.push({
+          ...firstSlot,
+          startTime: firstSlot.startTime,
+          endTime: maxEndTime,
+        });
+      }
+    }
+
+    return result.sort((a, b) => a.startTime.localeCompare(b.startTime));
+  };
+
   // Helper: Retrieve scheduled slots effective for a specific date,
   // respecting the official routine transition on Sept 14, 2026.
   const getEffectiveSlotsForDate = (dateStr: string, dayOfWeekName: string): ScheduleSlot[] => {
     const normalizedDay = dayOfWeekName.toUpperCase();
     const standardSlots = timetable.filter((s) => s.dayOfWeek.toUpperCase() === normalizedDay);
 
+    let rawSlots: ScheduleSlot[] = [];
+
     // If date is on or after the new routine effective date, use the standard active timetable
     if (dateStr >= NEW_ROUTINE_EFFECTIVE_DATE) {
-      return standardSlots;
+      rawSlots = standardSlots;
+    } else {
+      // Check if user belongs to CSE 3
+      const isCse3 = isCse3Student(subjects, timetable, routineNoticeStatus);
+      if (!isCse3) {
+        rawSlots = standardSlots;
+      } else {
+        // Pre-2026-09-14: Return previous CSE 3 routine slots for this weekday
+        const prevSlotsForDay = PREVIOUS_CSE3_SLOTS.filter((s) => s.dayOfWeek === normalizedDay);
+        if (prevSlotsForDay.length === 0) {
+          rawSlots = standardSlots;
+        } else {
+          rawSlots = prevSlotsForDay.map((slot) => {
+            const matchingSubject = findSubjectForSlot(subjects, slot.subjectName, slot.type, dateStr, slot.startTime);
+            return {
+              id: `prev-${dateStr}-${matchingSubject ? matchingSubject.id : slot.subjectName}-${slot.startTime}`,
+              subjectId: matchingSubject ? matchingSubject.id : '',
+              subjectName: matchingSubject ? matchingSubject.name : slot.subjectName,
+              type: slot.type as 'LECTURE' | 'LAB',
+              dayOfWeek: slot.dayOfWeek,
+              startTime: slot.startTime,
+              endTime: slot.endTime,
+            };
+          });
+        }
+      }
     }
 
-    // Check if user belongs to CSE 3
-    const isCse3 = isCse3Student(subjects, timetable, routineNoticeStatus);
-    if (!isCse3) {
-      return standardSlots;
-    }
-
-    // Pre-2026-09-14: Return previous CSE 3 routine slots for this weekday
-    const prevSlotsForDay = PREVIOUS_CSE3_SLOTS.filter((s) => s.dayOfWeek === normalizedDay);
-    if (prevSlotsForDay.length === 0) {
-      return standardSlots;
-    }
-
-    return prevSlotsForDay.map((slot) => {
-      const matchingSubject = findSubjectForSlot(subjects, slot.subjectName, slot.type, dateStr, slot.startTime);
-      return {
-        id: `prev-${dateStr}-${matchingSubject ? matchingSubject.id : slot.subjectName}-${slot.startTime}`,
-        subjectId: matchingSubject ? matchingSubject.id : '',
-        subjectName: matchingSubject ? matchingSubject.name : slot.subjectName,
-        type: slot.type as 'LECTURE' | 'LAB',
-        dayOfWeek: slot.dayOfWeek,
-        startTime: slot.startTime,
-        endTime: slot.endTime,
-      };
-    });
+    return mergeLabSlots(rawSlots);
   };
 
   // =========================================================================
